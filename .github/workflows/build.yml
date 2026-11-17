@@ -32,7 +32,7 @@ jobs:
         run: sh tests/run_tests.sh
         continue-on-error: true
       - name: Build firmware
-        run: ./build.sh --release "$VERSION"
+        run: sh build.sh --release "$VERSION"
       - name: Build the site
         run: |
           rm -rf site
