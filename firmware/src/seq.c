@@ -1157,16 +1157,15 @@ static int p_lockable(uint32_t id)
 {
     return id <= P_LD_AMP || id == P_SGATE || (id >= P_DIST && id <= P_REV) || id == P_GLIDE || id == P_PAN ||
            id == P_DETUNE || (id >= P_SLCR && id <= P_SLDEPTH) || (id >= P_E0 && id <= P_E7) || id == P_TFLT ||
-           (id >= P_IA && id <= P_IMIX);   /* 2.6: the INSERT's values and MIX */
+           (id >= P_IA && id <= P_IMIX) ||   /* 2.6: the INSERT's values and MIX */
+           (id >= P_FM1_ATK && id <= P_FM4_LEVEL);   /* sloop_custom: ANALOG4's and FMTONE's operator slots */
 }
 /* the range of p[id] on track t (the engine that renders: t->engine; the drum track's P_E0: the kit) */
 static const param_desc_t *lock_desc(const track_t *t, uint32_t id)
 {
     if (is_drum(t) && id == P_E0)
         return &DRUM_KIT_DESC;
-    if (id >= P_E0 && id <= P_E7)
-        return &ENGINES[t->engine % NENGINES]->edit[id - P_E0];
-    return &TP[id % P_COUNT];
+    return eng_pdesc(t->engine, id);                  /* (sloop_custom: the operator slots as the engine names them) */
 }
 static void lock_write(track_t *t, uint32_t id, int32_t v)
 {
@@ -3028,7 +3027,7 @@ static void sus_set(track_t *t, int on)
 static void midi_cc_set(track_t *t, uint32_t id, uint32_t value)
 {
     const param_desc_t *d = is_drum(t) && id == P_E0 ? &DRUM_KIT_DESC
-                            : id >= P_E0 ? &ENGINES[t->eng_req % NENGINES]->edit[(id - P_E0) & 7u] : &TP[id % P_COUNT];
+                            : eng_pdesc(t->eng_req, id % P_COUNT);
     if (d->max > d->min)
         t->p[id % P_COUNT] = (int16_t)(d->min + ((int32_t)(value & 127u) * (d->max - d->min) + 63) / 127);
 }
@@ -3064,8 +3063,8 @@ static int __attribute__((noinline)) midi_learned(uint32_t cc, uint32_t value)
 static uint32_t cc74_slot(const engine_t *e)      /* 0..7, or 8: none */
 {
     static const struct { const char *name; uint8_t slot; } T[] = {
-        {"ANALOG", 4}, {"PHASE", 2}, {"LOFI", 7}, {"SAMPLE", 4}, {"TRIO", 5}, {"GRAIN", 7}, {"FM6", 2}, {"PHYS", 2},
-        {"NOISE", 2}, {"SLICE", 7}};
+        {"LOFI", 7}, {"NOISE", 2}};   /* (sloop_custom: ANALOG4's and FMTONE's cutoffs are operator slots, the MONO2K
+                                        * engines have none: they keep the track FILTER) */
     uint32_t i;
     for (i = 0; i < NELEM(T); i++)
         if (str_eq(e->name, T[i].name) && e->edit[T[i].slot].max > e->edit[T[i].slot].min &&

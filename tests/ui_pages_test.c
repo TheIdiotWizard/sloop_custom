@@ -1680,24 +1680,33 @@ int main(int argc, char **argv)
         check(ins_d, "the drum track: the INSERT page in FX");
         go_home(); frames(16);
 
-        song.sel = 0; set_engine_of(&trk[0], 0); trk[0].engine = trk[0].eng_req; go_home(); frame();
-        WALK(FAM_EDIT, "FILTER", flt_a);
+        /* sloop_custom: an engine's own pages (params.c page_t.own): ANALOG4's FILTER 1, FMTONE's FILTER, none on SAW */
+        song.sel = 0; set_engine_of(&trk[0], ENGI_ANA4); trk[0].engine = trk[0].eng_req; go_home(); frame();
+        WALK(FAM_EDIT, "FILTER 1", flt_a);
         open_family(FAM_EDIT); frame();
-        for (j = 0; j < 30u && strcmp(PAGES[ui.page].title, "FILTER"); j++) { encs[panel.enc[EN_SELECT]] = 1; frame(); }
+        for (j = 0; j < 30u && strcmp(PAGES[ui.page].title, "FILTER 1"); j++) { encs[panel.enc[EN_SELECT]] = 1; frame(); }
         ui.force = 1; frame(); ppm("page-filter");
-        {   /* on EDIT > FILTER, ALGORITHM to a track that is not ANALOG: not left on a page it does not have */
+        {   /* on EDIT > FILTER 1, ALGORITHM to a track that is not ANALOG4: not left on a page it does not have */
             int16_t bpm0 = song.g[G_BPM];
             encs[panel.enc[EN_ALGO]] = 1; frames(2);
-            check(song.sel == 1u && trk[1].eng_req != 0u && PAGES[ui.page].fam == FAM_EDIT &&
-                  strcmp(PAGES[ui.page].title, "FILTER") && page_shown(cur_page()),
-                  "EDIT > FILTER, then a track that is not ANALOG: the page before (EDIT 2), not FILTER");
+            check(song.sel == 1u && trk[1].eng_req != ENGI_ANA4 && PAGES[ui.page].fam == FAM_EDIT &&
+                  strcmp(PAGES[ui.page].title, "FILTER 1") && page_shown(cur_page()),
+                  "EDIT > FILTER 1, then a track that is not ANALOG4: another EDIT page it has, not FILTER 1");
             encs[panel.enc[EN_SELECT]] = 1; frame();
             check(song.g[G_BPM] == bpm0, "  and SELECT turns pages there, not the tempo");
             song.sel = 0; go_home(); frame();
         }
-        set_engine_of(&trk[0], 1); trk[0].engine = trk[0].eng_req; go_home(); frame();
-        WALK(FAM_EDIT, "FILTER", flt_o);
-        check(flt_a && !flt_o, "EDIT: the FILTER page (TYPE) with ANALOG only");
+        set_engine_of(&trk[0], ENGI_FMTONE); trk[0].engine = trk[0].eng_req; go_home(); frame();
+        WALK(FAM_EDIT, "FILTER 1", flt_o);
+        {
+            int flt_f = 0;
+            WALK(FAM_EDIT, "FILTER", flt_f);
+            check(flt_a && !flt_o && flt_f, "EDIT: ANALOG4's FILTER 1 on ANALOG4 only; FMTONE's FILTER on FMTONE");
+            set_engine_of(&trk[0], ENGI_SAW); trk[0].engine = trk[0].eng_req; go_home(); frame();
+            flt_f = 0;
+            WALK(FAM_EDIT, "FILTER", flt_f);
+            check(!flt_f, "EDIT: no FILTER page on SAW (the track's FX > FILTER instead)");
+        }
         set_engine_of(&trk[0], TRK_DEF[0][0]); apply_preset_to(&trk[0], TRK_DEF[0][1]); trk[0].engine = trk[0].eng_req;
         go_home(); frames(16);
 

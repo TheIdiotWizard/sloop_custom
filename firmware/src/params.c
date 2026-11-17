@@ -64,12 +64,9 @@ static const char *const N_SLCR[] = {"OFF", "GATE", "STUT"};             /* SL_O
 static const char *const N_SLDIV[] = {"1/8", "1/16", "1/32", "8T", "16T", "32T"};   /* SL_DEN */
 static const char *const N_CHORD[] = {"OFF", "TRIAD", "7TH", "9TH", "SUS4", "POWER"};   /* seq.c CHORD_DEG */
 static const char *const N_ROLL[] = {"1/8", "1/16", "1/32", "32T", "1/64"};   /* seq.c ROLL_DEN */
-static const char *const N_ENGNAME[] = {"ANALOG", "DIGITAL", "PHASE", "LOFI", "SAMPLE", "VOICE", "TRIO", "WHEEL", "GRAIN",
-                                        "FM6", "PHYS", "NOISE",
-#if FELUCCA_SLICE
-                                             "SLICE",
-#endif
-};
+static const char *const N_ENGNAME[] = {"ANALOG4", "FMTONE", "SAW", "PULS", "ENS", "WAV", "LOFI", "VOICE", "WHEEL",
+                                        "NOISE"};   /* sloop_custom: core.h ENGI_* (engines.c ENGINES[]) */
+_Static_assert(NELEM(N_ENGNAME) == NENGINES, "an engine name per engine");
 
 #define PD(l, f, mn, mx, df) {l, f, mn, mx, df, 0, 0}
 #define PE(l, n, df) {l, F_ENUM, 0, (int16_t)(sizeof(n) / sizeof(n[0]) - 1), df, n, 0}
@@ -140,7 +137,31 @@ static const param_desc_t TP[P_COUNT] = {
     [P_LSYNC] = PE("SYNC", N_LSYNC, 0),           /* LFO 2: OFF = RATE, as before */
     [P_LTRIG] = PE("TRIG", N_LTRIG, 0),
     [P_LPOL] = PE("POL", N_LPOL, 0),
+    /* sloop_custom: the operator slots, as Felucca's / Mini-Tone's TP (each engine names them: engine_t.tdesc; its
+     * defaults are these where not bipolar: a sound load starts from them) */
+#define FMOP(k) [P_FM##k##_ATK] = PD("ATK", F_TIME, 0, 127, 0), \
+                [P_FM##k##_DEC] = PD("DEC", F_TIME, 0, 127, 0), \
+                [P_FM##k##_SUS] = PD("SUS", F_PCT, 0, 127, 127), \
+                [P_FM##k##_REL] = PD("REL", F_TIME, 0, 127, 0), \
+                [P_FM##k##_LEVEL] = PD("LVL", F_PCT, 0, 127, 127)
+    FMOP(1), FMOP(2), FMOP(3), FMOP(4),
+#undef FMOP
 };
+/* sloop_custom: the descriptor of parameter id for engine e (its range and default; not the engine's desc hook, the
+ * device display's): the operator slots as the engine names them, EDIT 1 and 2 its own, the rest TP. What the editor
+ * protocol, user presets, projects, locks and MIDI CCs use */
+static const param_desc_t *eng_pdesc(uint32_t e, uint32_t id)
+{
+    const engine_t *en = ENGINES[e % NENGINES];
+    if (id >= P_FM1_ATK && id <= P_FM4_LEVEL && en->tdesc) {
+        const param_desc_t *d = en->tdesc(id);
+        if (d)
+            return d;
+    }
+    if (id >= P_E0 && id <= P_E7)
+        return &en->edit[id - P_E0];
+    return &TP[id % P_COUNT];
+}
 /* a preset's extra parameters (preset_t.x) into p, each clamped to its range */
 static void preset_extras(int16_t *p, const preset_t *pr)
 {
@@ -240,7 +261,7 @@ static const param_desc_t *track_desc(const track_t *t, uint32_t id)
         const param_desc_t *d = e->desc ? e->desc(t, id - P_E0) : 0;   /* a mode-dependent label / names */
         return d ? d : &e->edit[id - P_E0];
     }
-    return &TP[id];
+    return eng_pdesc(t->eng_req, id);                 /* (the operator slots as the engine names them) */
 }
 
 /* a knob turned `steps` on an F_INT with a 0-terminated name list (ENV SYNC's note values, the INSERT's BITS and
@@ -391,6 +412,7 @@ typedef struct {
     const char *title;
     uint8_t fam, scope, graph;
     uint8_t id[4];               /* param ids; 0xFF = empty slot */
+    uint8_t own;                 /* sloop_custom (Mini-Tone's): 0 every engine's, n only engine n - 1's (page_shown) */
 } page_t;
 
 static const page_t PAGES[] = {
@@ -411,8 +433,20 @@ static const page_t PAGES[] = {
     {"SEL 2", FAM_SCL, SC_TRACK, GR_SCALE, {P_TRANS, P_STRUM, P_VLEAD, 0xFF}},   /* (2.4: the chords played) */
     {"EDIT 1", FAM_EDIT, SC_ENGINE, GR_NONE, {P_E0, P_E1, P_E2, P_E3}},
     {"EDIT 2", FAM_EDIT, SC_ENGINE, GR_NONE, {P_E4, P_E5, P_E6, P_E7}},
-    {"FILTER", FAM_EDIT, SC_TRACK, GR_NONE, {P_FTYPE, P_E4, P_E5, P_E7}},   /* ANALOG only (2.6, Felucca 1.5): TYPE CUT
-                                                                          * RES KTR (page_shown) */
+    /* sloop_custom: ANALOG4's own pages (Mini-Tone's, eng_ana4.c: its operator slots, P_FTYPE filter 1's TYPE) */
+    {"MIX", FAM_EDIT, SC_TRACK, GR_NONE, {P_FM1_LEVEL, P_FM2_LEVEL, P_FM3_ATK, P_FM3_DEC}, ENGI_ANA4 + 1u},
+    {"FILTER 1", FAM_EDIT, SC_TRACK, GR_NONE, {P_FTYPE, P_FM3_LEVEL, P_FM3_REL, P_FM4_ATK}, ENGI_ANA4 + 1u},
+    {"FILTER 2", FAM_EDIT, SC_TRACK, GR_NONE, {P_FM4_DEC, P_FM4_LEVEL, P_FM4_REL, 0xFF}, ENGI_ANA4 + 1u},
+    {"F1 ENV", FAM_EDIT, SC_TRACK, GR_NONE, {P_FM1_ATK, P_FM1_DEC, P_FM1_SUS, P_FM1_REL}, ENGI_ANA4 + 1u},
+    {"F1 AMT", FAM_EDIT, SC_TRACK, GR_NONE, {P_FM3_SUS, P_FM4_SUS, 0xFF, 0xFF}, ENGI_ANA4 + 1u},
+    {"ENV 2", FAM_EDIT, SC_TRACK, GR_NONE, {P_FM2_ATK, P_FM2_DEC, P_FM2_SUS, P_FM2_REL}, ENGI_ANA4 + 1u},
+    /* FMTONE's (Mini-Tone's, eng_fmtone.c): operator A's and B's envelopes, their delays and key tracking, the fine
+     * tuning, the voice filter (TYPE CUT RES KEY, P_FTYPE its TYPE) */
+    {"A ENV", FAM_EDIT, SC_TRACK, GR_NONE, {P_FM1_ATK, P_FM1_DEC, P_FM1_SUS, P_FM1_LEVEL}, ENGI_FMTONE + 1u},
+    {"B ENV", FAM_EDIT, SC_TRACK, GR_NONE, {P_FM2_ATK, P_FM2_DEC, P_FM2_SUS, P_FM2_LEVEL}, ENGI_FMTONE + 1u},
+    {"DEL TRK", FAM_EDIT, SC_TRACK, GR_NONE, {P_FM1_REL, P_FM2_REL, P_FM3_ATK, P_FM3_DEC}, ENGI_FMTONE + 1u},
+    {"FINE", FAM_EDIT, SC_TRACK, GR_NONE, {P_FM3_REL, P_FM4_ATK, P_FM4_DEC, 0xFF}, ENGI_FMTONE + 1u},
+    {"FILTER", FAM_EDIT, SC_TRACK, GR_NONE, {P_FTYPE, P_FM4_SUS, P_FM4_REL, P_FM4_LEVEL}, ENGI_FMTONE + 1u},
     {"VOICE", FAM_EDIT, SC_TRACK, GR_NONE, {P_VOICE, P_GLIDE, P_GLMODE, P_PRIO}},
     {"VOICE 2", FAM_EDIT, SC_TRACK, GR_NONE, {P_ALLOC, P_DETUNE, P_PAN, P_MUTE}},
     {"GLOBAL", FAM_GLO, SC_GLOBAL, GR_NONE, {G_BPM, G_SWING, G_CLOCK, G_TUNE}},
@@ -455,10 +489,10 @@ static int page_for_drum(const page_t *pg)
                                                        * track's filter: the drums have it since 2.4, the page was
                                                        * greyed "DRUM TRACK") */
 }
-/* a page the buttons and SELECT reach on the selected track: EDIT > FILTER (TYPE) on ANALOG only */
+/* a page the buttons and SELECT reach on the selected track: an engine's own pages (ANALOG4's, FMTONE's) on it only */
 static int page_shown(const page_t *pg)
 {
-    return pg->id[0] != P_FTYPE || (!is_drum(TSEL) && TSEL->eng_req % NENGINES == 0u);
+    return !pg->own || (!is_drum(TSEL) && TSEL->eng_req % NENGINES == pg->own - 1u);
 }
 
 static const param_desc_t *page_desc(const page_t *pg, uint32_t slot, int16_t **valp)

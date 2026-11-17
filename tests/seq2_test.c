@@ -1588,7 +1588,7 @@ static void t_plock(void)
     uint32_t i, bpb = (uint32_t)((double)FS * 60.0 / 120.0 / CTL + 0.5), ok1, ok2, ok3, ok4;
     int16_t at2, at3, dist0;
     reset(120);
-    host_preset(t, 0, 7);                             /* ANALOG TRAP PLUCK: P_E0 = WAVE (0..4) */
+    host_preset(t, ENGI_LOFI, 7);                     /* (sloop_custom) LOFI CHIP NOISE: P_E0 = CHIP (0..4) */
     for (i = 0; i < 16u; i++)
         put_step(t, i, 1, (const uint8_t[]){60}, ST_NOTE, 0);
     t->p[P_E0] = 3;
@@ -1616,7 +1616,7 @@ static void t_plock(void)
     ok4 = lock_set(t, 5, P_E0, 99) && t->lock[lock_find(t, 5, P_E0, 0)].val == 4;
     lock_del(t, 2, P_COUNT);
     check(ok4 && lock_find(t, 2, P_E0, 0) < 0 && lock_find(t, 2, P_DIST, 0) < 0 && lock_find(t, 5, P_E0, 0) >= 0,
-          "2.4: a lock's value is clamped (WAVE 99 -> 4); lock_del clears a step's locks");
+          "2.4: a lock's value is clamped (CHIP 99 -> 4); lock_del clears a step's locks");
     steps_clear(t);
     for (i = 0, ok4 = 1; i < NLOCK; i++) ok4 &= t->lock[i].step == LOCK_FREE;
     check(ok4 && !step_locked(t, 5), "2.4: steps_clear frees every lock and nudge");
@@ -1931,31 +1931,31 @@ static void t_midicc(void)
     mi_r = mi_w;
     song.g[G_ROUTE] = 0;
     a = &trk[0]; b = &trk[1];
-    a->eng_req = a->engine = 0;                         /* ANALOG: has RES */
-    b->eng_req = b->engine = 1;                         /* DIGITAL: none */
+    a->eng_req = a->engine = ENGI_NOISE;                /* (sloop_custom) NOISE: FREQ (EDIT 3) and RES */
+    b->eng_req = b->engine = ENGI_FMTONE;               /* FMTONE: neither an EDIT knob */
     for (i = 0; i < 8u; i++)
-        if (str_eq(ENGINES[0]->edit[i].label, "RES"))
+        if (str_eq(ENGINES[ENGI_NOISE]->edit[i].label, "RES"))
             res = i;
     cc_push(0, 7, 0); cc_push(0, 10, 127); cc_push(0, 74, 64); cc_push(0, 72, 127); cc_push(0, 73, 0);
     cc_push(0, 75, 64); cc_push(0, 5, 127); cc_push(0, 91, 127); cc_push(0, 93, 64); cc_push(0, 94, 1);
     run_block(); run_block();
-    check(a->p[P_LEVEL] == 0 && a->p[P_PAN] == 63 && a->p[P_TFLT] == 0 && a->p[P_E0 + 4] == 64 && a->p[P_REL] == 127 &&
+    check(a->p[P_LEVEL] == 0 && a->p[P_PAN] == 63 && a->p[P_TFLT] == 0 && a->p[P_E0 + 2] == 64 && a->p[P_REL] == 127 &&
           a->p[P_ATK] == 0 && a->p[P_DEC] == 64 && a->p[P_GLIDE] == 127 && a->p[P_REV] == 127 && a->p[P_CHOR] == 64 &&
           a->p[P_DLY] == 1,
-          "CC 7 10 74 72 73 75 5 91 93 94 on ch 1 set track 1 (2.7: 74 = ANALOG's CUT, the FILTER untouched)");
+          "CC 7 10 74 72 73 75 5 91 93 94 on ch 1 set track 1 (2.7: 74 = NOISE's FREQ, the FILTER untouched)");
     cc_push(0, 10, 0); cc_push(0, 74, 0); cc_push(0, 7, 127);
     run_block(); run_block();
-    check(a->p[P_PAN] == -64 && a->p[P_E0 + 4] == ENGINES[0]->edit[4].min && a->p[P_TFLT] == 0 && a->p[P_LEVEL] == 127,
+    check(a->p[P_PAN] == -64 && a->p[P_E0 + 2] == ENGINES[ENGI_NOISE]->edit[2].min && a->p[P_TFLT] == 0 && a->p[P_LEVEL] == 127,
           "2.5: CC 0 / 127: the ends of the range");
-    cc_push(1, 74, 0);                                  /* (2.7) DIGITAL has no cutoff: the track FILTER, as before */
+    cc_push(1, 74, 0);                                  /* (2.7) FMTONE has no cutoff knob: the track FILTER, as before */
     run_block(); run_block();
-    check(b->p[P_TFLT] == -64 && !strcmp(ENGINES[0]->edit[4].label, "CUT"),
-          "CC 74 (2.7, after PR #71): the engine's cutoff (ANALOG CUT); an engine without one (DIGITAL): the FILTER");
+    check(b->p[P_TFLT] == -64 && !strcmp(ENGINES[ENGI_NOISE]->edit[2].label, "FREQ"),
+          "CC 74 (2.7, after PR #71): the engine's cutoff (NOISE FREQ); an engine without one (FMTONE): the FILTER");
     cc_push(1, 74, 64);
     run_block(); run_block();
     cc_push(0, 71, 127);
     for (i = 0; i < P_COUNT; i++) before[i] = b->p[i];
-    cc_push(1, 71, 127); cc_push(1, 1, 99); cc_push(1, 64, 127);   /* DIGITAL has no RES; mod wheel, sustain: not mapped */
+    cc_push(1, 71, 127); cc_push(1, 1, 99); cc_push(1, 64, 127);   /* FMTONE has no RES knob; mod wheel, sustain: not mapped */
     run_block(); run_block();
     for (i = 0; i < P_COUNT; i++) same &= b->p[i] == before[i];
     check(res < 8u && a->p[P_E0 + res] == 127 && same, "2.5: CC71 = the engine's RES; an engine without one, and unmapped CCs, change nothing");
@@ -1978,7 +1978,10 @@ static void t_midicc(void)
         int32_t o[CTL * 2], pk[3] = {0, 0, 0};
         uint32_t ph, j, lv = song.g[G_DRLVL];
         a->p[P_LEVEL] = 100, a->p[P_ATK] = 0, a->p[P_SUS] = 127, a->p[P_MUTE] = 0;
-        a->p[P_E0 + 4] = ENGINES[0]->edit[4].max, a->p[P_TFLT] = 0, a->p[P_REV] = a->p[P_DLY] = a->p[P_CHOR] = 0;   /* (CUT open)*/
+        a->eng_req = a->engine = ENGI_ANA4;               /* (sloop_custom: a steady tone, ANALOG4 at its defaults: the */
+        for (j = 0; j < 8u; j++)                          /* saws through open filters; NOISE, used above, is noise) */
+            a->p[P_E0 + j] = ENGINES[ENGI_ANA4]->edit[j].def;
+        a->p[P_TFLT] = 0, a->p[P_REV] = a->p[P_DLY] = a->p[P_CHOR] = 0;
         mclk_push(0x09u | 0x90u << 8 | 60u << 16 | 100u << 24);   /* ch 1: a held C4 */
         for (j = 0; j < 60u; j++) run_block();
         for (ph = 0; ph < 3u; ph++) {

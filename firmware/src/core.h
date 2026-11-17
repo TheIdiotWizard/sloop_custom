@@ -14,18 +14,28 @@
 enum { V_POLY, V_MONO, V_LEGATO, V_UNISON };   /* P_VOICE */
 #define NSTEP 64
 #define HALF_FRAMES 256          /* I2S half buffer: 5.8 ms at 44.1 kHz */
-#ifndef FELUCCA_SLICE
-#define FELUCCA_SLICE 0          /* the SLICE engine (eng_slice.c): kept in the tree, not built by default */
-#endif
-/* SLOOP 2.4: FM6 (eng_fm6.c) is engine 9 in every build; SLICE, when built, comes last (10). Projects and user
- * presets store the engine index as a byte, and no shipped SLOOP was built with SLICE, so its number is stored
- * nowhere: FM6 may take 9 and SLICE moves up (engines.c ENGINES[], params.c N_ENGNAME follow this order) */
-#define NENGINES (12 + FELUCCA_SLICE)
-#define ENGI_GRAIN 8u            /* GRAIN, PHYS, NOISE (SLOOP 2.5, appended after FM6: the stores keep the numbers) */
-#define ENGI_PHYS 10u
-#define ENGI_NOISE 11u
-#define ENGI_SLICE 12u           /* with FELUCCA_SLICE: after NOISE */
-#define ENGI_FM6 9u              /* the FM6 engine's index (eng_fm6.c, the stores: append-only) */
+#undef FELUCCA_SLICE
+#define FELUCCA_SLICE 0          /* the SLICE engine (eng_slice.c): retired in sloop_custom (not in ENGINES[]) */
+/* sloop_custom: the engines, in this order (engines.c ENGINES[], params.c N_ENGNAME): Mini-Tone's ANALOG4 and FMTONE
+ * (eng_ana4.c, eng_fmtone.c), MONO2K's SAW PULS ENS WAV as Melodee Custom ported them (eng_m2k.c), then SLOOP's LOFI,
+ * VOICE (eng_formant.c), DRAWBAR and NOISE. A clean slate: the stores of SLOOP itself are not read (project.c FUN7,
+ * upreset.c UP_VER). The retired engines' code that other parts still need (eng_sample.c: the drum kits' samples, the
+ * user sample slots; eng_fm6.c: compiled, never played) stays; their indices are past NENGINES, which no track holds. */
+#define NENGINES 10u
+#define ENGI_ANA4 0u
+#define ENGI_FMTONE 1u
+#define ENGI_SAW 2u              /* SAW PULS ENS WAV: 2..5 (eng_m2k.c m2k_kind) */
+#define ENGI_PULS 3u
+#define ENGI_ENS 4u
+#define ENGI_WAV 5u
+#define ENGI_LOFI 6u
+#define ENGI_FORMANT 7u
+#define ENGI_DRAWBAR 8u
+#define ENGI_NOISE 9u
+#define ENGI_FM6 0xF0u           /* (retired: no track's engine; eng_fm6.c is compiled for the editor's FM6 bank only) */
+#define ENGI_GRAIN 0xF1u
+#define ENGI_PHYS 0xF2u
+#define ENGI_SLICE 0xF3u
 #define UP_SLOTS 32u             /* user presets (upreset.c) */
 #define NELEM(a) (sizeof(a) / sizeof((a)[0]))
 
@@ -70,6 +80,12 @@ enum {                          /* per-track parameters */
     P_FTYPE,                                   /* ANALOG's filter TYPE: LP (as before) / BP / HP (eng_analog.c) */
     P_ESYNC,                                   /* ENV SYNC: ATK DEC REL as note values of the tempo (voice.c) */
     P_LSYNC, P_LTRIG, P_LPOL,                  /* LFO 2: SYNC to the tempo, TRIG (NOTE / FREE), POL (BI / UNI) (voice.c) */
+    /* sloop_custom: the 20 operator slots of Felucca / Mini-Tone (their ids there too): ANALOG4's and FMTONE's
+     * parameters past EDIT 1 and 2, named by the engine (engine_t.tdesc), on its own pages (params.c page_t.own) */
+    P_FM1_ATK, P_FM1_DEC, P_FM1_SUS, P_FM1_REL, P_FM1_LEVEL,
+    P_FM2_ATK, P_FM2_DEC, P_FM2_SUS, P_FM2_REL, P_FM2_LEVEL,
+    P_FM3_ATK, P_FM3_DEC, P_FM3_SUS, P_FM3_REL, P_FM3_LEVEL,
+    P_FM4_ATK, P_FM4_DEC, P_FM4_SUS, P_FM4_REL, P_FM4_LEVEL,
     P_E0, P_E1, P_E2, P_E3, P_E4, P_E5, P_E6, P_E7,
     P_COUNT
 };
@@ -182,6 +198,13 @@ typedef struct {
      * per control tick, before the render), not at the end of the ADSR's release */
     uint8_t ownenv;
     int (*done)(struct track *t, voice_t *v);
+    /* sloop_custom (after Mini-Tone and Melodee Custom), all optional: */
+    const param_desc_t *(*tdesc)(uint32_t id);   /* the operator slots P_FM1_ATK .. P_FM4_LEVEL as the engine names
+                                                  * them (0: not the engine's) */
+    void (*loaded)(struct track *t);             /* a factory preset just loaded: the slots it sets (ui.c apply_preset_to) */
+    uint8_t keep;                /* bit k: s[k] kept when a sounding voice is retriggered (voice.c voice_start) */
+    /* the part's block after its voices (ENS's chorus): out the part's sum, nr the voices rendered */
+    void (*post)(struct track *t, int32_t *out, uint32_t n, uint32_t nr);
 } engine_t;
 
 /* ------------------------------------------------------------ track --- */

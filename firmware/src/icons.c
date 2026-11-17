@@ -103,8 +103,6 @@ UI_SMALL static uint32_t param_icon(const param_desc_t *d, int32_t v)
         return ICON_LFO_WAVE;                 /* "WAVE" is also the oscillator wave */
     if (d == &TP[P_ARATE] || d == &TP[P_SLRATE])
         return ICON_DIVISION;                 /* arp / SLICER RATE is a note division, not Hz */
-    if (d->names == N_TRIO_MODE)
-        return ICON_CUTOFF;                   /* TRIO's MODE is the filter type, not the arp mode */
 #if FELUCCA_SLICE
     if (d->names == N_SLC_DIV)
         return ICON_SLICE;                    /* SLICE: DIV is the slicing, MODE the gate, REV the direction */
@@ -120,10 +118,9 @@ UI_SMALL static uint32_t param_icon(const param_desc_t *d, int32_t v)
 UI_SMALL static uint32_t engine_icon(const char *name)
 {
     static const icon_map_t M[] = {
-        {"ANALOG", ICON_WAVE}, {"DIGITAL", ICON_ALGORITHM}, {"PHASE", ICON_PHASE}, {"LOFI", ICON_BITS},
-        {"SAMPLE", ICON_SAMPLE}, {"VOICE", ICON_MOUTH}, {"TRIO", ICON_TRIO}, {"WHEEL", ICON_DRAWBAR},
-        {"SLICE", ICON_SLICE},
-        {"GRAIN", ICON_GRAIN},
+        {"ANALOG4", ICON_TRIO}, {"FMTONE", ICON_ALGORITHM}, {"SAW", ICON_W_SAW}, {"PULS", ICON_PULSE},
+        {"ENS", ICON_CHORUS}, {"WAV", ICON_WAVE}, {"LOFI", ICON_BITS}, {"VOICE", ICON_MOUTH},
+        {"WHEEL", ICON_DRAWBAR}, {"NOISE", ICON_NOISE},   /* (sloop_custom's engines) */
         {"DRUM", ICON_DRUM},
     };
     uint32_t i;

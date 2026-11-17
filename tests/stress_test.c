@@ -166,7 +166,7 @@ static void t_fuzz(uint32_t nframes)
     song.sel = 0; go_home(); ui.force = 1;
     song.g[G_BPM] = 140;
     for (k = 0; k < NPART; k++) {
-        host_preset_req(&trk[k], ENGI_FM6, rn(ENGINES[ENGI_FM6]->npresets));
+        host_preset_req(&trk[k], ENGI_FMTONE, rn(ENGINES[ENGI_FMTONE]->npresets));
         chord_steps(k);
         trk[k].p[P_CHORD] = 3;
         trk[k].p[P_STRUM] = 30;
@@ -199,7 +199,7 @@ static void t_fuzz(uint32_t nframes)
         } else if (r < 54) {
             trk[rn(NPART)].p[P_CHORD] = (int16_t)rn(6);
         } else if (r < 55) {
-            uint32_t t = rn(NPART), e = rn(3) ? ENGI_FM6 : rn(NENGINES);
+            uint32_t t = rn(NPART), e = rn(3) ? ENGI_FMTONE : rn(NENGINES);
             host_preset_req(&trk[t], e, rn(ENGINES[e]->npresets));
         } else if (r < 56) {
             trk[rn(NTRK)].p[P_SDIV] = (int16_t)rn(NDIV_STEP);
@@ -348,7 +348,7 @@ static void t_bench(void)
     double off, on, home, v[VIS_N], a = 0, b = 0;
     uint32_t s, i;
     static const char *const TXT[] = {"120.0", "-64", "FILTER", "SLOOP", "C#m7", "2BAR"};
-    for (i = 0; i < NPART; i++) host_preset(&trk[i], ENGI_FM6, i);
+    for (i = 0; i < NPART; i++) host_preset(&trk[i], ENGI_FMTONE, i);
     off = bench_blocks(0, 6000);
     on = bench_blocks(1, 6000);
     printf("bench: worst case (3 FM6 parts, 4-note chords x2 ratchets, 1/16 at 240 BPM): %.2f us a block without "

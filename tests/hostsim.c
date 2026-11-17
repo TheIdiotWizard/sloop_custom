@@ -85,6 +85,9 @@ static void host_tracks_init(void)                /* as felucca_init: defaults, 
     for (k = 0; k < NTRK; k++) {
         for (i = 0; i < P_E0; i++)
             trk[k].p[i] = TP[i].def;
+        if (k < NPART)                             /* (sloop_custom) the engine's EDIT defaults, as set_engine_of: zeros */
+            for (i = 0; i < 8u; i++)               /* were ANALOG's saw, they are ANALOG4's sine */
+                trk[k].p[P_E0 + i] = ENGINES[trk[k].engine % NENGINES]->edit[i].def;
         steps_clear(&trk[k]);
     }
     song.master_q12 = 4096;
@@ -114,6 +117,8 @@ static void host_preset_req(track_t *t, uint32_t e, uint32_t pi)
     }
     preset_extras(t->p, p);
     fm6_track_loaded(t);                          /* FM6: the preset's patch (ui.c apply_preset_to) */
+    if (ENGINES[e]->loaded)                       /* sloop_custom: the operator slots (ANALOG4, FMTONE) */
+        ENGINES[e]->loaded(t);
 }
 static void host_preset(track_t *t, uint32_t e, uint32_t pi)
 {
@@ -182,9 +187,9 @@ static int tracks_demo(const char *dir, const char *name, uint32_t solo)
     }
     host_tracks_init();
     song.g[G_BPM] = 120;
-    host_preset(t1, 0, 4);
-    host_preset(t2, 1, 5);
-    host_preset(t3, 3, 0);
+    host_preset(t1, ENGI_ANA4, 4);                  /* (sloop_custom) ANALOG4 WARM PAD, FMTONE TINE EP (POLY: the keys' */
+    host_preset(t2, ENGI_FMTONE, 0);                /* chord), LOFI GAME LEAD (the lead, as before) */
+    host_preset(t3, ENGI_LOFI, 0);
     for (i = 0; i < 16u; i++) {
         uint8_t n = ACID[i];
         put_step(t1, i, n ? 1u : 0u, &n, n ? ST_NOTE : ST_REST, ACIDF[i]);
@@ -353,13 +358,14 @@ static double tracks_cost(const uint8_t parts[NPART][3], uint32_t *busy_max)
  * voices of part 1 (and part 2). Each taken voice fades over one block. Compares the largest sample
  * step around each take with the largest one in the 0.25 s before it; a hard cut would be several
  * times larger. Writes DIR/steal.wav. */
+static void xfade_sine(track_t *t);   /* (below: the plain held sine) */
 static int steal_test(const char *dir)
 {
     static const uint8_t N1[7] = {48, 52, 55, 59, 62, 65, 69};
     const uint32_t frames = 4u * FS;
     char path[512];
     FILE *w;
-    int32_t prev = 0, *L = calloc(frames, sizeof *L);
+    int32_t prev = 0, *L = calloc(frames + CTL, sizeof *L)   /* (+ CTL: the last block's samples past frames) */;
     uint32_t f, i, p, k, events[6], nev = 0, bad = 0, kills0;
     double worst = 0;
     snprintf(path, sizeof path, "%s/steal.wav", dir);
@@ -368,15 +374,8 @@ static int steal_test(const char *dir)
     host_tracks_init();
     for (p = 0; p < NPART; p++) {
         track_t *t = &trk[p];
-        host_preset(t, 0, 5);                      /* ANALOG SINE KEY, as a plain held sine: */
-        t->p[P_E4] = 127;                          /* filter open, no resonance, no drive */
-        t->p[P_E5] = t->p[P_E6] = 0;
-        t->p[P_ED_FLT] = 0;
-        t->p[P_ATK] = 40;                          /* slow attack, full sustain, no sends */
-        t->p[P_SUS] = 127;
-        t->p[P_DIST] = t->p[P_CHOR] = t->p[P_DLY] = t->p[P_REV] = 0;
-        t->p[P_VOICE] = V_POLY;
-        t->p[P_LEVEL] = 90;
+        xfade_sine(t);                             /* (sloop_custom: ANALOG's SINE KEY before) a plain held sine: */
+        t->p[P_LEVEL] = 90;                        /* slow attack, full sustain, no sends (WHEEL FLUTE) */
     }
     kills0 = voice_kills;
     wav_hdr(w, frames);
@@ -431,12 +430,11 @@ static int steal_test(const char *dir)
  * Writes DIR/engine_switch.wav. */
 static void xfade_sine(track_t *t)
 {
-    host_preset(t, 0, 5);                          /* ANALOG, as a plain held sine */
-    t->p[P_E0] = 3;                                /* (SIN, whichever preset that is) */
-    t->p[P_E1] = t->p[P_E2] = t->p[P_E3] = 0;
+    host_preset(t, ENGI_DRAWBAR, 0);               /* (sloop_custom: ANALOG is gone) WHEEL, as a plain held sine: */
+    t->p[P_E0] = 0;                                /* FLUTE (the 8' bar alone), no SUB / BODY / TOP, no PERC, CLICK, */
+    t->p[P_E1] = t->p[P_E2] = t->p[P_E3] = 0;     /* DRV or rotor; every voice of the budget (no engine cap) */
+    t->p[P_E4] = t->p[P_E5] = t->p[P_E6] = t->p[P_E7] = 0;
     t->p[P_ED_FX] = 0;
-    t->p[P_E4] = 127;
-    t->p[P_E5] = t->p[P_E6] = 0;
     t->p[P_ED_FLT] = 0;
     t->p[P_ATK] = 40;
     t->p[P_SUS] = 127;
@@ -455,7 +453,7 @@ static int xfade_test(const char *dir)
     const uint8_t to[4] = {1, 2, 3, 4};
     char path[512];
     FILE *w;
-    int32_t *L = calloc(frames, sizeof *L);
+    int32_t *L = calloc(frames + CTL, sizeof *L)   /* (+ CTL: the last block's samples past frames) */;
     uint32_t f, i, k, bad = 0, late_ok = 0;
     double worst = 0;
     track_t *t = &trk[0];
@@ -506,7 +504,7 @@ static int xfade_test(const char *dir)
         for (i = sw[k]; i < sw[k] + FS / 100u; i++)
             at = abs(L[i] - L[i - 1]) > at ? abs(L[i] - L[i - 1]) : at;
         printf("tracks: engine switch %s -> %s (%s): largest sample step %d in the 10 ms after, %d in the 0.1 s "
-               "before (%.2f x)\n", ENGINES[0]->name, ENGINES[to[k]]->name, k ? "chord held" : "release tail", at,
+               "before (%.2f x)\n", ENGINES[ENGI_DRAWBAR]->name, ENGINES[to[k]]->name, k ? "chord held" : "release tail", at,
                calm, (double)at / calm);
         worst = (double)at / calm > worst ? (double)at / calm : worst;
         bad += at > calm * 3 / 2;
@@ -541,9 +539,9 @@ static int rec_test(void)
     int ok_len, ok_short, ok_half, ok_cap, ok_swing, ok_mono, ok_chord, fail;
     host_tracks_init();
     song.g[G_BPM] = 120;
-    host_preset(t1, 0, 1);                          /* POLY pad */
-    host_preset(t2, 0, 1);
-    host_preset(t3, 0, 0);                          /* SAW LEAD */
+    host_preset(t1, ENGI_ANA4, 4);                  /* POLY pad (sloop_custom: ANALOG4 WARM PAD) */
+    host_preset(t2, ENGI_ANA4, 4);
+    host_preset(t3, ENGI_ANA4, 1);                  /* a lead (ANALOG4 PWM LEAD) */
     t1->p[P_VOICE] = t2->p[P_VOICE] = V_POLY;
     t3->p[P_VOICE] = V_MONO;
     t2->p[P_SLEN] = 4;
@@ -761,10 +759,11 @@ static int tracks_test(const char *dir)
     printf("tracks: one part, 8 notes held + drums (host -O2, ns per sample, heaviest preset per engine):");
     for (e = 0; e < NENGINES; e++)
         printf(" %s %s %.1f%s", ENGINES[e]->name, ENGINES[e]->presets[heavy[e]].name, best_e[e], e + 1u < NENGINES ? "," : "\n");
-    {   /* DIGITAL, PHASE, VOICE (their heaviest presets) at once: 3 + 3 + 2 notes = the budget of 8 */
-        uint8_t parts[NPART][3] = {{1, (uint8_t)heavy[1], 3}, {2, (uint8_t)heavy[2], 3}, {5, (uint8_t)heavy[5], 2}};
-        uint8_t full[NPART][3] = {{1, (uint8_t)heavy[1], 8}, {2, (uint8_t)heavy[2], 8}, {5, (uint8_t)heavy[5], 4}};
-        uint8_t vv[NPART][3] = {{5, (uint8_t)heavy[5], 4}, {5, (uint8_t)heavy[5], 4}, {0, 0, 0}};
+    {   /* (sloop_custom) FMTONE, ANALOG4, VOICE (their heaviest presets) at once: 3 + 3 + 2 notes = the budget of 8 */
+        enum { EA = ENGI_FMTONE, EB = ENGI_ANA4, EV = ENGI_FORMANT };
+        uint8_t parts[NPART][3] = {{EA, (uint8_t)heavy[EA], 3}, {EB, (uint8_t)heavy[EB], 3}, {EV, (uint8_t)heavy[EV], 2}};
+        uint8_t full[NPART][3] = {{EA, (uint8_t)heavy[EA], 8}, {EB, (uint8_t)heavy[EB], 8}, {EV, (uint8_t)heavy[EV], 4}};
+        uint8_t vv[NPART][3] = {{EV, (uint8_t)heavy[EV], 4}, {EV, (uint8_t)heavy[EV], 4}, {0, 0, 0}};
         uint8_t idle[NPART][3] = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
         uint32_t bm2 = 0, bm3 = 0;
         double two_voice, none;
@@ -773,7 +772,7 @@ static int tracks_test(const char *dir)
         two_voice = tracks_cost(vv, &bm3);
         none = tracks_cost(idle, 0);
         printf("tracks: worst single part: %s %s %.1f ns\n", ENGINES[worst_e]->name, ENGINES[worst_e]->presets[worst_p].name, worst);
-        printf("tracks: DIGITAL + PHASE + VOICE + drums, 3 + 3 + 2 notes: %.1f ns (%.2f x the worst single part), "
+        printf("tracks: FMTONE + ANALOG4 + VOICE + drums, 3 + 3 + 2 notes: %.1f ns (%.2f x the worst single part), "
                "%u voices\n", four, four / worst, bm);
         printf("tracks: the same, 8 + 8 + 4 notes asked for (budget keeps %u): %.1f ns (%.2f x)\n", bm2, four_full,
                four_full / worst);
@@ -810,6 +809,9 @@ int main(int argc, char **argv)
         preset_extras(inst.p, p);
     }
     fm6_track_loaded(&inst);                            /* FM6: the preset's patch */
+    inst.preset = (uint8_t)(ENGINES[eng]->npresets ? preset % ENGINES[eng]->npresets : 0);
+    if (ENGINES[eng]->loaded)                           /* sloop_custom: the operator slots (ANALOG4, FMTONE) */
+        ENGINES[eng]->loaded(&inst);
     inst.p[P_VOICE] = (int16_t)mono;
     inst.p[P_CHOR] = argc > 5 ? atoi(argv[5]) : 24;      /* as felucca_init */
     inst.p[P_DLY] = argc > 5 ? atoi(argv[5]) : 28;

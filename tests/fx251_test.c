@@ -2,7 +2,7 @@
 /* SLOOP 2.6, after Felucca 1.4 / 1.5 (Leo Kuroshita): the sound side of what came from there.
  *   insert   each INSERT type changes a part and stays bounded; TYPE OFF and MIX 0 leave it bit for bit; TYPE OFF
  *            again: dry once its fade ran; the drum track's INSERT works on its left, right and sends
- *   filter   ANALOG's TYPE: LP keeps the lows, HP the highs, BP the middle
+ *   filter   ANALOG4's FILTER 1 TYPE (sloop_custom; ANALOG's before): LP keeps the lows, HP the highs, BP the middle
  *   esync    ENV SYNC: ATK as a note value of the tempo (a quarter at 120 BPM: 0.5 s; at 60: 1 s)
  *   lfo 2    SYNC: a cycle a note value; TRIG FREE: a new phrase does not restart it; POL UNI: 0..+1
  *   mutes    the drum track's live mutes: the sequencer skips a muted sound (and its ratchets), the others play
@@ -77,7 +77,8 @@ static double tonew(uint32_t a, uint32_t b, double hz)
     }
     return s1 * s1 + s2 * s2 - c * s1 * s2;
 }
-/* a clean start: the defaults, the INSERT states at rest, track 1 an ANALOG saw (no filter, no drive), nothing else */
+/* a clean start: the defaults, the INSERT states at rest, the sends' lines empty, track 1 an ANALOG4 saw (sloop_custom;
+ * ANALOG's before: one oscillator, both filters open, no envelope on them, no key tracking, no drive), nothing else */
 static void setup(void)
 {
     uint32_t i;
@@ -89,13 +90,19 @@ static void setup(void)
         trk[i].p[P_REV] = trk[i].p[P_CHOR] = trk[i].p[P_DLY] = 0;
         trk[i].p[P_LEVEL] = 100;
     }
-    host_preset(&trk[0], 0, 0);
-    trk[0].p[P_E0] = 0, trk[0].p[P_E1] = 0, trk[0].p[P_E2] = 0, trk[0].p[P_E3] = 0;   /* SAW, one oscillator */
-    trk[0].p[P_E4] = 127, trk[0].p[P_E5] = 0, trk[0].p[P_E6] = 0, trk[0].p[P_E7] = 0;  /* open, no RES, DRV, KTR */
+    host_preset(&trk[0], ENGI_ANA4, 0);
+    trk[0].p[P_E0] = 2, trk[0].p[P_E1] = 64, trk[0].p[P_E2] = 0, trk[0].p[P_E3] = 0;   /* SAW, no SUB */
+    trk[0].p[P_E4] = 2, trk[0].p[P_E5] = 64, trk[0].p[P_E6] = 0, trk[0].p[P_E7] = 0;
+    trk[0].p[P_FM2_LEVEL] = 0, trk[0].p[P_FM1_LEVEL] = 127, trk[0].p[P_FM3_ATK] = 0, trk[0].p[P_FM3_DEC] = 0;   /* osc 1 alone */
+    trk[0].p[P_FM3_LEVEL] = 127, trk[0].p[P_FM3_REL] = 0, trk[0].p[P_FM3_SUS] = 0, trk[0].p[P_FM4_ATK] = 0;   /* filter 1 open, */
+    trk[0].p[P_FM4_DEC] = 0, trk[0].p[P_FM4_LEVEL] = 127, trk[0].p[P_FM4_REL] = 0, trk[0].p[P_FM4_SUS] = 0;   /* no F1EN, DRV; */
+    trk[0].p[P_FM2_REL] = 0, trk[0].p[P_FTYPE] = 0;     /* filter 2 open LP in series, no KEY, no ENV 2 */
     trk[0].p[P_ATK] = 0, trk[0].p[P_DEC] = 0, trk[0].p[P_SUS] = 127, trk[0].p[P_REL] = 0;
     trk[0].p[P_ED_FLT] = trk[0].p[P_ED_PIT] = trk[0].p[P_ED_SHP] = 0;
     trk[0].p[P_LD_PIT] = trk[0].p[P_LD_FLT] = trk[0].p[P_LD_SHP] = trk[0].p[P_LD_AMP] = 0;
     trk[0].p[P_VOICE] = V_POLY, trk[0].p[P_GLIDE] = 0, trk[0].p[P_DIST] = 0, trk[0].p[P_TRANS] = 0;
+    trk[0].p[P_REV] = trk[0].p[P_CHOR] = trk[0].p[P_DLY] = 0;   /* (sloop_custom: the preset's sends off again: ANALOG4
+                                                         * SAW BASS has DLY and REV, ANALOG's 808 BOOM had none) */
     trk[0].p[P_ED_FX] = 0;
     for (i = 0; i < NVOICE; i++)
         trk[0].v[i].active = 0;
@@ -103,6 +110,9 @@ static void setup(void)
     song.master_q12 = 2048;
     texture_reset(0);                                   /* (GLO > TEXTURE off, at rest) */
     memset(&lim_dac, 0, sizeof lim_dac);                /* (the master's one-block delay: nothing of the last render) */
+    memset(dly_buf, 0, sizeof dly_buf), memset(cho_buf, 0, sizeof cho_buf);   /* (sloop_custom: no tail of the tests before */
+    memset(rev_line, 0, sizeof rev_line), memset(rev_ap, 0, sizeof rev_ap);   /* rings on in the sends or the output's DC */
+    memset(&uo, 0, sizeof uo);                                                /* blocker: the checks measure small levels) */
     lim_dac.env = LIM_T, lim_dac.g = 32768, lim_dac.hold = 0;
     tx.g = 0;
     song.g[G_TXSRC] = 0;
@@ -177,10 +187,10 @@ static void t_filter(void)
     uint32_t a = 200u * CTL, b = 600u * CTL, ty, k;
     for (ty = 0; ty < 3u; ty++) {
         setup();
-        trk[0].p[P_E4] = 127;
+        trk[0].p[P_FM3_LEVEL] = 127;                  /* (ANALOG4's CUT1) */
         trk_note_on(&trk[0], 33, 100);                /* A1 (55 Hz): a saw, every harmonic */
         fork_dry(600);
-        trk[0].p[P_E4] = 64, trk[0].p[P_FTYPE] = (int16_t)ty;   /* cutoff ~ 650 Hz; LP BP HP */
+        trk[0].p[P_FM3_LEVEL] = 64, trk[0].p[P_FTYPE] = (int16_t)ty;   /* cutoff ~ 650 Hz; LP BP HP */
         render(600);
         for (k = 0; k < 3u; k++)
             g[ty][k] = 10 * log10(tonew(a, b, HZ[k]));
@@ -193,8 +203,8 @@ static void t_filter(void)
     }
     /* two poles: 12 dB an octave (LP, HP), 6 on each side (BP); 3.3 kHz is 2.3 octaves over the cutoff, 55 Hz 3.6 under */
     check(g[0][2] < -20 && g[2][0] < -30 && g[2][2] > -3,
-          "ANALOG filter TYPE: LP keeps the lows (3.3 kHz 20 dB down), HP the highs (55 Hz 30 dB down)");
-    check(g[1][1] > g[1][0] + 12 && g[1][1] > g[1][2] + 6, "ANALOG filter TYPE BP: the middle over both ends");
+          "ANALOG4 filter 1 TYPE: LP keeps the lows (3.3 kHz 20 dB down), HP the highs (55 Hz 30 dB down)");
+    check(g[1][1] > g[1][0] + 12 && g[1][1] > g[1][2] + 6, "ANALOG4 filter 1 TYPE BP: the middle over both ends");
     check(g[0][0] > -1.5 && g[0][0] < 1.5, "  (LP below its cutoff: as the open filter, within 1.5 dB)");
 }
 
@@ -309,7 +319,7 @@ static void t_learn(void)
     mi_r = mi_w;
     song.g[G_ROUTE] = 0;
     ml_tab[0] = (uint16_t)(20u | 1u << 7 | (P_DIST + 1u) << 9);   /* CC 20 -> track 2 DST */
-    ml_tab[1] = (uint16_t)(74u | 0u << 7 | (ML_E0 + 4u) << 9);    /* CC 74 -> track 1 E5 (ANALOG CUT) */
+    ml_tab[1] = (uint16_t)(74u | 0u << 7 | (ML_E0 + 4u) << 9);    /* CC 74 -> track 1 E5 (ANALOG4's WAV2) */
     trk[1].p[P_DIST] = 0;
     cc_in(5, 20, 127);                                /* channel 6 (the selected track's): anywhere */
     check(trk[1].p[P_DIST] == TP[P_DIST].max, "MIDI LEARN: CC 20 on any channel sets track 2's DST (the learned one)");
@@ -441,7 +451,7 @@ static void t_bend(void)
 {
     double p0, p2, p12;
     setup();
-    trk[0].p[P_E4] = 50;                              /* (a darker saw: clean crossings) */
+    trk[0].p[P_FM3_LEVEL] = 50;                       /* (a darker saw: clean crossings; ANALOG4's CUT1) */
     trk_note_on(&trk[0], 45, 100);
     render(400);
     p0 = period_of(100u * CTL, 400u * CTL);
@@ -566,7 +576,8 @@ static void t_throw(void)
 }
 static void t_clicks(void)
 {
-    static const uint8_t E[5][3] = {{0, 2, 7}, {7, 0, 3}, {2, 3, 1}, {3, 4, 1}, {9, 7, 2}};   /* engine, from, to */
+    static const uint8_t E[5][3] = {{ENGI_ANA4, 2, 7}, {ENGI_DRAWBAR, 0, 3}, {ENGI_FMTONE, 3, 1}, {ENGI_LOFI, 4, 1},
+                                    {ENGI_ENS, 4, 2}};   /* engine, from, to (sloop_custom's engines) */
     double worst = 0, base, sw;
     uint32_t k;
     for (k = 0; k < 5u; k++) {
@@ -591,11 +602,11 @@ static void t_clicks(void)
             worst = sw / (base + 50);
     }
     printf("  a preset over held notes: the switch's worst sample step %.1f x the note's own\n", worst);
-    check(worst < 1.5, "a preset loaded over held notes: they fade out with their own sound (no click: WHEEL, PHASE, FM6..)");
+    check(worst < 1.5, "a preset loaded over held notes: they fade out with their own sound (no click: ANALOG4, WHEEL, FMTONE, LOFI, ENS)");
     {
         double lp, ms;
         setup();
-        host_preset(&trk[0], 0, 2);
+        host_preset(&trk[0], ENGI_ANA4, 2);
         trk[0].p[P_LEVEL] = 110;
         trk_note_on(&trk[0], 40, 120);
         render(360);

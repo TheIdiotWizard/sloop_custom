@@ -21,10 +21,11 @@
 #define UI_SMALL
 #endif
 #define UP_PER_BANK 16u
-#define UP_PMAX 72u                              /* room for P_COUNT to grow */
+#define UP_PMAX 95u                              /* room for P_COUNT to grow (sloop_custom: 91; a bank of 16 still fits
+                                                  * one flash object, 3816 bytes) */
 #define UP_USED 0xA5u
-#define UP_VER 1u
-#define UP_BANK_MAGIC 0x31425055u                /* "UPB1" */
+#define UP_VER 7u                                /* sloop_custom: another list of engines (SLOOP's 1 is not read) */
+#define UP_BANK_MAGIC 0x37425055u                /* "UPB7" (sloop_custom) */
 typedef struct {
     uint8_t used, ver, engine, np;               /* UP_USED, UP_VER, engine, P_COUNT when stored */
     char name[12];                               /* ASCII 32..126, 0-padded (no 0 when 12 long) */
@@ -36,7 +37,8 @@ typedef struct {
     uint16_t rsize, nslot;
     up_rec_t r[UP_PER_BANK];
 } up_bank_t;
-_Static_assert(sizeof(up_rec_t) == 192, "user preset record layout");
+_Static_assert(sizeof(up_rec_t) == 238, "user preset record layout");
+_Static_assert(sizeof(up_bank_t) <= 3840u, "a bank in one flash object");
 _Static_assert(P_COUNT <= UP_PMAX && P_COUNT < 128, "user preset record: P_COUNT");
 #ifdef UP_HOST
 static up_bank_t up_bank[UP_SLOTS / UP_PER_BANK];
@@ -178,7 +180,7 @@ UI_SMALL static int up_parse(const uint8_t *a, uint32_t na, up_rec_t *r, uint32_
 #ifndef UP_HOST
 UI_SMALL static const param_desc_t *up_desc(uint32_t e, uint32_t i)
 {
-    return i >= P_E0 ? &ENGINES[e]->edit[i - P_E0] : &TP[i];
+    return eng_pdesc(e, i);
 }
 
 UI_SMALL static int up_arp_of(uint32_t k, int16_t *a)   /* (2.7.1) its arp, MODE … ORDER, as up_values: 1 = no preset */

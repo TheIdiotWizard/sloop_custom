@@ -117,7 +117,6 @@ typedef struct {                 /* per voice */
  * do): 2.5 KB less in RAM. The arena is zeroed when another arena engine takes the part, so the wheels' phases
  * spread again (init) when DRAWBAR comes back after GRAIN, FM6 or PHYS; after any other engine they stay as they
  * were, as before. */
-#define ENGI_DRAWBAR 7u                 /* ENGINES[] (engines.c) */
 typedef struct { drw_trk_t t; drw_vc_t v[NVOICE]; } drw_part_t;
 static drw_part_t *drw_of(const track_t *t) { return (drw_part_t *)eng_arena_of(t, ENGI_DRAWBAR); }
 

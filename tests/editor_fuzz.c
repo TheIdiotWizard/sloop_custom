@@ -190,9 +190,10 @@ static void proj_random(project_t *p)
 }
 static void projv_random(uint8_t *b, uint32_t *len)
 {
-    static const uint32_t SZ[5] = {sizeof(project_v5_t), sizeof(project_v4_t), sizeof(project_v3_t), sizeof(project_v2_t), sizeof(project_v1_t)};
-    static const uint32_t MG[5] = {PROJ_MAGIC_V5, PROJ_MAGIC_V4, PROJ_MAGIC_V3, PROJ_MAGIC_V2, PROJ_MAGIC_V1};
-    uint32_t v = rn(5), n = SZ[v];
+    /* (sloop_custom: SLOOP's own formats, FUN6 .. FUN1, as they were stored: no longer read, so refused whole) */
+    static const uint32_t SZ[6] = {3816u, 3840u, 3112u, 2584u, 2552u, 688u};
+    static const uint32_t MG[6] = {0x46554E36u, 0x46554E35u, 0x46554E34u, 0x46554E33u, 0x46554E32u, 0x46554E31u};
+    uint32_t v = rn(6), n = SZ[v];
     rbytes(b, n, 1);
     if (rn(2)) {                                  /* mostly plausible values */
         uint32_t i;
@@ -708,9 +709,8 @@ static const char *proj_field(uint32_t off)
     if (off >= t0 + NTRK * ts) { snprintf(b, sizeof b, "sum"); return b; }
     {
         uint32_t k = (off - t0) / ts, o = (off - t0) % ts;
-        if (o < offsetof(proj_trk_t, e)) snprintf(b, sizeof b, "track %u p[%u]", k, o / 2);
-        else if (o < offsetof(proj_trk_t, x)) snprintf(b, sizeof b, "track %u e[%u]", k, (o - (uint32_t)offsetof(proj_trk_t, e)) / 2);
-        else if (o < offsetof(proj_trk_t, engine)) snprintf(b, sizeof b, "track %u x[%u] (p[%u])", k, o - (uint32_t)offsetof(proj_trk_t, x), PROJ_NC6 + o - (uint32_t)offsetof(proj_trk_t, x));
+        if (o < offsetof(proj_trk_t, e)) snprintf(b, sizeof b, "track %u p[%u]", k, o);   /* (FUN7: a byte each) */
+        else if (o < offsetof(proj_trk_t, engine)) snprintf(b, sizeof b, "track %u e[%u]", k, (o - (uint32_t)offsetof(proj_trk_t, e)) / 2);
         else if (o < offsetof(proj_trk_t, step)) snprintf(b, sizeof b, "track %u engine/preset", k);
         else if (o < offsetof(proj_trk_t, mf)) snprintf(b, sizeof b, "track %u step %u byte %u", k, (o - (uint32_t)offsetof(proj_trk_t, step)) / 10, (o - (uint32_t)offsetof(proj_trk_t, step)) % 10);
         else if (o < offsetof(proj_trk_t, lock)) snprintf(b, sizeof b, "track %u mf[%u]", k, o - (uint32_t)offsetof(proj_trk_t, mf));

@@ -44,13 +44,14 @@ assets, is entirely governed by the GPL.
 
 | What | Licence | Where |
 | --- | --- | --- |
-| Instrument and drum samples (Versilian Studios VSCO-2 CE, VCSL; Sonic Pi: SCRCH) | CC0 1.0 | `assets/samples-cc0/`, provenance in `ATTRIBUTION.txt` there |
+| Instrument and drum samples (Versilian Studios VSCO-2 CE, VCSL; Sonic Pi: SCRCH); sloop_custom builds only the drum kit into the firmware (the instrument sets were the retired SAMPLE and GRAIN engines') | CC0 1.0 | `assets/samples-cc0/`, provenance in `ATTRIBUTION.txt` there |
 | Terminus font 8x16: the FM-1's screen (Terminus Bold, ter-u16b, SLOOP 2.6), and the web editor's font (the regular ter-u16n; `tools/gen_webfont.py` makes it a TrueType font inlined in `web/editor.html`) | SIL OFL 1.1 | `assets/fonts/ter-u16b.bdf`, `assets/fonts/ter-u16n.bdf`, `assets/fonts/Terminus-LICENSE.txt` |
 | Fukiai icon font (Hügelton Instruments), web editor only | MIT | `web/fukiai.ttf`, `web/FUKIAI-LICENSE.txt` |
-| CrispyZebra by Leo Kuroshita (<https://github.com/hugelton/CrispyZebra>): the PHASE engine's waveforms are a C port of its oscillator | GPL-3.0 | `firmware/src/eng_phase.c` |
 | klattsch by Tony Gies (<https://github.com/tgies/klattsch>): design reference for the VOICE (formant) engine; no code copied. Formant data from Klatt (1980) / Hillenbrand et al. (1995) | MIT (klattsch) | credit only |
 | msfa by Google Inc. and Pascal Gauthier, from Dexed (<https://github.com/asb2m10/dexed>): the FM6 engine's synthesis (SLOOP 2.4), ported to integer C for Felucca 1.0 by Leo Kuroshita (Dexed itself is GPL-3.0; only msfa is used; the FM6 factory patches are Felucca's own) | Apache-2.0 | `firmware/src/fm6_core.c`, `LICENSES/Apache-2.0-msfa.txt` |
-| DaisySP (Electrosmith, Emilie Gillet) and Rings' sympathetic strings (Emilie Gillet): the PHYS engine's models (SLOOP 2.5, from Felucca 1.0, ported to fixed point by Leo Kuroshita) | MIT | `firmware/src/phys_dsp.c`, `firmware/src/phys_symp.c` (the notice is in each file) |
+| Mini-Tone by Stephane Schmitz (<https://github.com/eldontyrellcorp/Mini-Tone>): sloop_custom's ANALOG4 and FMTONE engines, their presets and the resonant SVF they use (`rsvf`, its `RSVF_G` / `RES_K` tables), ported unchanged but for SLOOP's plumbing | GPL-3.0-only | `firmware/src/eng_ana4.c`, `firmware/src/eng_fmtone.c`, `firmware/src/engines.c` (rsvf), `tools/gen_tables.py` |
+| MONO2K by Sequencist (Inigo Hernandez, <https://github.com/InigoHernandez/mono2k>), as ported by Melodee Custom (<https://github.com/TheIdiotWizard/melodee_custom>; Kerem Kilic, Ellic Studio): sloop_custom's SAW, PULS, ENS and WAV engines (its SWAV-SAW, SWAV-PUL, SWAV-ENS and DIGI-WAV machines), their tables and the MONO2K owner's 64 single-cycle waves, without Melodee's FILTER and DRIVE | GPL-3.0-only | `firmware/src/eng_m2k.c`, `firmware/src/m2k_tables.h` |
+| LOOM-8 by Charles Vestal (<https://github.com/charlesvestal/fm1-loom>), through Melodee Custom's LOOM A palette: sloop_custom's four track colours | GPL-3.0-only | `firmware/src/gfx.c` (TE_COL_DEF), `web/editor.html` |
 | JieLi AC79 SDK: `uboot.boot`, `cfg_tool.bin`, `eq_cfg_hw.bin` are read from your SDK checkout at build time and placed in the package; no SDK files are in this tree | Apache-2.0 | <https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK> |
 
 ## Contributions

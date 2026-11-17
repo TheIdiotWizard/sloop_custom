@@ -67,7 +67,7 @@ void preview_param(uint32_t k, uint32_t id, int32_t value)
     if (k >= NTRK || id >= P_COUNT) return;
     track_t *t = &trk[k];
     const param_desc_t *d = is_drum(t) && id == P_E0 ? &DRUM_KIT_DESC
-        : id >= P_E0 ? &ENGINES[t->eng_req % NENGINES]->edit[id - P_E0] : &TP[id];
+        : is_drum(t) ? &TP[id] : eng_pdesc(t->eng_req, id);   /* (sloop_custom: the operator slots as the engine names them) */
     t->p[id] = (int16_t)clamp(value, d->min, d->max);
     /* An edit made while a lock is active changes its base too. */
     for (uint32_t i = 0; i < t->lk_n; i++)

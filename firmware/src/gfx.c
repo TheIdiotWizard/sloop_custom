@@ -78,13 +78,14 @@ typedef struct {
 _Static_assert(sizeof(theme_t) == 40u, "theme layout (the editor's Theme page writes these bytes)");
 static theme_t theme;                            /* the theme there is (theme_valid: project.c theme_check passed) */
 static uint8_t theme_valid, theme_on;
-/* the tracks' colours: full, two thirds, one third (the built-in ones as they always were) */
-static const uint16_t TE_COL_DEF[4] = {RGB(40, 124, 255), RGB(30, 204, 112), RGB(255, 198, 24), RGB(255, 98, 26)};
-static const uint16_t TE_MID_DEF[4] = {RGB(26, 82, 170), RGB(20, 136, 76), RGB(170, 132, 16), RGB(170, 66, 18)};
-static const uint16_t TE_DIM_DEF[4] = {RGB(14, 40, 86), RGB(10, 66, 38), RGB(86, 66, 8), RGB(86, 32, 8)};
-static uint16_t TE_COL[4] = {RGB(40, 124, 255), RGB(30, 204, 112), RGB(255, 198, 24), RGB(255, 98, 26)};
-static uint16_t TE_MID[4] = {RGB(26, 82, 170), RGB(20, 136, 76), RGB(170, 132, 16), RGB(170, 66, 18)};
-static uint16_t TE_DIM[4] = {RGB(14, 40, 86), RGB(10, 66, 38), RGB(86, 66, 8), RGB(86, 32, 8)};
+/* the tracks' colours: full, two thirds, one third. sloop_custom: Melodee Custom's LOOM A track colours (LOOM-8's,
+ * Charles Vestal): yellow, orange, green, teal; their shades as a theme's (rgb565_scale 2/3, 1/3) */
+static const uint16_t TE_COL_DEF[4] = {RGB(230, 180, 50), RGB(234, 122, 72), RGB(160, 170, 70), RGB(70, 170, 160)};
+static const uint16_t TE_MID_DEF[4] = {RGB(153, 120, 33), RGB(156, 81, 48), RGB(106, 113, 46), RGB(46, 113, 106)};
+static const uint16_t TE_DIM_DEF[4] = {RGB(76, 60, 16), RGB(78, 40, 24), RGB(53, 56, 23), RGB(23, 56, 53)};
+static uint16_t TE_COL[4] = {RGB(230, 180, 50), RGB(234, 122, 72), RGB(160, 170, 70), RGB(70, 170, 160)};
+static uint16_t TE_MID[4] = {RGB(153, 120, 33), RGB(156, 81, 48), RGB(106, 113, 46), RGB(46, 113, 106)};
+static uint16_t TE_DIM[4] = {RGB(76, 60, 16), RGB(78, 40, 24), RGB(53, 56, 23), RGB(23, 56, 53)};
 static uint16_t rgb565_scale(uint32_t c, uint32_t num, uint32_t den)
 {
     uint32_t r = ((c >> 11) & 31u) * num / den, g = ((c >> 5) & 63u) * num / den, b = (c & 31u) * num / den;

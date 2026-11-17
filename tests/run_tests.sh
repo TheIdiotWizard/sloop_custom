@@ -14,10 +14,8 @@
 #                   (tests/target_budget.txt, +10 %; exact, static).
 #   voices          the budget of 8, steal fades, MONO / LEGATO / UNISON keep their note, the VOICE cap,
 #                   no hanging notes on any MIDI / key routing.
-# FM6 (tests/fm6_test.c): the 6-operator FM engine (firmware/src/eng_fm6.c, fm6_core.c, fm6_bank.c): the 32
-#                   algorithms' carriers, the operator envelopes ending the voice, retrigger, DC / clipping, the
-#                   eight macros, the patch formats (packed, SysEx), the 6-voice cap, the patch bank on a
-#                   simulated NOR; demos in build/fm6_demo/.
+# sloop_custom: the tests of the retired engines (FM6, SAMPLE, GRAIN, PHYS, SLICE; the SAMPLE engine's chops) are out
+# of the run; their files stay in tests/ for reference.
 # After an intended change of the sound: GOLDEN_UPDATE=1 sh tests/run_tests.sh, review the diff
 # of tests/golden.txt, commit it with the change. After an intended change of the cost (or a new
 # compiler): BUDGET_UPDATE=1 (rewrites cpu_baseline.txt and target_budget.txt). VERBOSE=1: every render.
@@ -61,8 +59,6 @@ $CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/len_test" tests/le
 run "2.8.3: SEQ > NOTES, LEN under later notes, MONO / STEP FULL, shorter, delete" "$OUT/len_test"
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/drum_steal_test" tests/drum_steal_test.c -lm
 run "2.8.3: drum voices on a busy beat, every kit: no kick cut by another sound" "$OUT/drum_steal_test"
-$CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/chop_attack_test" tests/chop_attack_test.c -lm
-run "2.8.3: a sample played again starts from silence with its ATK (POLY same note, MONO, LEGATO, UNISON), no click" "$OUT/chop_attack_test"
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/fade_noise_test" tests/fade_noise_test.c -lm
 run "SLOOP Pro #4: a note fading out keeps 16-bit resolution (DAC, MASTER 2048, USB FULL, 808 SLIDE): no 16 LSB floor" "$OUT/fade_noise_test"
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/knob_walk_test" tests/knob_walk_test.c -lm
@@ -164,17 +160,8 @@ run "project formats (FUN4 / FUN3 / FUN2 / FUN1 -> FUN5), capture / apply, autos
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/slicer_test" tests/slicer_test.c -lm
 mkdir -p build/slicer_demo
 run "SLICER: no clicks, timing, sync with the sequencer, STUT, cost, demos" "$OUT/slicer_test" build/slicer_demo
-$CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/fm6_test" tests/fm6_test.c -lm
-mkdir -p build/fm6_demo
-run "FM6: algorithms, envelopes, retrigger, DC, clipping, macros, patch formats, voices, the bank, demos" "$OUT/fm6_test" build/fm6_demo
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/noise_clock_test" tests/noise_clock_test.c -lm
 run "NOISE LFSR: the clock follows the keys past the sample rate (NZ ARCADE, clipper-fm1 #10)" "$OUT/noise_clock_test"
-$CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/sample_pitch_test" tests/sample_pitch_test.c -lm
-run "SAMPLE, GRAIN: the pitch follows the keys to the top of the keyboard (up to the decode bound)" "$OUT/sample_pitch_test"
-$CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/grain_release_test" tests/grain_release_test.c -lm
-run "GRAIN: a note played in the release of the one before is not starved of grains" "$OUT/grain_release_test"
-$CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/phys_tune_test" tests/phys_tune_test.c -lm
-run "PHYS: every pitched preset in tune (+-5 cents; a curved bridge +-20), notes 28..100" "$OUT/phys_tune_test"
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/unison_level_test" tests/unison_level_test.c -lm
 run "UNISON: every engine spreads its voices' phases (no stack of voices in phase over POLY)" "$OUT/unison_level_test"
 run "the editor protocol and the other inputs (USB / TRS MIDI, damaged flash) fuzzed under ASan + UBSan, and its reproducers" sh tests/editor_fuzz.sh "${EDFZ_N:-2000}" 1
@@ -206,6 +193,6 @@ fi
 # the browser audio preview (web editor): the same engines in WASM as on the host, when it is built
 # (python3 tools/build_preview.py: Emscripten, or clang + wasm-ld)
 if [ -f build/preview/sloop-preview.wasm ]; then
-    run "the editor's audio preview: WASM == host, all 12 engines" sh tests/run_preview_tests.sh
+    run "the editor's audio preview: WASM == host, every engine" sh tests/run_preview_tests.sh
 fi
 [ $fail -eq 0 ] && echo "ALL HOST TESTS PASSED" || { echo "HOST TESTS FAILED"; exit 1; }

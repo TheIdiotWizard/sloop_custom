@@ -68,7 +68,7 @@ static void track_lfo_tick(track_t *t)
 /* voices the engine may use (POLY and UNISON): its cap, else all of them */
 static uint32_t trk_nvoice(const track_t *t)
 {
-    uint32_t c = ENGINES[t->engine] == &ENG_PHYS ? phys_poly(t) : ENGINES[t->engine]->poly;   /* (PHYS: by MODEL) */
+    uint32_t c = ENGINES[t->engine]->poly;
     return c && c < NPOLY ? c : NPOLY;
 }
 
@@ -328,23 +328,22 @@ static void voice_start(track_t *t, voice_t *v, uint32_t note, uint32_t vel, int
         v->ph[0] = ph0;                                 /* (resetting them clicks) */
         v->ph[1] = ph1;
         v->ph[2] = ph2;
-        if (e == &ENG_ANALOG) {
-            v->s[0] = s0;
-            v->s[1] = s1;
-        } else if (e == &ENG_DIGITAL) {
-            v->s[5] = s5;
-            v->s[6] = s6;
-            v->s[7] = s7;                               /* op 4 phase; the modulator envelope restarts */
+        if (e->keep) {                                  /* sloop_custom: engine_t.keep (ANALOG4's, Mini-Tone's) */
+            if (e->keep & 0x01u)
+                v->s[0] = s0;
+            if (e->keep & 0x02u)
+                v->s[1] = s1;
+            if (e->keep & 0x10u)
+                v->s[4] = s4;
+            if (e->keep & 0x20u)
+                v->s[5] = s5;
+            if (e->keep & 0x40u)
+                v->s[6] = s6;
+            if (e->keep & 0x80u)
+                v->s[7] = s7;
         } else if (e == &ENG_LOFI) {
             v->s[0] = s0;
             v->s[4] = s4;
-        } else if (e == &ENG_TRIO) {
-            v->s[0] = s0;                               /* filter */
-            v->s[1] = s1;
-            v->s[4] = s4;                               /* the sample waiting for its step corrections */
-        } else if (e == &ENG_PHASE) {
-            v->s[0] = s0;                               /* the WAVE / WAVE2 toggles go with the phases kept */
-            v->s[1] = s1;
         } else if (e == &ENG_NOISE) {
             v->s[0] = s0;                               /* the filter and the colour poles (2.5) */
             v->s[1] = s1;
@@ -363,16 +362,14 @@ static void unison_spread(track_t *t, voice_t *v, uint32_t r)
     const engine_t *e = ENGINES[t->engine];
     /* (after Clipper 1.2) each engine moves all its oscillators (and reseeds its noise): ph[0] alone left the others in
      * phase (ANALOG's osc 2, TRIO's 2 and 3, DIGITAL's and FM6's operators, the subs, SAMPLE's start...) */
-    if (e == &ENG_ANALOG)
-        analog_spread(t, v, r);
-    else if (e == &ENG_DIGITAL)
-        digital_spread(t, v, r);
-    else if (e == &ENG_PHASE)
-        phase_spread(t, v, r);
+    if (e == &ENG_ANA4)
+        a4_spread(t, v, r);
+    else if (e == &ENG_FMTONE)
+        fmt_spread(t, v, r);
+    else if (e == &ENG_M2K_SAW || e == &ENG_M2K_PULS || e == &ENG_M2K_ENS || e == &ENG_M2K_WAV)
+        m2k_spread(t, v, r);
     else if (e == &ENG_LOFI)
         lofi_spread(t, v, r);
-    else if (e == &ENG_TRIO)
-        trio_spread(t, v, r);
     else if (e == &ENG_NOISE)
         noise_spread(t, v, r);
     else if (e == &ENG_FM6)
@@ -878,6 +875,9 @@ static uint32_t track_render(track_t *t, int32_t *out, uint32_t n)
         e->render(t, v, out, n, &m);
         nr++;
     }
+    if (e->post)                                        /* sloop_custom: the part after its voices (ENS's chorus); the
+                                                         * engine's own values (before a fade's are put back) */
+        e->post(t, out, n, nr);
     if (fade) {
         for (i = 0; i < 8u; i++)
             t->p[P_E0 + i] = pe_new[i];

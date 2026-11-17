@@ -464,10 +464,8 @@ def main(out):
     except (OSError, ValueError):
         pass
     b = Builder()
-    if have_cc0:
-        for name, kind in CC0_SETS:
-            if kind != "kit":                       # the CC0 KIT feeds the GM kit
-                b.cc0_set(name, kind)
+    # sloop_custom: the instrument sets (PIANO .. SCRCH) were the SAMPLE and GRAIN engines' only: both are gone, and the
+    # 194 KB of flash they took holds the new engines (WAV's 64 waves among them). The CC0 KIT still feeds the GM kit.
     b.gm_kit(have_cc0)
     if os.environ.get("FELUCCA_SLICE") == "1":       # SLICE's BREAK: only when that engine is built
         b.slice_break()                             # last: the sets' offsets stay as they were

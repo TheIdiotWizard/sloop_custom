@@ -72,7 +72,7 @@ static void scene_setup(uint32_t s)
     switch (s) {
     case 0:
         for (k = 0; k < NPART; k++) {
-            host_preset(&trk[k], 5, k);                  /* FORMANT */
+            host_preset(&trk[k], ENGI_FORMANT, k);       /* FORMANT (VOICE) */
             chords(&trk[k], k, 4, 48 + 5 * k);
         }
         song.g[G_CLOCK] = CLICK_ON;
@@ -80,13 +80,13 @@ static void scene_setup(uint32_t s)
         break;
     case 1:
         for (k = 0; k < NPART; k++) {
-            host_preset(&trk[k], ENGI_FM6, 2 * k);
+            host_preset(&trk[k], ENGI_FMTONE, 2 * k);   /* (sloop_custom: FMTONE, its voices in the arena; FM6 before) */
             chords(&trk[k], k, 4, 52 + 3 * k);
         }
         break;
     case 2:
         for (k = 0; k < NPART; k++) {
-            host_preset(&trk[k], ENGI_PHYS, 3 * k);
+            host_preset(&trk[k], ENGI_ENS, k);          /* (sloop_custom: ENS, its chorus a part's post; PHYS before) */
             trk[k].p[P_E0] = (int16_t)(k == 1u ? 3 : k);   /* MODAL, SYMP, MEMB */
             trk[k].p[P_LWAVE] = 4;                       /* S&H */
             trk[k].p[P_LRATE] = (int16_t)(110 + 5 * k);
@@ -95,9 +95,9 @@ static void scene_setup(uint32_t s)
         }
         break;
     case 4:
-        host_preset(&trk[0], 0, 4);                      /* ANALOG */
-        host_preset(&trk[1], ENGI_FM6, 1);
-        host_preset(&trk[2], 7, 2);                      /* DRAWBAR */
+        host_preset(&trk[0], ENGI_ANA4, 4);              /* (sloop_custom) ANALOG4 */
+        host_preset(&trk[1], ENGI_FMTONE, 1);
+        host_preset(&trk[2], ENGI_DRAWBAR, 2);
         for (k = 0; k < NPART; k++) {
             trk[k].p[P_ITYPE] = (int16_t)(k == 0u ? 1 : k == 1u ? 5 : 7);   /* SOFT, CRUSH, FLANG */
             trk[k].p[P_IA] = (int16_t)(60 + 20 * k);
@@ -136,9 +136,9 @@ static void scene_setup(uint32_t s)
         song.g[G_TXDUCK] = 1;
         break;
     default:
-        host_preset(&trk[0], 0, 4);                      /* ANALOG */
-        host_preset(&trk[1], ENGI_GRAIN, 0);
-        host_preset(&trk[2], 7, 0);                      /* DRAWBAR */
+        host_preset(&trk[0], ENGI_ANA4, 4);              /* (sloop_custom) ANALOG4, WAV, DRAWBAR (GRAIN before) */
+        host_preset(&trk[1], ENGI_WAV, 0);
+        host_preset(&trk[2], ENGI_DRAWBAR, 0);
         trk[0].p[P_DIST] = 60;
         trk[1].p[P_REV] = 90;
         trk[2].p[P_CHOR] = 80;
@@ -159,8 +159,8 @@ static void scene_block(uint32_t s, uint32_t b)          /* what the UI would do
 {
     uint32_t k;
     if (s == 2u && (b == 400u || b == 900u))
-        for (k = 0; k < NPART; k++)                      /* MODEL under the sounding notes: phys_render resets, with a draw */
-            trk[k].p[P_E0] = (int16_t)((trk[k].p[P_E0] + 1) % PM_COUNT);
+        for (k = 0; k < NPART; k++)                      /* (sloop_custom) ENS's chord under the sounding notes */
+            trk[k].p[P_E0] = (int16_t)((trk[k].p[P_E0] + 3) % 33);
     if (s == 3u) {
         if (b % 128u == 64u)
             trk[(b / 128u) % NPART].p[P_MUTE] ^= 1;      /* mute fades, each part in turn */
@@ -186,7 +186,7 @@ static void scene_block(uint32_t s, uint32_t b)          /* what the UI would do
             for (k = 1; k < NPART; k++) {
                 sound_change(&trk[k]);
                 panic_req |= (uint8_t)(1u << k);
-                host_preset_req(&trk[k], k == 1u ? ENGI_FM6 : 7, 4 + k);
+                host_preset_req(&trk[k], k == 1u ? ENGI_FMTONE : ENGI_DRAWBAR, 4 + k);   /* (FM6 before) */
             }
         }
         if (b == 650u)

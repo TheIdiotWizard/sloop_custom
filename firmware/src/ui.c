@@ -578,7 +578,8 @@ UI_SMALL static void go_home(void)
  * writes the sequencer: every pattern is the one the player records or enters. */
 
 /* the parts' sounds at power-on (engine, preset): bass, pad, lead */
-static const uint8_t TRK_DEF[NPART][2] = {{0, 0}, {1, 0}, {4, 5}};   /* ANALOG 808 BOOM, DIGITAL RHODES, SAMPLE LOFI FLUTE */
+static const uint8_t TRK_DEF[NPART][2] = {{ENGI_ANA4, 0}, {ENGI_FMTONE, 0}, {ENGI_SAW, 1}};   /* sloop_custom: ANALOG4 SAW BASS,
+                                                         * FMTONE TINE EP, SAW BIG PAD */
 UI_SMALL static uint32_t trk_def_engine(uint32_t i) { return i < NPART ? TRK_DEF[i][0] : 0u; }
 
 UI_SMALL static int seq_is_empty(const track_t *t) { return track_empty(t); }
@@ -665,7 +666,8 @@ UI_SMALL static void apply_preset_to(track_t *t, uint32_t pi)
         }
         preset_extras(t->p, pr);                     /* glide, pitch / LFO modulation, voice mode */
     }
-    fm6_track_loaded(t);                             /* FM6: the preset's patch (its PTCH) */
+    if (e->loaded)                                   /* sloop_custom: the operator slots the preset sets (ANALOG4, */
+        e->loaded(t);                                /* FMTONE: Mini-Tone's a4_track_loaded, fmt_track_loaded) */
 }
 
 /* the engine's defaults and its first preset. With the audio IRQ off: the ISR sees the old engine with
@@ -712,56 +714,31 @@ UI_SMALL static void select_engine(uint32_t e)
  * engine's preset table may change order; tests/ui_pages_test.c checks every preset is here once */
 enum { BK_BASS, BK_KEYS, BK_ORGAN, BK_PAD, BK_LEAD, BK_PLUCK, BK_STAB, BK_FX };
 static const char *const BANK_KIND[] = {"BASS", "KEYS", "ORGN", "PAD", "LEAD", "PLCK", "STAB", "FX"};
+/* sloop_custom: the engines of core.h; ANALOG4 and FMTONE (Mini-Tone), SAW PULS ENS WAV (MONO2K) first in each kind */
 static const struct { uint8_t kind, e; const char *name; } BANK[] = {
-    {BK_BASS, 0, "808 BOOM"}, {BK_BASS, 0, "808 DIRTY"}, {BK_BASS, 0, "808 SLIDE"}, {BK_BASS, 0, "SUB BASS"},
-    {BK_BASS, 0, "PLUGG BASS"}, {BK_BASS, 0, "REESE"}, {BK_BASS, 0, "WOBBLE"}, {BK_BASS, 0, "ACID 303"},
-    {BK_BASS, 1, "FM BASS"}, {BK_BASS, 2, "CZ BASS"}, {BK_BASS, 6, "FAT BASS"}, {BK_BASS, 0, "FUNK BASS"},
-    {BK_BASS, 5, "WOW BASS"}, {BK_BASS, 3, "GB BASS"}, {BK_BASS, 4, "UP BASS"}, {BK_BASS, 4, "DEEP BASS"},
-    {BK_BASS, ENGI_FM6, "ROUND BASS"}, {BK_BASS, 1, "BASS GTR"}, {BK_BASS, 0, "MONO BASS"},
-    {BK_BASS, ENGI_PHYS, "PLUCK BASS"}, {BK_BASS, 3, "NES BASS"}, {BK_BASS, 0, "SAW BASS"},
-    {BK_KEYS, 1, "RHODES"}, {BK_KEYS, 1, "DX RHODES"}, {BK_KEYS, 1, "WURLI"}, {BK_KEYS, 1, "M1 PIANO"},
-    {BK_KEYS, 1, "AFRO KEYS"}, {BK_KEYS, 4, "GRAND PNO"}, {BK_KEYS, 4, "DUSTY PNO"}, {BK_KEYS, 4, "LOFI KEYS"},
-    {BK_KEYS, 2, "SOFT KEYS"}, {BK_KEYS, 1, "CLAV"}, {BK_KEYS, ENGI_FM6, "TINE EP"}, {BK_KEYS, 1, "FM GRAND"},
-    {BK_ORGAN, 7, "SOUL ORGAN"}, {BK_ORGAN, 7, "GOSPEL"}, {BK_ORGAN, 7, "JAZZ ORGAN"},
-    {BK_ORGAN, 7, "DIRTY B3"}, {BK_ORGAN, 7, "HOUSE ORGN"}, {BK_ORGAN, ENGI_FM6, "DRAWBARS"},
-    {BK_ORGAN, 6, "ACCORDION"}, {BK_ORGAN, 7, "ROCK ORGAN"}, {BK_ORGAN, 7, "CHAPEL"},
-    {BK_ORGAN, 7, "REGGAE ORG"}, {BK_PAD, 0, "WARM PAD"}, {BK_PAD, 6, "SAW PAD"}, {BK_PAD, 1, "GLASS PAD"},
-    {BK_PAD, 0, "DARK STR"}, {BK_PAD, 2, "CZ STRING"}, {BK_PAD, 0, "ATMOS PAD"}, {BK_PAD, 8, "LOFI CLOUD"},
-    {BK_PAD, 8, "VIBE HAZE"}, {BK_PAD, 5, "CHOIR AAH"}, {BK_PAD, 5, "SOUL OOH"}, {BK_PAD, ENGI_FM6, "SOFT PAD"},
-    {BK_PAD, 6, "ENSEMBLE"}, {BK_PAD, 8, "STR CLOUD"}, {BK_PAD, 8, "SHIMMER"}, {BK_PAD, 8, "DRONE"},
-    {BK_PAD, ENGI_PHYS, "BOWED MTL"}, {BK_PAD, ENGI_NOISE, "WIND"}, {BK_PAD, ENGI_PHYS, "CELLO BOW"},
-    {BK_PAD, ENGI_PHYS, "GLASS BOWL"}, {BK_PAD, ENGI_NOISE, "OCEAN"}, {BK_PAD, 2, "CZ PAD"},
-    {BK_PAD, 5, "VOX PAD"}, {BK_PAD, 8, "PNO FREEZE"}, {BK_PAD, 8, "HORN CLOUD"}, {BK_PAD, 0, "SINE PAD"},
-    {BK_PAD, 6, "PULSE PAD"}, {BK_LEAD, 0, "SUPERSAW"}, {BK_LEAD, 0, "G-FUNK LD"}, {BK_LEAD, 6, "SYNC LEAD"},
-    {BK_LEAD, 6, "HOOVER"}, {BK_LEAD, 5, "TALKBOX"}, {BK_LEAD, 3, "GAME LEAD"}, {BK_LEAD, 4, "LOFI FLUTE"},
-    {BK_LEAD, 8, "FLUTE DUST"}, {BK_LEAD, 0, "FAT LEAD"}, {BK_LEAD, 0, "PAN FLUTE"}, {BK_LEAD, 5, "HARMONICA"},
-    {BK_LEAD, ENGI_NOISE, "NZ ARCADE"}, {BK_LEAD, 3, "WAVE LEAD"}, {BK_LEAD, 2, "CZ LEAD"},
-    {BK_LEAD, 5, "ROBOT"}, {BK_LEAD, 0, "PWM LEAD"}, {BK_LEAD, 6, "SQR LEAD"}, {BK_PLUCK, 0, "TRAP PLUCK"},
-    {BK_PLUCK, 2, "RESO PLUCK"}, {BK_PLUCK, 1, "PLUGG BELL"}, {BK_PLUCK, 1, "TRAP BELL"},
-    {BK_PLUCK, 1, "MUSIC BOX"}, {BK_PLUCK, 1, "KALIMBA"}, {BK_PLUCK, 1, "MARIMBA"}, {BK_PLUCK, 4, "VIBES"},
-    {BK_PLUCK, 3, "8BIT ARP"}, {BK_PLUCK, ENGI_FM6, "GLASS BELL"}, {BK_PLUCK, ENGI_FM6, "WOOD BARS"},
-    {BK_PLUCK, ENGI_FM6, "NYLON PICK"}, {BK_PLUCK, 1, "HARP"}, {BK_PLUCK, 1, "STEEL DRUM"},
-    {BK_PLUCK, 1, "GLOCKEN"}, {BK_PLUCK, 1, "CELESTA"}, {BK_PLUCK, 1, "XYLOPHONE"},
-    {BK_PLUCK, ENGI_PHYS, "STR PLUCK"}, {BK_PLUCK, ENGI_PHYS, "SITAR"}, {BK_PLUCK, ENGI_PHYS, "PHYS HARP"},
-    {BK_PLUCK, ENGI_PHYS, "BELL TREE"}, {BK_PLUCK, ENGI_PHYS, "MODAL BAR"}, {BK_PLUCK, ENGI_PHYS, "THUMB PNO"},
-    {BK_PLUCK, ENGI_PHYS, "NYLON GTR"}, {BK_PLUCK, ENGI_PHYS, "STEEL GTR"}, {BK_PLUCK, ENGI_PHYS, "MUTED GTR"},
-    {BK_PLUCK, ENGI_PHYS, "KOTO"}, {BK_PLUCK, ENGI_PHYS, "BANJO"}, {BK_PLUCK, ENGI_PHYS, "TANPURA"},
-    {BK_PLUCK, ENGI_PHYS, "CHIMES"}, {BK_PLUCK, ENGI_PHYS, "BIG BELL"}, {BK_PLUCK, ENGI_PHYS, "VIBRA BAR"},
-    {BK_PLUCK, ENGI_PHYS, "STEEL PAN"}, {BK_PLUCK, ENGI_PHYS, "WOOD BLOCK"}, {BK_PLUCK, 3, "1BIT BEEP"},
-    {BK_PLUCK, 2, "CZ RESO"}, {BK_PLUCK, 1, "TUBE BELL"}, {BK_PLUCK, 1, "FM PLUCK"}, {BK_STAB, 6, "MIN STAB"},
-    {BK_STAB, 6, "MIN7 STAB"}, {BK_STAB, 6, "RAVE STAB"}, {BK_STAB, 6, "DUB CHORD"}, {BK_STAB, 0, "SYN BRASS"},
-    {BK_STAB, 2, "CZ BRASS"}, {BK_STAB, 4, "HORN STAB"}, {BK_STAB, 4, "STRING STB"},
-    {BK_STAB, ENGI_FM6, "BRASS SECT"}, {BK_STAB, 6, "80S POLY"}, {BK_STAB, 3, "CHIP CHORD"},
-    {BK_STAB, 6, "POWER STAB"}, {BK_FX, 4, "SCRATCH"}, {BK_FX, 4, "GM KIT"}, {BK_FX, ENGI_PHYS, "HAND DRUM"},
-    {BK_FX, ENGI_PHYS, "MEMB TOMS"}, {BK_FX, ENGI_NOISE, "RAIN"}, {BK_FX, ENGI_NOISE, "NZ METAL"},
-    {BK_FX, ENGI_PHYS, "TABLA"}, {BK_FX, ENGI_PHYS, "CONGA"}, {BK_FX, ENGI_PHYS, "TIMPANI"},
-    {BK_FX, ENGI_NOISE, "VINYL"}, {BK_FX, ENGI_NOISE, "HISS"}, {BK_FX, ENGI_NOISE, "RISER"},
-    {BK_FX, ENGI_NOISE, "NZ SNARE"}, {BK_FX, ENGI_NOISE, "BITCRUSH"}, {BK_FX, ENGI_NOISE, "RADIO"},
-    {BK_FX, 3, "CHIP NOISE"},
-#if FELUCCA_SLICE
-    {BK_FX, ENGI_SLICE, "BREAK 16"}, {BK_FX, ENGI_SLICE, "CHOP 8"}, {BK_FX, ENGI_SLICE, "REVERSE"},
-    {BK_FX, ENGI_SLICE, "USR SLICE"},
-#endif
+    {BK_BASS, ENGI_ANA4, "SAW BASS"}, {BK_BASS, ENGI_ANA4, "ACID"}, {BK_BASS, ENGI_FMTONE, "FM BASS"},
+    {BK_BASS, ENGI_SAW, "SUB BASS"}, {BK_BASS, ENGI_PULS, "PWMBASS"}, {BK_BASS, ENGI_WAV, "DIGI BASS"},
+    {BK_BASS, ENGI_FORMANT, "WOW BASS"}, {BK_BASS, ENGI_LOFI, "GB BASS"}, {BK_BASS, ENGI_LOFI, "NES BASS"},
+    {BK_KEYS, ENGI_FMTONE, "TINE EP"}, {BK_KEYS, ENGI_WAV, "LOFI KEYS"}, {BK_ORGAN, ENGI_DRAWBAR, "SOUL ORGAN"},
+    {BK_ORGAN, ENGI_DRAWBAR, "GOSPEL"}, {BK_ORGAN, ENGI_DRAWBAR, "JAZZ ORGAN"}, {BK_ORGAN, ENGI_DRAWBAR, "DIRTY B3"},
+    {BK_ORGAN, ENGI_DRAWBAR, "HOUSE ORGN"}, {BK_ORGAN, ENGI_DRAWBAR, "ROCK ORGAN"}, {BK_ORGAN, ENGI_DRAWBAR, "CHAPEL"},
+    {BK_ORGAN, ENGI_DRAWBAR, "REGGAE ORG"}, {BK_PAD, ENGI_ANA4, "WARM PAD"}, {BK_PAD, ENGI_FMTONE, "GLASS PAD"},
+    {BK_PAD, ENGI_SAW, "BIG PAD"}, {BK_PAD, ENGI_PULS, "PWMPAD"}, {BK_PAD, ENGI_ENS, "STRINGS"},
+    {BK_PAD, ENGI_WAV, "WAVE PAD"}, {BK_PAD, ENGI_FORMANT, "CHOIR AAH"}, {BK_PAD, ENGI_FORMANT, "SOUL OOH"},
+    {BK_PAD, ENGI_NOISE, "WIND"}, {BK_PAD, ENGI_NOISE, "OCEAN"}, {BK_PAD, ENGI_FORMANT, "VOX PAD"},
+    {BK_LEAD, ENGI_ANA4, "PWM LEAD"}, {BK_LEAD, ENGI_ANA4, "SYNC LEAD"}, {BK_LEAD, ENGI_FMTONE, "PLUCK LEAD"},
+    {BK_LEAD, ENGI_SAW, "SUPERSAW"}, {BK_LEAD, ENGI_SAW, "MONO SAW"}, {BK_LEAD, ENGI_SAW, "DRIFT LD"},
+    {BK_LEAD, ENGI_PULS, "SQUARE"}, {BK_LEAD, ENGI_PULS, "REED"}, {BK_LEAD, ENGI_ENS, "OCT PULS"},
+    {BK_LEAD, ENGI_WAV, "SCAN LEAD"}, {BK_LEAD, ENGI_WAV, "SYNC LEAD"}, {BK_LEAD, ENGI_FORMANT, "TALKBOX"},
+    {BK_LEAD, ENGI_LOFI, "GAME LEAD"}, {BK_LEAD, ENGI_FORMANT, "HARMONICA"}, {BK_LEAD, ENGI_NOISE, "NZ ARCADE"},
+    {BK_LEAD, ENGI_LOFI, "WAVE LEAD"}, {BK_LEAD, ENGI_FORMANT, "ROBOT"}, {BK_PLUCK, ENGI_FMTONE, "BELL"},
+    {BK_PLUCK, ENGI_FMTONE, "RESO PLUCK"}, {BK_PLUCK, ENGI_FMTONE, "FIFTH RING"}, {BK_PLUCK, ENGI_LOFI, "8BIT ARP"},
+    {BK_PLUCK, ENGI_LOFI, "1BIT BEEP"}, {BK_STAB, ENGI_FMTONE, "BRASS"}, {BK_STAB, ENGI_ENS, "MAJOR"},
+    {BK_STAB, ENGI_ENS, "MINOR"}, {BK_STAB, ENGI_ENS, "FIFTHS"}, {BK_STAB, ENGI_LOFI, "CHIP CHORD"},
+    {BK_FX, ENGI_ANA4, "KICK"}, {BK_FX, ENGI_ANA4, "ZAP TOM"}, {BK_FX, ENGI_ANA4, "NOISE HAT"},
+    {BK_FX, ENGI_NOISE, "RAIN"}, {BK_FX, ENGI_NOISE, "NZ METAL"}, {BK_FX, ENGI_NOISE, "VINYL"},
+    {BK_FX, ENGI_NOISE, "HISS"}, {BK_FX, ENGI_NOISE, "RISER"}, {BK_FX, ENGI_NOISE, "NZ SNARE"},
+    {BK_FX, ENGI_NOISE, "BITCRUSH"}, {BK_FX, ENGI_NOISE, "RADIO"}, {BK_FX, ENGI_LOFI, "CHIP NOISE"},
 };
 #define NBANK (sizeof BANK / sizeof BANK[0])
 static uint8_t bank_pi[NBANK];                       /* the preset index of each entry in its engine */
@@ -887,7 +864,7 @@ UI_SMALL static void fav_toggle(int add)                      /* KNOB 4 on the P
 }
 /* (2.7) the settings' side record: the theme (40 bytes, zero: none), then the favourites (ui.c fav) with a magic and a
  * CRC. A 2.7 beta wrote the theme alone (the rest erased: no favourites); an older SLOOP never reads it */
-#define FAVS_MAGIC 0x31564146u                      /* "FAV1" */
+#define FAVS_MAGIC 0x37564146u                      /* "FAV7": sloop_custom's list of sounds (SLOOP's FAV1 indices are other sounds here) */
 typedef struct {
     theme_t th;
     uint32_t fmagic;
