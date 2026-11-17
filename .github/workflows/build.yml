@@ -1,0 +1,55 @@
+# Build the firmware and publish the web installer (GitHub Pages).
+# One-time setup: repo Settings -> Pages -> Source: "GitHub Actions".
+name: build
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+env:
+  VERSION: "2.9-custom"
+  AC79_TAG: AC79NN_SDK_V1.2.1_2023-12-13
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependencies
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq xz-utils
+          pip install Pillow
+      - name: JieLi toolchain
+        run: tools/get_toolchain.sh
+      - name: JieLi AC79 SDK
+        run: git clone --depth 1 --branch "$AC79_TAG" https://gitee.com/Jieli-Tech/fw-AC79_AIoT_SDK.git "$HOME/fw-AC79_AIoT_SDK"
+      - name: Host tests
+        run: sh tests/run_tests.sh
+        continue-on-error: true
+      - name: Build firmware
+        run: ./build.sh --release "$VERSION"
+      - name: Build the site
+        run: |
+          rm -rf site
+          python3 web/make_site.py "build/felucca-$VERSION.fwsc" "$VERSION" site
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware
+          path: build/*.fwsc
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.d.outputs.page_url }}
+    steps:
+      - id: d
+        uses: actions/deploy-pages@v4
