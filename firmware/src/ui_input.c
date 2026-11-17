@@ -521,6 +521,38 @@ UI_SMALL static void edit_param(uint32_t slot, int32_t steps)
         }
         return;
     }
+    if (pg->graph == GR_NAME) {                           /* sloop_custom: KNOB 1 position, KNOB 2 character, KNOBS 3, 4: CLEAR, SAVE (GO) */
+        uname_fix();
+        if (slot == 0u) {
+            ui.upos = (uint8_t)clamp((int32_t)ui.upos + steps, 0, 11);
+            ui.arm = 0;
+        } else if (slot == 1u) {
+            int32_t n = (int32_t)sizeof UP_CH - 1, ci = 0, i;
+            for (i = 0; i < n; i++)
+                if (UP_CH[i] == ui.uname[ui.upos])
+                    ci = i;
+            ci = ((ci + steps % n) % n + n) % n;
+            ui.uname[ui.upos] = UP_CH[ci];
+            ui.arm = 0;
+        } else {
+            if (steps <= 0)
+                return;
+            if (ui.arm != 0xE0u + slot) {                 /* one detent arms, a second one within ~1.5 s acts */
+                ui.arm = (uint8_t)(0xE0u + slot);
+                ui.arm_t = 90;
+                ui_say("AGAIN: ", slot == 2u ? "CLEAR" : "SAVE");
+                return;
+            }
+            ui.arm = 0;
+            if (slot == 2u) {
+                uname_clear();
+                ui_message("NAME CLEARED");
+            } else {
+                up_ui(2u, ui.uslot);
+            }
+        }
+        return;
+    }
     if (pg->graph == GR_USER) {                           /* KNOB 1 slot; LOAD / ERASE / SAVE: GO buttons */
         static const char *const UP_GO[3] = {"LOAD", "ERASE", "SAVE"};
         if (slot == 0u) {
@@ -1296,7 +1328,7 @@ UI_SMALL static void ui_input(void)
         if ((s = panel_enc(EN_K1 + k)) == 0)
             continue;
         if (ui.home || pg->scope == SC_STEP || pg->scope == SC_TRK || page_desc(pg, k, &hv) ||
-            (pg->graph == GR_USER && k == 0u)) {     /* (not an empty column, nor "DRUM TRACK") */
+            (pg->graph == GR_USER && k == 0u) || pg->graph == GR_NAME) {     /* (not an empty column, nor "DRUM TRACK") */
             ui.hot_col = (uint8_t)k;
             ui.hot_t = 40;
         }

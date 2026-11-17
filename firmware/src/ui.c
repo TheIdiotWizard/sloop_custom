@@ -68,6 +68,8 @@ static struct {
     uint8_t confirm;             /* 1 = "clear the sequence?" (REC held on SEQ / ARP), 2 = "clear track n?" (TRACKS) */
     uint8_t confirm_trk;         /* the track the dialog clears */
     uint8_t uslot;               /* SAVE > USER: the selected user preset slot */
+    uint8_t upos;                /* sloop_custom, SAVE > NAME: the character under edit (0..11) */
+    char uname[13];              /* .. the name for the next SAVE: 12 characters, spaces for blank (0 = untouched) */
     /* layers (ui_layers.c): a function button held, the keys and knobs do something else */
     uint8_t layer;               /* the layer drawn (LY_*), LY_PLAY = none */
     uint8_t layer_btn;           /* its button (B_*), NB = none */
@@ -93,6 +95,24 @@ static struct {
     uint32_t graph_sig, head_sig, foot_sig, frame;
     uint8_t graph_top;           /* the graph strip's top G_OY rows hold something */
 } ui;
+
+/* sloop_custom, SAVE > NAME: the name the next SAVE gives the sound (12 characters; blank = the automatic ENGINE + slot) */
+static const char UP_CH[] = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.+#";
+UI_SMALL static void uname_fix(void)
+{
+    uint32_t i;
+    if (ui.uname[0])
+        return;
+    for (i = 0; i < 12u; i++)
+        ui.uname[i] = ' ';
+    ui.uname[12] = 0;
+}
+UI_SMALL static void uname_clear(void)
+{
+    ui.uname[0] = 0;
+    uname_fix();
+    ui.upos = 0;
+}
 
 UI_SMALL static const page_t *cur_page(void) { return &PAGES[ui.page]; }
 static int32_t accel(uint32_t role, int32_t s, int32_t range);   /* ui_input.c */

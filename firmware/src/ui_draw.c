@@ -503,6 +503,28 @@ UI_SMALL static void graph_user(void)
     }
 }
 
+/* sloop_custom, SAVE > NAME: the 12 characters of the name, the one under edit underlined */
+UI_SMALL static void graph_name(void)
+{
+    uint32_t i;
+    char tag[4], hd[16];
+    uname_fix();
+    up_slot_label(tag, ui.uslot);
+    str_cpy(hd, "SAVE TO ", sizeof hd);
+    str_cpy(hd + str_len(hd), tag, 4);
+    cv_text(4, 6, &FONT_S, hd, C_GRAY);
+    for (i = 0; i < 12u; i++) {
+        char c[2];
+        int32_t x = 10 + (int32_t)i * 17;
+        int sel = i == ui.upos;
+        c[0] = ui.uname[i] == ' ' ? '_' : ui.uname[i];
+        c[1] = 0;
+        cv_text(x, 40, &FONT_S, c, sel ? C_WHITE : (ui.uname[i] == ' ' ? C_DIM : C_HI));
+        if (sel)
+            cv_rect(x, 56, 10, 2, C_WHITE);
+    }
+}
+
 /* the sections A..D (the four slots): used / empty, the selected one in white */
 UI_SMALL static void graph_slots(void)
 {
@@ -794,6 +816,10 @@ UI_SMALL static void draw_graph(void)
             cv_oy = 0;
             graph_user();
             break;
+        case GR_NAME:
+            cv_oy = 0;
+            graph_name();
+            break;
         default:
             if (big_page(pg)) {
                 cv_oy = 0;
@@ -802,7 +828,7 @@ UI_SMALL static void draw_graph(void)
             break;
         }
     }
-    top = !ui.home && !drum_note && (pg->graph == GR_BROWSE || pg->graph == GR_SLOTS || pg->graph == GR_USER ||
+    top = !ui.home && !drum_note && (pg->graph == GR_BROWSE || pg->graph == GR_SLOTS || pg->graph == GR_USER || pg->graph == GR_NAME ||
                                      pg->graph == GR_ROLL || big_page(pg));   /* these draw from the top */
     cv_oy = 0;
     if (ui.hot_t && settings.zoom && !(top && (big_page(pg) || pg->graph == GR_ROLL) && !drum_note)) {   /* (the big values show it already) */                 /* focus (menu ZOOM): the touched value, large and white */
@@ -962,6 +988,19 @@ UI_SMALL static void draw_columns(void)
         draw_column(1, "ENG", ENGINES[TSEL->eng_req]->name, "", VAL(1u), -1, engine_icon(ENGINES[TSEL->eng_req]->name));
         draw_column(2, "", "", "", C_HI, -1, ICON_AUTO);
         draw_column(3, "FAV", fav_has(fav_key()) ? "ON" : "--", "", VAL(3u), -1, ICON_NONE);   /* (2.7) KNOB 4 */
+        return;
+    }
+    if (cur_page()->graph == GR_NAME) {                  /* sloop_custom: POS, CHAR, then CLEAR and SAVE (GO) */
+        char p[4], ch[4];
+        uname_fix();
+        fmt_int(p, (int32_t)ui.upos + 1);
+        ch[0] = ui.uname[ui.upos] == ' ' ? 'S' : ui.uname[ui.upos];
+        ch[1] = ui.uname[ui.upos] == ' ' ? 'P' : 0;
+        ch[2] = 0;
+        draw_column(0, "POS", p, "/12", VAL(0u), (int32_t)ui.upos * 1000 / 11, ICON_AUTO);
+        draw_column(1, "CHAR", ch, "", VAL(1u), -1, ICON_AUTO);
+        draw_column(2, "CLEAR", "--", "", C_HI, -1, ICON_AUTO);
+        draw_column(3, "SAVE", "--", "", C_HI, -1, ICON_AUTO);
         return;
     }
     if (cur_page()->graph == GR_USER) {                  /* SLOT, then three GO buttons */

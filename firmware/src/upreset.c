@@ -376,7 +376,19 @@ UI_SMALL static void up_ui(uint32_t op, uint32_t k)     /* 0 load, 1 erase, 2 sa
         ui_message("STOP BEFORE SAVE");
         return;
     }
-    rc = op == 1u ? up_put(k, 0) : up_store(k, 0);
+    {
+        char nm[13];                                   /* sloop_custom: the name typed on SAVE > NAME (blank: the automatic one) */
+        uint32_t n = 0, i;
+        uname_fix();
+        for (i = 0; i < 12u; i++)
+            nm[i] = ui.uname[i];
+        nm[12] = 0;
+        for (n = 12; n && nm[n - 1] == ' '; n--)
+            nm[n - 1] = 0;
+        rc = op == 1u ? up_put(k, 0) : up_store(k, nm[0] ? nm : 0);
+        if (op == 2u && !rc)
+            uname_clear();
+    }
     if (rc == 3)
         ui_message("NO FLASH");                        /* (no RAM mirror to keep it in) */
     else if (rc)

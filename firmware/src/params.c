@@ -406,7 +406,7 @@ enum { FAM_HOME, FAM_ENV, FAM_LFO, FAM_FX, FAM_SCL, FAM_EDIT, FAM_GLO, FAM_SAVE,
        FAM_COUNT };
 enum { SC_TRACK, SC_GLOBAL, SC_ENGINE, SC_STEP, SC_TRK, SC_SONG, SC_DRUM };
 enum { GR_NONE, GR_ADSR, GR_LFO, GR_STEPS, GR_ARP, GR_SCALE, GR_FX, GR_ROLL, GR_BROWSE, GR_SLOTS, GR_USER, GR_TRK,
-       GR_SLCR, GR_INS };
+       GR_SLCR, GR_INS, GR_NAME };
 
 typedef struct {
     const char *title;
@@ -462,6 +462,7 @@ static const page_t PAGES[] = {
     {"TEXTURE 2", FAM_GLO, SC_GLOBAL, GR_NONE, {G_TXRATE, G_TXWHEN, G_TXDUCK, 0xFF}},
     {"PRESETS", FAM_SAVE, SC_GLOBAL, GR_BROWSE, {0xFF, 0xFF, 0xFF, 0xFF}},   /* browser: PRESETS knob / KNOB 1 */
     {"USER", FAM_SAVE, SC_GLOBAL, GR_USER, {0xFF, 0xFF, 0xFF, 0xFF}},       /* user presets: SLOT LOAD ERASE SAVE */
+    {"NAME", FAM_SAVE, SC_GLOBAL, GR_NAME, {0xFF, 0xFF, 0xFF, 0xFF}},       /* sloop_custom: the name of the next user preset: POS CHAR CLEAR SAVE */
     {"SECTION", FAM_SAVE, SC_GLOBAL, GR_SLOTS, {G_SLOT, 0xFF, G_LOAD, G_SAVE}},   /* ("PROJECT" before 2.7) */   /* (KNOB 2: ERASE, 2.6: ui_input.c) */
     {"TOOLS", FAM_SAVE, SC_GLOBAL, GR_NONE, {G_CLRSEQ, G_INITSND, 0xFF, G_NEWPRJ}},
     {"ARP", FAM_ARP, SC_TRACK, GR_NONE, {P_AMODE, P_ARATE, P_AOCT, P_AGATE}},   /* (2.7.2: its values large, as ARP 2:
@@ -483,7 +484,7 @@ static int page_for_drum(const page_t *pg)
     if (pg->scope == SC_STEP)                       /* (2.4) the synth steps' roll: the drums have their grid. Reached */
         return 0;                                   /* by ALGO from a synth track, it drew the drum steps as notes */
     if (pg->scope == SC_GLOBAL)
-        return pg->graph != GR_BROWSE && pg->graph != GR_USER;
+        return pg->graph != GR_BROWSE && pg->graph != GR_USER && pg->graph != GR_NAME;
     return pg->scope != SC_ENGINE && (pg->scope != SC_TRACK || pg->fam == FAM_SEQ || pg->graph == GR_SLCR ||
                                       pg->graph == GR_INS || pg->id[0] == P_TFLT);   /* (2.7.2: FX > FILTER too, the
                                                        * track's filter: the drums have it since 2.4, the page was
