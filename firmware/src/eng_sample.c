@@ -41,6 +41,10 @@ static uint32_t pow2_q16(int32_t d16)
  * smp_zone_t layout (off relative to the slot's data at +512) + IMA ADPCM data. */
 #include "../hal/fm1_xip.h"   /* relative: hostsim includes this file too */
 #define SMP_USER_SLOTS 4
+#ifndef SMP_USER_ON
+#define SMP_USER_ON 0                               /* sloop_custom: no user samples; their flash is the songs' (storage.c); the host test of the
+                                                     * slots' code builds it with 1 */
+#endif
 #define SMP_USER_BASE 0xA0000u                      /* USR1..USR3: 0xA0000..0xDBFFF */
 #define SMP_USER4_BASE 0xE7000u                     /* USR4 (2.4): the free flash after the FM6 bank, 0xE7000..0xFAFFF */
 #define SMP_USER_SIZE 0x14000u
@@ -87,6 +91,8 @@ static void smp_user_scan(uint32_t k)
     smp_user_gen++;
     usr_nz[k] = 0;                                  /* (from here no new voice takes the slot) */
     slc_user_scan(k, 0);
+    if (!SMP_USER_ON)
+        return;                                     /* sloop_custom: the slots' flash holds songs (storage.c) */
     if (h->magic != SMP_USER_MAGIC || h->version != 1 || !h->nz || h->nz > 16u ||
         h->data_len > SMP_USER_SIZE - SMP_USER_DATA)
         return;

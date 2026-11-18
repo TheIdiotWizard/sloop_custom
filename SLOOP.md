@@ -57,6 +57,7 @@ Projects, autosaves and backups from 2.7 load as they are, and a project saved i
 - **Your own screen colours.** The editor's new **Theme** page: the five screen colours, the background (white too: **Light ↔ dark**), an accent for what you touch, the four tracks' colours and a name, with a preview. **Send** it and it comes after MONO in MENU → COLOR; share it as one line of text.
 - **USB RATE** (HOME menu → AUDIO, KNOB 3): AUTO, 44.1 or 48 kHz, for the phones that record the USB audio distorted.
 - **Drum MUTE mode stays** when you let go of EDIT (#126): EDIT + a black key, then the white keys mute; a black key again goes back to erasing.
+- **SAVE → SONG** (sloop_custom): ten songs of four sections each; pick one, LOAD, COPY or ERASE it (two detents). User samples are gone: their flash holds the songs.
 - **SAVE → SECTION** (was PROJECT). The four slots are the song's sections and are now named so, **A–D**, with *SAVED SECTION B*, *LOADED SECTION B*; NEW says *NEW LOOP, A-D KEPT*. The FM-1 holds one song (A–D and their order); to keep several, save an editor backup per song (the editor's **Song & sections** tab, formerly Projects).
 - **SELECT counts what it walks:** the page counter shows the pages SELECT goes through (SEQ: STEP 1/2, PATTERN 2/2).
 - **USB SERIAL** left the menu: the developer console no longer fits the FM-1's flash. The USB audio input shows on every Mac without it.

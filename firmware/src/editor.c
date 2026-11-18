@@ -114,6 +114,8 @@ UI_SMALL static int ed_smp_erase(uint32_t k, uint32_t all)  /* header sector, or
 {
     uint32_t i, took;
     int rc = 0;
+    if (!SMP_USER_ON)
+        return 1;                                 /* sloop_custom: that flash holds songs (storage.c) */
     usr_nz[k] = 0;
     for (i = 0; i < 16u; i++)
         usr_zone[k][i].n = 0;                     /* a sounding voice ends instead of reading 0xFF */

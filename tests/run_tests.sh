@@ -36,6 +36,8 @@ mkdir -p build/gen
 
 $CC -o "$OUT/storage_test" tests/storage_test.c
 run "flash storage (A/B, torn writes)" "$OUT/storage_test"
+$CC -O1 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -Itests -o "$OUT/song_test" tests/song_test.c -lm
+run "songs (sloop_custom): ten songs of four sections, switch / copy / erase, power-on, the other flash untouched" "$OUT/song_test"
 
 $CC -o "$OUT/recovery_test" tests/recovery_test.c
 run "application USB recovery and boot-loop guard" "$OUT/recovery_test"
@@ -66,7 +68,7 @@ run "every page, HOME, REC READY: a knob turned alone changes one value (sloop-p
 
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/drumkit_test" tests/drumkit_test.c -lm
 run "synthesised drum kits: every kit x sound bounded, audible, finite, levels, cost" "$OUT/drumkit_test" "$OUT/drum-kits.wav" "$OUT/drum-kits.txt"
-$CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/userkit_test" tests/userkit_test.c -lm
+$CC -O2 -w -DSMP_USER_ON=1 -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/userkit_test" tests/userkit_test.c -lm
 run "user drum kits (KIT USR1..USR3): a user slot's sounds on the drum lanes" "$OUT/userkit_test"
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/dsyn_test" tests/dsyn_test.c -lm
 run "SYN1..SYN4 drum kits and the editor's DRUM SYNTH commands (v10)" "$OUT/dsyn_test"
@@ -74,7 +76,7 @@ $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/font_test" tests/font_test.c
 run "the screen font at 1 bit a pixel: every glyph, the same pixels as 2.5" "$OUT/font_test"
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/punch_test" tests/punch_test.c -lm
 run "punch-in FX: 27 effects (11 on the black keys), bounded, dry after release, FX-held keys" "$OUT/punch_test" "$OUT/punch-fx.wav"
-$CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/fx251_test" tests/fx251_test.c -lm
+$CC -DSMP_USER_ON=1 -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/fx251_test" tests/fx251_test.c -lm
 run "after Felucca 1.4 / 1.5: INSERT, filter TYPE, ENV SYNC, LFO 2, drum mutes, MIDI LEARN" "$OUT/fx251_test"
 
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -Ifirmware/hal -o "$OUT/ui_pages_test" tests/ui_pages_test.c -lm

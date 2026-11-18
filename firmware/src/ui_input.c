@@ -582,6 +582,31 @@ UI_SMALL static void edit_param(uint32_t slot, int32_t steps)
         up_ui(slot - 1u, ui.uslot);
         return;
     }
+    if (pg->graph == GR_SONGS) {                          /* sloop_custom: KNOB 1 the song, KNOB 2 ERASE, KNOB 3 LOAD, KNOB 4 COPY (into the song): GO buttons */
+        static const char *const SG_GO[3] = {"ERASE", "LOAD", "COPY"};
+        uint32_t pick = ui.spick ? (uint32_t)ui.spick - 1u : song_cur;
+        if (slot == 0u) {
+            ui.spick = (uint8_t)(clamp((int32_t)pick + steps, 0, (int32_t)ST_NSONG - 1) + 1);
+            ui.arm = 0;
+            return;
+        }
+        if (steps <= 0)
+            return;
+        if (ui.arm != 0xE9u + slot) {                     /* one detent arms, a second one within ~1.5 s acts */
+            ui.arm = (uint8_t)(0xE9u + slot);
+            ui.arm_t = 90;
+            ui_say("AGAIN: ", SG_GO[slot - 1u]);
+            return;
+        }
+        ui.arm = 0;
+        if (slot == 1u)
+            song_erase(pick);
+        else if (slot == 2u)
+            song_switch(pick);
+        else
+            song_copy_to(pick);
+        return;
+    }
     if (pg->graph == GR_SLOTS && slot == 1u) {           /* 2.6: KNOB 2 ERASE, a GO button (the slot KNOB 1 picks) */
         if (steps <= 0)
             return;
@@ -1338,7 +1363,7 @@ UI_SMALL static void ui_input(void)
         if ((s = panel_enc(EN_K1 + k)) == 0)
             continue;
         if (ui.home || pg->scope == SC_STEP || pg->scope == SC_TRK || page_desc(pg, k, &hv) ||
-            (pg->graph == GR_USER && k == 0u) || pg->graph == GR_NAME) {     /* (not an empty column, nor "DRUM TRACK") */
+            (pg->graph == GR_USER && k == 0u) || pg->graph == GR_NAME || pg->graph == GR_SONGS) {     /* (not an empty column, nor "DRUM TRACK") */
             ui.hot_col = (uint8_t)k;
             ui.hot_t = 40;
         }

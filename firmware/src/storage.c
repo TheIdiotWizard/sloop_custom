@@ -24,7 +24,22 @@
  * (upreset.c); the working project (autosave, project.c): copy A 0x9F000, copy B 0xFE000 (the two sectors
  * left: A/B needs no two neighbours); the FM6 patch bank (fm6_bank.c, SLOOP 2.4): 0xE5000 / 0xE6000, the first
  * two sectors of the free 0xE5000..0xFBFFF after the update staging (FL_FM6, fm1_flash.h) */
-enum { OBJ_SETTINGS, OBJ_PROJECT0, OBJ_UPRESET0 = OBJ_PROJECT0 + 4, OBJ_AUTOSAVE = OBJ_UPRESET0 + 2, OBJ_FM6BANK, OBJ_COUNT };
+/* sloop_custom: songs. The user sample slots are gone (nothing here plays a user sample), so their flash holds songs: 80
+ * sectors, 0xA0000..0xDBFFF (USR1..3) and 0xE7000..0xFAFFF (USR4), as 40 A/B pairs. A song is its four sections A..D; song
+ * 0 is the one above (OBJ_PROJECT0 + 0..3, the order in the settings), songs 1..9 take four pairs each (OBJ_SONG0 + 4 * (song
+ * - 1) + section), pair 36 holds the table of the ten songs' orders (OBJ_SONGTAB). The first 30 pairs are the first region,
+ * the other 10 the second (the pair index runs across both) */
+#ifndef ST_NSONG
+#define ST_NSONG 10u                           /* (core.h; the storage test has no core.h) */
+#endif
+#define ST_SONG_PAIRS 37u
+enum { OBJ_SETTINGS, OBJ_PROJECT0, OBJ_UPRESET0 = OBJ_PROJECT0 + 4, OBJ_AUTOSAVE = OBJ_UPRESET0 + 2, OBJ_FM6BANK,
+       OBJ_SONG0, OBJ_SONGTAB = OBJ_SONG0 + 4u * (ST_NSONG - 1u), OBJ_COUNT };
+_Static_assert(OBJ_COUNT - OBJ_SONG0 == ST_SONG_PAIRS && ST_SONG_PAIRS <= 40u, "the songs fit the 40 pairs of the freed sample flash");
+static uint32_t st_song_pair(uint32_t p, uint32_t copy)    /* pair p 0..39 -> its copy A / B */
+{
+    return (p < 30u ? 0xA0000u + p * 2u * 4096u : 0xE7000u + (p - 30u) * 2u * 4096u) + copy * 4096u;
+}
 
 typedef struct {
     uint32_t magic;
@@ -60,6 +75,8 @@ UI_SMALL static uint32_t st_sector(uint32_t obj, uint32_t copy)  /* flash offset
         return copy ? 0xFE000u : 0x9F000u;
     if (obj == OBJ_FM6BANK)
         return 0xE5000u + copy * ST_SECTOR;
+    if (obj >= OBJ_SONG0)
+        return st_song_pair(obj - OBJ_SONG0, copy);
     if (obj >= OBJ_UPRESET0 && obj < OBJ_AUTOSAVE)
         return 0xDC000u + (obj - OBJ_UPRESET0) * 2u * ST_SECTOR + copy * ST_SECTOR;
     return 0x97000u + (obj - OBJ_PROJECT0) * 2u * ST_SECTOR + copy * ST_SECTOR;

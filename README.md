@@ -78,7 +78,7 @@ SLOOP turns the FM-1 into a four-track groovebox you play live: **three synths a
 - **Steadier on two cores:** the supplies at M-VAVE's own levels from power-on (after X0X 1.0.9).
 - **Your own screen colours:** the editor's Theme page (light themes too), MENU → COLOR.
 - **USB RATE** (44.1 / 48 kHz) for phones; the drum **MUTE mode stays** after EDIT (#126).
-- **SAVE → SECTION A–D** (was PROJECT 1–4): the FM-1 holds one song; keep several as editor backups.
+- **SAVE → SECTION A–D** (was PROJECT 1–4): sloop_custom holds ten songs of four sections (SAVE → SONG); keep more as editor backups.
 
 Details in [SLOOP.md](SLOOP.md#new-in-27). Projects, autosaves and backups from 2.6 load as they are; a project saved in 2.7 opens in 2.6 without the 2.7 features.
 
@@ -508,7 +508,7 @@ Something else? [Open an issue](../../issues): what you did, what you expected, 
 | Recording | live, quantised as heard (latency-compensated), overdub; free take (the tempo follows you) or the tempo set; start on the first note or a one-bar count-in; 1, 2 or 4 bars |
 | Performance | layers: punch-in FX, erase, note repeat, step entry, key / chords, mute / solo / fill / tap tempo, song sections and a quick chain of up to 8 |
 | Effects | 27 punch-in effects; master DUST, DUCK, DJ filter, limiter; per track drive, slicer, sends to a stereo chorus, a tempo delay (dotted 1/8 and 1/16 too) and a stereo reverb |
-| Memory | autosave, undo / redo, one song of 4 sections (more as backup files), 32 user presets, song of 4 sections × 16 steps × 1–64 bars, full backup / restore (editor) |
+| Memory | autosave, undo / redo, ten songs of 4 sections (SAVE → SONG; more as backup files), 32 user presets, song of 4 sections × 16 steps × 1–64 bars, full backup / restore (editor) |
 | Audio | 44.1 kHz, fixed-point DSP; USB audio input (the master output, 16-bit stereo at 44.1 or 48 kHz, class compliant) |
 | MIDI | USB class-compliant in / out (the keys, or the sequencer too); TRS MIDI IN (3.5 mm); MIDI clock in (USB or TRS), clock only if you like (IN = CLOCK) |
 | Lights | button backlight (3 levels), C keys / white keys, played notes |

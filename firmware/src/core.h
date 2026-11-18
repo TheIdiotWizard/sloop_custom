@@ -36,6 +36,7 @@ enum { V_POLY, V_MONO, V_LEGATO, V_UNISON };   /* P_VOICE */
 #define ENGI_GRAIN 0xF1u
 #define ENGI_PHYS 0xF2u
 #define ENGI_SLICE 0xF3u
+#define ST_NSONG 10u             /* songs of four sections (project.c, storage.c) */
 #define UP_SLOTS 32u             /* user presets (upreset.c) */
 #define NELEM(a) (sizeof(a) / sizeof((a)[0]))
 

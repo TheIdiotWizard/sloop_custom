@@ -126,13 +126,17 @@ int main(void)
                 uint32_t a = st_sector(o, c);
                 int data = a >= 0x97000u && a + 4096u <= 0xA0000u, ups = a >= 0xDC000u && a + 4096u <= 0xE0000u;
                 int glob = a >= 0xFC000u && a + 4096u <= 0xFF000u, fm6 = a >= 0xE5000u && a + 4096u <= 0xE7000u;
-                inside &= (data || ups || glob || fm6) && !(a & 0xFFFu);
+                int sng = o >= OBJ_SONG0 && ((a >= 0xA0000u && a + 4096u <= 0xDC000u) || (a >= 0xE7000u && a + 4096u <= 0xFB000u));
+                inside &= (data || ups || glob || fm6 || sng) && !(a & 0xFFFu);
                 for (o2 = 0; o2 < OBJ_COUNT; o2++)
                     for (c2 = 0; c2 < 2u; c2++)
                         if ((o2 != o || c2 != c) && st_sector(o2, c2) == a)
                             apart = 0;
             }
-        bad += check("data stays in the Felucca regions (autosave too)", inside);
+        bad += check("data stays in the Felucca regions (autosave too, and the songs in the freed sample flash)", inside);
+        bad += check("song pairs: the first 30 at 0xA0000, the rest at 0xE7000", st_sector(OBJ_SONG0, 0) == 0xA0000u &&
+                     st_sector(OBJ_SONG0 + 29u, 1) == 0xDBFFFu - 0xFFFu && st_sector(OBJ_SONG0 + 30u, 0) == 0xE7000u &&
+                     st_sector(OBJ_SONGTAB, 0) == 0xF3000u);
         bad += check("every object copy has its own sector", apart);
     }
     {   /* SLOOP 2.5: the settings in two parts (persist_t, then the SYN kits): one record, A/B as any other */

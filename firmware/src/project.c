@@ -262,10 +262,57 @@ static union {
     uint8_t raw[ST_PAYLOAD_MAX];
 } proj_tmp;
 UI_SMALL static void *up_stage(void) { return &proj_tmp; }   /* upreset.c: a user preset bank staged for a write (sloop-lab) */
+
+/* ---- songs (sloop_custom): the sections A..D belong to one of ST_NSONG songs, song_cur. Song 0's sections are the
+ * original objects, the others' are the freed sample flash (storage.c). The order (arrangement) of each song is in
+ * song_arr, written to OBJ_SONGTAB when the song is left; the current song's is `arrangement`, which the settings keep
+ * (its spare byte `reserved[0]` is song_cur: a settings object from before reads as song 0) */
+static uint8_t song_cur;
+static uint16_t song_used;                         /* the songs, the current one not counted, that hold a section */
+#if FELUCCA_ARRANGER
+static arr_config_t song_arr[ST_NSONG];
+#endif
+UI_SMALL static uint32_t sec_obj_of(uint32_t song, uint32_t slot)
+{
+    return song ? OBJ_SONG0 + (song - 1u) * 4u + (slot & 3u) : OBJ_PROJECT0 + (slot & 3u);
+}
+UI_SMALL static uint32_t sec_obj(uint32_t slot) { return sec_obj_of(song_cur, slot); }
+#if FELUCCA_ARRANGER
+UI_SMALL static void song_tab_load(void)               /* each song's order from OBJ_SONGTAB; one not stored or not valid: the default */
+{
+    uint32_t i;
+    int n = st_load(OBJ_SONGTAB, &proj_tmp, sizeof proj_tmp);
+    for (i = 0; i < ST_NSONG; i++) {
+        arr_config_t *c = &song_arr[i];
+        if (n >= (int)((i + 1u) * sizeof *c))
+            memcpy(c, proj_tmp.raw + i * sizeof *c, sizeof *c);
+        else
+            c->count = 0;
+        if (!arr_valid(c, 15u))
+            arr_defaults(c);
+        c->reserved[0] = c->reserved[1] = 0;
+    }
+}
+UI_SMALL static int song_tab_save(void) { return st_save(OBJ_SONGTAB, song_arr, sizeof song_arr); }
+UI_SMALL static int obj_filled(uint32_t obj)           /* a valid object of some bytes (an erased section is one of none) */
+{
+    st_hdr_t h;
+    return st_current(obj, &h) >= 0 && h.len > 0;
+}
+UI_SMALL static void song_scan(void)                   /* power-on: which of the other songs hold a section */
+{
+    uint32_t s, i;
+    song_used = 0;
+    for (s = 0; s < ST_NSONG; s++)
+        for (i = 0; i < 4u; i++)
+            if (s != song_cur && obj_filled(sec_obj_of(s, i)))
+                song_used |= (uint16_t)(1u << s);
+}
+#endif
 UI_SMALL static void proj_fetch(uint32_t slot)
 {
     project_t *q = &proj_slot[slot & 3u];
-    int n = st_load(OBJ_PROJECT0 + (slot & 3u), &proj_tmp, sizeof proj_tmp);
+    int n = st_load(sec_obj(slot), &proj_tmp, sizeof proj_tmp);
     if (!proj_import(q, &proj_tmp, n))
         q->magic = 0;
 }
@@ -282,7 +329,7 @@ UI_SMALL static void project_save(uint32_t slot)
     proj_capture(p);
 #if FELUCCA_FLASH
     if (flash_ok) {
-        if (st_save(OBJ_PROJECT0 + (slot & 3u), p, sizeof *p))
+        if (st_save(sec_obj(slot), p, sizeof *p))
             ui_message("SAVE ERROR");
         else
             ui_say("SAVED SECTION ", SEC_NAME[slot & 3u]);
@@ -307,7 +354,7 @@ UI_SMALL static void project_erase(uint32_t slot)
         return;
     }
 #if FELUCCA_FLASH
-    if (flash_ok && st_save(OBJ_PROJECT0 + slot, &proj_slot[slot], 0)) {
+    if (flash_ok && st_save(sec_obj(slot), &proj_slot[slot], 0)) {
         ui_message("ERASE ERROR");
         return;
     }
@@ -519,6 +566,10 @@ UI_SMALL static void persist_boot(void)                    /* before settings_in
             else
                 p.arrangement = arrangement;
 #endif
+#if FELUCCA_ARRANGER
+            song_cur = arrangement.reserved[0] < ST_NSONG ? arrangement.reserved[0] : 0u;     /* (sloop_custom) */
+            arrangement.reserved[0] = p.arrangement.reserved[0] = song_cur;
+#endif
             persist_saved = p;
             {   /* 2.7: the theme and the favourites, in the side record of the same copy (gfx.c, storage.c st_side) */
                 side_rec_t r;
@@ -537,6 +588,10 @@ UI_SMALL static void persist_boot(void)                    /* before settings_in
                 panel = old;
         }
     }
+#if FELUCCA_ARRANGER
+    song_tab_load();                               /* sloop_custom: the songs' orders, and which songs hold something */
+    song_scan();
+#endif
     {   /* projects: fill empty RAM slots from flash, so the slot list is right after power-on. A slot
          * still valid in RAM (a warm reset: an update, UPDATE MODE, a crash) may never have reached
          * flash (a live section stored while playing): marked to be written when quiet */
@@ -545,7 +600,7 @@ UI_SMALL static void persist_boot(void)                    /* before settings_in
             if (!proj_ok(&proj_slot[i])) {
                 proj_fetch(i);
             } else {
-                int n = st_load(OBJ_PROJECT0 + i, &proj_tmp, sizeof proj_tmp);
+                int n = st_load(sec_obj(i), &proj_tmp, sizeof proj_tmp);
                 if (n != (int)sizeof proj_slot[i] || memcmp(&proj_tmp.v6, &proj_slot[i], sizeof proj_slot[i]))
                     sec_dirty |= (uint8_t)(1u << i);
             }
@@ -748,6 +803,7 @@ UI_SMALL static uint32_t settings_restore(const void *raw, uint32_t n)
 #if FELUCCA_ARRANGER
     if (!arr_valid(&p.arrangement, 15u))
         return 2;
+    p.arrangement.reserved[0] = song_cur;            /* (sloop_custom: a backup never changes the song the FM-1 is on) */
     if ((song.playing || transport_req) && memcmp(&p.arrangement, &arrangement, sizeof arrangement))
         return 3;                                    /* SLOOP 2.5: a new song order only when stopped (as on the SONG screen) */
 #endif
@@ -777,7 +833,7 @@ UI_SMALL static uint32_t project_restore(uint32_t slot, const void *raw, uint32_
     if (song.playing || transport_req)
         return 3;
     if (slot < 4u && !n) {
-        if (!flash_ok || st_save(OBJ_PROJECT0 + slot, raw, 0))
+        if (!flash_ok || st_save(sec_obj(slot), raw, 0))
             return 4;
         memset(&proj_slot[slot], 0, sizeof proj_slot[slot]);
         sec_dirty &= (uint8_t)~(1u << slot);
@@ -789,7 +845,7 @@ UI_SMALL static uint32_t project_restore(uint32_t slot, const void *raw, uint32_
         project_apply(&autosave_buf);
         return 0;
     }
-    if (!flash_ok || st_save(OBJ_PROJECT0 + slot, &autosave_buf, sizeof autosave_buf))
+    if (!flash_ok || st_save(sec_obj(slot), &autosave_buf, sizeof autosave_buf))
         return 4;
     memcpy(&proj_slot[slot], &autosave_buf, sizeof proj_slot[slot]);
     sec_dirty &= (uint8_t)~(1u << slot);
@@ -834,7 +890,7 @@ UI_SMALL static void sections_write(void)                        /* the dirty se
 #if FELUCCA_FLASH
     if (flash_ok)
         for (i = 0; i < 4u; i++)
-            if (((sec_dirty >> i) & 1u) && st_save(OBJ_PROJECT0 + i, &proj_slot[i], sizeof proj_slot[i]) == 0)
+            if (((sec_dirty >> i) & 1u) && st_save(sec_obj(i), &proj_slot[i], sizeof proj_slot[i]) == 0)
                 sec_dirty &= (uint8_t)~(1u << i);       /* (a failed write stays dirty: tried again later) */
     if (!flash_ok)
 #endif
@@ -858,6 +914,140 @@ UI_SMALL static void persist_flush_now(void)
     }
 #endif
 }
+#if FELUCCA_FLASH
+/* ---- songs (SAVE > SONG): stopped only. A song is four sections and an order; the current one is in RAM (and its
+ * sections in flash as they were saved), so leaving it writes what is dirty and its order, then the other's four sections
+ * are read into the slots and its order becomes the song's. Section A of it is the loop, if it holds one */
+UI_SMALL static int song_is_used(uint32_t s)
+{
+    uint32_t i;
+    if (s >= ST_NSONG)
+        return 0;
+    if (s != song_cur)
+        return (song_used >> s) & 1u;
+    for (i = 0; i < 4u; i++)
+        if (project_used(i))
+            return 1;
+    return 0;
+}
+UI_SMALL static int song_idle(const char *what)
+{
+    if (song.playing || transport_req) {
+        ui_say("STOP BEFORE ", what);
+        return 0;
+    }
+    if (!flash_ok) {
+        ui_message("NO FLASH");
+        return 0;
+    }
+    return 1;
+}
+UI_SMALL static void song_switch(uint32_t n)
+{
+    uint32_t i;
+    char nb[4];
+    if (n >= ST_NSONG || !song_idle("LOAD"))
+        return;
+    fmt_int(nb, (int32_t)n + 1);
+    if (n == song_cur) {
+        ui_say("ALREADY SONG ", nb);
+        return;
+    }
+    sections_write();                                  /* the sections not yet in flash, the order if it changed */
+    if (sec_dirty) {
+        ui_message("SAVE ERROR");
+        return;
+    }
+    song_arr[song_cur] = arrangement;
+    song_arr[song_cur].reserved[0] = 0;
+    if (song_tab_save()) {
+        ui_message("SAVE ERROR");
+        return;
+    }
+    if (song_is_used(song_cur))
+        song_used |= (uint16_t)(1u << song_cur);
+    else
+        song_used &= (uint16_t)~(1u << song_cur);
+    fm1_irq_off();
+    for (i = 0; i < 4u; i++)
+        memset(&proj_slot[i], 0, sizeof proj_slot[i]);
+    live_sec = -1;
+    sec_dirty = 0;
+    song_cur = (uint8_t)n;
+    arrangement = song_arr[n];
+    arrangement.reserved[0] = (uint8_t)n;
+    fm1_irq_on();
+    song_used &= (uint16_t)~(1u << n);
+    for (i = 0; i < 4u; i++)
+        proj_fetch(i);
+    song.g[G_SLOT] = 1;
+    settings_save();                                   /* the song and its order: where the FM-1 comes back to */
+    if (proj_ok(&proj_slot[0])) {
+        section_load(0);
+        ui_say("SONG ", nb);
+    } else {
+        ui_say("EMPTY SONG ", nb);
+    }
+}
+UI_SMALL static void song_copy_to(uint32_t n)           /* the current song's four sections and order over song n's */
+{
+    uint32_t i;
+    char nb[4];
+    if (n >= ST_NSONG || !song_idle("COPY"))
+        return;
+    fmt_int(nb, (int32_t)n + 1);
+    if (n == song_cur) {
+        ui_say("THIS IS SONG ", nb);
+        return;
+    }
+    sections_write();
+    if (sec_dirty) {
+        ui_message("SAVE ERROR");
+        return;
+    }
+    for (i = 0; i < 4u; i++)
+        if (st_save(sec_obj_of(n, i), &proj_slot[i], proj_ok(&proj_slot[i]) ? sizeof proj_slot[i] : 0u)) {
+            ui_message("COPY ERROR");
+            return;
+        }
+    song_arr[n] = arrangement;
+    song_arr[n].reserved[0] = 0;
+    if (song_tab_save()) {
+        ui_message("COPY ERROR");
+        return;
+    }
+    if (song_is_used(song_cur))
+        song_used |= (uint16_t)(1u << n);
+    else
+        song_used &= (uint16_t)~(1u << n);
+    ui_say("COPIED TO SONG ", nb);
+}
+UI_SMALL static void song_erase(uint32_t n)             /* another song: its four sections gone, its order the default */
+{
+    uint32_t i;
+    char nb[4];
+    if (n >= ST_NSONG || !song_idle("ERASE"))
+        return;
+    fmt_int(nb, (int32_t)n + 1);
+    if (n == song_cur) {
+        ui_say("CURRENT SONG ", nb);
+        return;
+    }
+    if (!song_is_used(n)) {
+        ui_say("EMPTY SONG ", nb);
+        return;
+    }
+    for (i = 0; i < 4u; i++)
+        if (obj_filled(sec_obj_of(n, i)) && st_save(sec_obj_of(n, i), 0, 0)) {
+            ui_message("ERASE ERROR");
+            return;
+        }
+    arr_defaults(&song_arr[n]);
+    song_tab_save();
+    song_used &= (uint16_t)~(1u << n);
+    ui_say("ERASED SONG ", nb);
+}
+#endif /* FELUCCA_FLASH (songs) */
 UI_SMALL static void sections_flush(void)                        /* main loop */
 {
     static uint32_t tried;

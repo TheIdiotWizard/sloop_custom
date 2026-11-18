@@ -436,13 +436,16 @@ UI_SMALL static uint32_t graph_signature(void)
     h ^= (uint32_t)pg->graph * 131u + TSEL->eng_req + song.sel * 7777u;
     for (i = 0; i < P_COUNT; i++)
         h = (h ^ (uint32_t)t->p[i]) * 16777619u;
-    h ^= (uint32_t)TSEL->preset * 7u + (uint32_t)song.g[G_SLOT] * 13u + TSEL->user * 257u + up_gen * 7919u + ui.uslot * 104729u;
+    h ^= (uint32_t)TSEL->preset * 7u + (uint32_t)song.g[G_SLOT] * 13u + TSEL->user * 257u + up_gen * 7919u + ui.uslot * 104729u + ui.spick * 1299709u + song_cur * 15485863u;
     {   /* (2.7) the favourites: the PRESETS list and its FAV column */
         uint32_t q;
         for (q = 0; q < FAV_N; q++) h = h * 31u + fav[q];
     }
     if (pg->graph == GR_SLCR && t->p[P_SLCR])        /* the SLICER's step playing */
         h ^= (sl[song.sel].idx + 1u) * 2654435761u;
+    if (pg->graph == GR_SONGS)                       /* (sloop_custom: which songs hold something) */
+        for (i = 0; i < ST_NSONG; i++)
+            h ^= (uint32_t)song_is_used(i) << (8u + i);
     if (pg->graph == GR_SLOTS)                       /* (a checksum over each slot) */
         for (i = 0; i < 4u; i++)
             h ^= (uint32_t)project_used(i) << (20u + i);
@@ -581,6 +584,24 @@ UI_SMALL static void graph_slots(void)
             cv_rect(4, y + 6, 3, 3, C_WHITE);
         cv_text(14, y, &FONT_S, b, sel ? C_WHITE : C_GRAY);
         cv_text(40, y, &FONT_S, project_used(i) ? "USED" : "EMPTY", project_used(i) ? (sel ? C_WHITE : C_HI) : C_DIM);
+    }
+}
+
+/* sloop_custom, SAVE > SONG: the ten songs (two columns of five): used / empty, the current one starred, the picked one white */
+UI_SMALL static void graph_songs(void)
+{
+    uint32_t i, pick = ui.spick ? (uint32_t)ui.spick - 1u : song_cur;
+    for (i = 0; i < ST_NSONG; i++) {
+        int32_t x = i < 5u ? 4 : 124, y = 10 + (int32_t)(i % 5u) * 22;
+        char b[4];
+        int sel = i == pick, used = song_is_used(i);
+        fmt_int(b, (int32_t)i + 1);
+        if (sel)
+            cv_rect(x, y + 6, 3, 3, C_WHITE);
+        cv_text(x + 10, y, &FONT_S, b, sel ? C_WHITE : C_GRAY);
+        cv_text(x + 36, y, &FONT_S, used ? "USED" : "EMPTY", used ? (sel ? C_WHITE : C_HI) : C_DIM);
+        if (i == song_cur)
+            cv_text(x + 84, y, &FONT_S, "*", C_AMB);
     }
 }
 
@@ -862,6 +883,10 @@ UI_SMALL static void draw_graph(void)
             cv_oy = 0;
             graph_name();
             break;
+        case GR_SONGS:
+            cv_oy = 0;
+            graph_songs();
+            break;
         default:
             if (big_page(pg)) {
                 cv_oy = 0;
@@ -870,7 +895,7 @@ UI_SMALL static void draw_graph(void)
             break;
         }
     }
-    top = !ui.home && !drum_note && (pg->graph == GR_BROWSE || pg->graph == GR_SLOTS || pg->graph == GR_USER || pg->graph == GR_NAME ||
+    top = !ui.home && !drum_note && (pg->graph == GR_BROWSE || pg->graph == GR_SLOTS || pg->graph == GR_USER || pg->graph == GR_NAME || pg->graph == GR_SONGS ||
                                      pg->graph == GR_ROLL || big_page(pg));   /* these draw from the top */
     cv_oy = 0;
     if (ui.hot_t && settings.zoom && !(top && (big_page(pg) || pg->graph == GR_ROLL) && !drum_note)) {   /* (the big values show it already) */                 /* focus (menu ZOOM): the touched value, large and white */
@@ -1045,6 +1070,16 @@ UI_SMALL static void draw_columns(void)
         draw_column(1, "CHAR", ch, "", VAL(1u), -1, ICON_AUTO);
         draw_column(2, "TYPE", kc ? BANK_KIND[kc - 1u] : "--", "", VAL(2u), -1, ICON_AUTO);
         draw_column(3, "SAVE", "--", "CLR<", C_HI, -1, ICON_AUTO);
+        return;
+    }
+    if (cur_page()->graph == GR_SONGS) {                 /* sloop_custom: SONG, then ERASE, LOAD, COPY */
+        uint32_t pick = ui.spick ? (uint32_t)ui.spick - 1u : song_cur;
+        char val[4];
+        fmt_int(val, (int32_t)pick + 1);
+        draw_column(0, "SONG", val, pick == song_cur ? "*" : "", VAL(0u), (int32_t)pick * 1000 / (int32_t)(ST_NSONG - 1u), ICON_AUTO);
+        draw_column(1, "ERASE", "--", "", pick != song_cur && song_is_used(pick) ? C_HI : C_DIM, -1, ICON_AUTO);
+        draw_column(2, "LOAD", "--", "", pick != song_cur ? C_HI : C_DIM, -1, ICON_AUTO);
+        draw_column(3, "COPY", "--", "", pick != song_cur ? C_HI : C_DIM, -1, ICON_AUTO);
         return;
     }
     if (cur_page()->graph == GR_USER) {                  /* SLOT, then three GO buttons */

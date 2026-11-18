@@ -619,7 +619,7 @@ A muted track fades out in a few milliseconds and plays no new notes; its patter
 | **Name a sound** (sloop_custom) | SAVE → NAME: the name, large, with the cursor; **POS** (KNOB 1: the character, 1–12), **CHAR** (KNOB 2: the characters round it show as a strip: space, A–Z, 0–9, `- . _ / #  +`), **TYPE** (KNOB 3: the sound type saved with it: BASS … FX, or none), **SAVE** (KNOB 4: right, two detents: store it in the slot picked on USER; left, two detents: CLEAR the name). The name starts as the sound's own and its type too; blank is the automatic ENGINE + slot name. SAVE → USER → SAVE uses them as well. The type is the label in the PRESETS list and the TYPE filter |
 | **Autosave** | automatic: when the transport is stopped and you have not touched anything for 2.5 s (at most every 20 s), the working project is kept in flash; at power-on SLOOP comes back exactly as you left it |
 
-**One song on the FM-1.** The FM-1 holds one song: **four sections, A–D**, and the order they play in (the SONG screen). A **section** is a loop: the four tracks (sounds, patterns, kit, locks, nudges, fill conditions, the track filter) and the global settings of the loop (tempo, swing, key…). Your **working loop** (what plays in loop mode, kept by the autosave) is apart from them: LOAD copies a section into it, SAVE copies it into a section. A–D are not four songs. **To keep several songs**, save an editor **Backup** file per song (Song & sections tab) and restore the one you want to play. (Before 2.7 the SAVE page was called PROJECT, its slots 1–4: the same four sections.)
+**Ten songs on the FM-1 (sloop_custom).** The FM-1 holds ten songs, one of them live: each is **four sections, A–D**, and the order they play in (the SONG screen). A **section** is a loop: the four tracks (sounds, patterns, kit, locks, nudges, fill conditions, the track filter) and the global settings of the loop (tempo, swing, key…). Your **working loop** (what plays in loop mode, kept by the autosave) is apart from them: LOAD copies a section into it, SAVE copies it into a section. A–D are not four songs. **To keep several songs**, save an editor **Backup** file per song (Song & sections tab) and restore the one you want to play. (Before 2.7 the SAVE page was called PROJECT, its slots 1–4: the same four sections.)
 
 **Settings of the FM-1** — SYNC, MIDI OUT, IN, the lights, the menu settings, the REC screen's MODE, START and QUANT — are not part of a section: loading one or NEW never changes them.
 
@@ -630,6 +630,7 @@ A muted track fades out in a few milliseconds and plays no new notes; its patter
 | **PRESETS** | the sound (your favourites, then by engine: its factory sounds, then your user presets on it) | the engine (next / previous) | **TYPE** (sloop_custom): only one sound type (ALL, BASS, KEYS, ORGN, PAD, LEAD, PLCK, STAB, FX); the filter works on the PRESETS page only | **FAV** (2.7): right adds the sound to your favourites, left removes it |
 | **USER** | **SLOT** 1–32 | **LOAD** (GO) | **ERASE** (GO) | **SAVE** (GO) |
 | **SECTION** | **SECT** A–D | **ERASE** (GO, 2.6) | **LOAD** (GO) | **SAVE** (GO) |
+| **SONG** (sloop_custom) | **SONG** 1–10 (the current one starred) | **ERASE** (GO, another song) | **LOAD** (GO: switch to it) | **COPY** (GO: the live song over it) |
 | **TOOLS** | **CLRSQ** (GO) | **INIT** (GO) | — | **NEW** (GO) |
 
 <a id="favourites"></a>**Favourites (2.7).** On the PRESETS page, turn KNOB 4 right: the sound is added to your favourites (*FAV ADDED*), up to 16, which come first in the PRESETS list, tagged FAV, in the order you added them; the PRESETS knob reaches them in a click or two from anywhere on TRACKS or HOME. KNOB 4 left removes it. A user preset can be a favourite too. They are a setting of the FM-1, kept through power-off (not in a project, and not in an editor backup). MIDI Program Change still counts the list without them.
@@ -640,7 +641,10 @@ GO: one click shows *AGAIN: SAVE* (or LOAD…), a second click within about 1.5 
 
 ## 14. Song mode: sections, chains, songs
 
-The FM-1 holds **one song**: up to **16 steps** of **4 sections, A–D**. Each section holds the four tracks (sounds, patterns, kit): SAVE → SECTION shows them. For more songs, keep one editor backup file per song.
+The FM-1 holds **ten songs** (SAVE → SONG); each is up to **16 steps** of **4 sections, A–D**. Each section holds the four tracks (sounds, patterns, kit): SAVE → SECTION shows them. For more songs, keep one editor backup file per song.
+
+
+**Songs (sloop_custom).** SAVE → SONG lists the ten songs (USED / EMPTY, the live one starred). **KNOB 1** picks one. **LOAD** (KNOB 3, two detents) makes it the live song: what was not yet saved in the live song is written first, then the picked song's four sections and its order are read in, and its section A becomes the loop (an empty song leaves the loop as it is). **COPY** (KNOB 4) writes the live song's four sections and order over the picked song. **ERASE** (KNOB 2) empties a song that is not the live one. Every action asks for a second detent, and the song must be stopped. Everything else (SECTION, the SONG screen, SAVE + a key) works on the live song, and the FM-1 comes back on the song it was left on. The editor's backup and restore are of the live song. **User samples are gone in this build**: their flash holds the songs, so the editor refuses sample uploads.
 
 ### Make it live, by playing
 

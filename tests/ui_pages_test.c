@@ -56,6 +56,12 @@ static uint32_t scope_w;
 #include "../firmware/src/ui.c"
 static uint32_t saves, loads, erases;
 static int project_used(uint32_t i) { return i < 2; }
+static uint8_t song_cur;
+static uint32_t song_calls[4];                       /* switch, copy, erase, last arg */
+static int song_is_used(uint32_t n) { return n == 0 || n == 3; }
+static void song_switch(uint32_t n) { song_calls[0]++; song_calls[3] = n; song_cur = (uint8_t)n; }
+static void song_copy_to(uint32_t n) { song_calls[1]++; song_calls[3] = n; }
+static void song_erase(uint32_t n) { song_calls[2]++; song_calls[3] = n; }
 static void project_save(uint32_t i) { (void)i; saves++; ui_message("SAVED"); }
 static void project_load(uint32_t i) { (void)i; loads++; }
 static void project_erase(uint32_t i) { (void)i; erases++; ui_message("ERASED"); }
@@ -1823,6 +1829,36 @@ int main(int argc, char **argv)
         encs[panel.enc[EN_K2]] = 1; frames(2);
         check(erases == e0 + 1u && ui.arm == 0xE8u, "  the arm runs out (~1.5 s): a detent after it arms again");
         ui.arm = 0; song.g[G_SLOT] = 1;
+        go_home(); frames(4);
+    }
+    {   /* sloop_custom: SAVE > SONG: KNOB 1 picks the song (the current one first), KNOB 2 ERASE, KNOB 3 LOAD, KNOB 4 COPY:
+         * GO buttons, one detent arms, a second acts, a turn to the left does nothing */
+        uint32_t i;
+        song.playing = 0;
+        song_cur = 0; ui.spick = 0; memset(song_calls, 0, sizeof song_calls);
+        go_home(); frame();
+        for (i = 0; i < NPAGES; i++) if (!strcmp(PAGES[i].title, "SONG") && PAGES[i].fam == FAM_SAVE) break;
+        check(i < NPAGES && PAGES[i].graph == GR_SONGS, "SAVE > SONG: a page");
+        open_family(PAGES[i].fam); ui.page = (uint8_t)i; ui.fam_last[PAGES[i].fam] = (uint8_t)i; page_entered(); ui.force = 1; frame();
+        ppm("page-song");
+        encs[panel.enc[EN_K1]] = 1; frames(2);
+        check(ui.spick == 2u, "SONG: KNOB 1 right picks song 2");
+        for (i = 0; i < 20u; i++) { encs[panel.enc[EN_K1]] = 1; frame(); }
+        check(ui.spick == ST_NSONG, "SONG: stops at song 10");
+        encs[panel.enc[EN_K1]] = -1; frames(2);
+        check(ui.spick == ST_NSONG - 1u, "SONG: KNOB 1 left, song 9");
+        encs[panel.enc[EN_K3]] = -1; frames(2);
+        check(!song_calls[0], "SONG, LOAD: a turn to the left does nothing");
+        encs[panel.enc[EN_K3]] = 1; frames(2);
+        check(!song_calls[0] && ui.arm == 0xEBu && !strcmp(ui.msg, "AGAIN: LOAD"), "SONG, LOAD: one detent arms (AGAIN: LOAD)");
+        ui.force = 1; frame(); ppm("page-song-arm");
+        encs[panel.enc[EN_K3]] = 1; frames(2);
+        check(song_calls[0] == 1u && song_calls[3] == ST_NSONG - 2u && song_cur == ST_NSONG - 2u, "SONG, LOAD again: song 9 loaded");
+        encs[panel.enc[EN_K2]] = 1; frames(2); encs[panel.enc[EN_K2]] = 1; frames(2);
+        check(song_calls[2] == 1u && song_calls[3] == ST_NSONG - 2u, "SONG, ERASE twice: the picked song erased");
+        encs[panel.enc[EN_K4]] = 1; frames(2); encs[panel.enc[EN_K4]] = 1; frames(2);
+        check(song_calls[1] == 1u, "SONG, COPY twice: the current song copied into the picked one");
+        ui.spick = 0; song_cur = 0; ui.arm = 0;
         go_home(); frames(4);
     }
     {   /* 2.7: favourites: the PRESETS page, KNOB 4 right adds the sound to the top of the list, left removes it */

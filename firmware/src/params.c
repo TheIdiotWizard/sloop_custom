@@ -406,7 +406,7 @@ enum { FAM_HOME, FAM_ENV, FAM_LFO, FAM_FX, FAM_SCL, FAM_EDIT, FAM_GLO, FAM_SAVE,
        FAM_COUNT };
 enum { SC_TRACK, SC_GLOBAL, SC_ENGINE, SC_STEP, SC_TRK, SC_SONG, SC_DRUM };
 enum { GR_NONE, GR_ADSR, GR_LFO, GR_STEPS, GR_ARP, GR_SCALE, GR_FX, GR_ROLL, GR_BROWSE, GR_SLOTS, GR_USER, GR_TRK,
-       GR_SLCR, GR_INS, GR_NAME };
+       GR_SLCR, GR_INS, GR_NAME, GR_SONGS };
 
 typedef struct {
     const char *title;
@@ -464,6 +464,7 @@ static const page_t PAGES[] = {
     {"USER", FAM_SAVE, SC_GLOBAL, GR_USER, {0xFF, 0xFF, 0xFF, 0xFF}},       /* user presets: SLOT LOAD ERASE SAVE */
     {"NAME", FAM_SAVE, SC_GLOBAL, GR_NAME, {0xFF, 0xFF, 0xFF, 0xFF}},       /* sloop_custom: the name of the next user preset: POS CHAR CLEAR SAVE */
     {"SECTION", FAM_SAVE, SC_GLOBAL, GR_SLOTS, {G_SLOT, 0xFF, G_LOAD, G_SAVE}},   /* ("PROJECT" before 2.7) */   /* (KNOB 2: ERASE, 2.6: ui_input.c) */
+    {"SONG", FAM_SAVE, SC_GLOBAL, GR_SONGS, {0xFF, 0xFF, 0xFF, 0xFF}},       /* sloop_custom: the ten songs of four sections: SONG, ERASE, LOAD, COPY (ui_input.c) */
     {"TOOLS", FAM_SAVE, SC_GLOBAL, GR_NONE, {G_CLRSEQ, G_INITSND, 0xFF, G_NEWPRJ}},
     {"ARP", FAM_ARP, SC_TRACK, GR_NONE, {P_AMODE, P_ARATE, P_AOCT, P_AGATE}},   /* (2.7.2: its values large, as ARP 2:
                                                        * GR_ARP was never drawn, the middle stayed empty) */

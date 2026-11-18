@@ -11,6 +11,11 @@ static void panel_setup(void);
 static void project_load(uint32_t slot);
 static void project_erase(uint32_t slot);        /* SAVE > PROJECT > ERASE (2.6) */
 static int project_used(uint32_t slot);
+static void song_switch(uint32_t n);             /* sloop_custom, SAVE > SONG: project.c */
+static void song_copy_to(uint32_t n);
+static void song_erase(uint32_t n);
+static int song_is_used(uint32_t n);
+static uint8_t song_cur;                         /* (the song the sections are of: project.c) */
 static int up_used(uint32_t k);              /* user presets: upreset.c */
 static int up_arp_of(uint32_t k, int16_t *a);   /* (2.7.1) user preset k's arp, MODE … ORDER: upreset.c */
 static int up_load(uint32_t k);
@@ -70,6 +75,7 @@ static struct {
     uint8_t confirm;             /* 1 = "clear the sequence?" (REC held on SEQ / ARP), 2 = "clear track n?" (TRACKS) */
     uint8_t confirm_trk;         /* the track the dialog clears */
     uint8_t uslot;               /* SAVE > USER: the selected user preset slot */
+    uint8_t spick;               /* sloop_custom, SAVE > SONG: the song picked + 1 (0: the current one) */
     uint8_t upos;                /* sloop_custom, SAVE > NAME: the character under edit (0..11) */
     char uname[13];              /* .. the name for the next SAVE: 12 characters, spaces for blank (0 = untouched: the sound's own name) */
     uint8_t utype;               /* .. its sound type: 0 none, 1..8 = BASS .. FX, 0xFF = the sound's own (0 = zero-initialised: set at boot) */
