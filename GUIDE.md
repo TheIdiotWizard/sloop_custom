@@ -8,6 +8,8 @@ SLOOP is a free, open-source (GPL-3.0) firmware for the M-VAVE FM-1, based on [F
 
 ---
 
+> **sloop_custom:** this is a personal build of SLOOP with ten engines (ANALOG4, FMTONE, SAW, PULS, ENS, WAV, LOFI, VOICE, WHEEL, NOISE), engine-ordered presets, nameable user presets and a mod-wheel (CC 1) pitch-depth default. Release notes below the sound-bank and engine sections that mention FM6, PHYS, SAMPLE, GRAIN, TRIO, DIGITAL, PHASE, DX7 or the 12-engine bank describe stock SLOOP. Install and editor: https://theidiotwizard.github.io/sloop_custom/
+
 ## How to read this guide
 
 | Written | Means |
@@ -50,7 +52,7 @@ The 11 black keys are F#3, G#3, A#3, C#4, D#4, F#4, G#4, A#4, C#5, D#5, F#5. The
 14. [Song mode: sections, chains, songs](#14-song-mode-sections-chains-songs)
 15. [The screens](#15-the-screens)
 16. [Every page, knob by knob](#16-every-page-knob-by-knob)
-17. [The sounds and the twelve engines](#17-the-sounds-and-the-twelve-engines)
+17. [The sounds and the ten engines](#17-the-sounds-and-the-ten-engines)
 18. [Effects: master, punch-in, per track](#18-effects-master-punch-in-per-track)
 19. [The visualiser](#19-the-visualiser)
 20. [The HOME menu and the lights](#20-the-home-menu-and-the-lights)
@@ -85,7 +87,7 @@ Everything from 2.7 is unchanged and still here. Projects, autosaves and backups
 
 ## 1. Install and update
 
-**From the browser (recommended).** Open the [installer page](https://isod89.github.io/sloop-fm1/) in **Chrome or Edge**, connect the FM-1 by USB (a data cable, plugged straight in, no hub), press **INSTALL**, allow MIDI access, and wait for *Done*. The FM-1 restarts on the SLOOP logo.
+**From the browser (recommended).** Open the [installer page](https://theidiotwizard.github.io/sloop_custom/) in **Chrome or Edge**, connect the FM-1 by USB (a data cable, plugged straight in, no hub), press **INSTALL**, allow MIDI access, and wait for *Done*. The FM-1 restarts on the SLOOP logo.
 
 **From the source folder (Windows).** Double-click **`INSTALL-SLOOP.bat`**: it builds the firmware and opens the installer at `http://localhost:8766/webapp/installer/`. Keep the black window open until the install is done. **`OPEN-EDITOR.bat`** opens the web editor.
 
@@ -710,7 +712,7 @@ Tap a button to open its first page (or the last one you used); **tap it again**
 | | **REV/CHO** (global) | SIZE reverb size | DAMP reverb damping | CRT chorus rate | CDP chorus depth |
 | **SEL** | **SEL** | ROOT (the track's key) | SCL: the track's scale (SEL + KNOB 2 sets all three) | QNT keys: OFF, SNAP, WHITE | CHORD: OFF, TRIAD, 7TH, 9TH, SUS4, POWER |
 | | **SEL 2** | TRN transpose ±24 | STRUM ±60 ms | VLEAD: OFF / ON | — |
-| **EDIT** | **EDIT 1** | engine parameter 1 | 2 | 3 | 4 (see [the engines](#the-twelve-engines)) |
+| **EDIT** | **EDIT 1** | engine parameter 1 | 2 | 3 | 4 (see [the engines](#the-ten-engines)) |
 | | **EDIT 2** | engine parameter 5 | 6 | 7 | 8 |
 | | **FILTER** (ANALOG only, 2.6) | TYPE: LP, BP, HP | CUT cutoff | RES resonance | KTR key tracking |
 | | **VOICE** | VCE: POLY, MONO, LEG (legato), UNI (unison) | GLD glide | GLMOD: RATE / TIME | PRIO: LAST, LOW, HIGH (mono note priority) |
@@ -752,45 +754,43 @@ Notes:
 
 ---
 
-## 17. The sounds and the twelve engines
+## 17. The sounds and the ten engines
 
 ### The sound bank
 
-**153 factory sounds**, every one a full patch on one of the twelve engines, all level-matched (the same LEVEL gives the same loudness). **PRESETS** browses them **by kind** — basses, keys, organs, pads, leads, plucks and bells, stabs, FX — with the kind shown next to the name; your **32 user presets** come after. A new project starts at **90 BPM** with *808 BOOM* on track 1, *RHODES* on track 2, *LOFI FLUTE* on track 3 and the 808 kit on track 4.
+**69 factory sounds** on the ten engines, level-matched. **PRESETS** lists them **by engine**, in the engine order below (all the ANALOG4 sounds, then FMTONE, and so on); your own user presets sit at the end of their engine's group. The sound's kind is shown next to its name. **KNOB 3 (TYPE)** filters the list by kind. The effect sends of a loaded sound are as the sound defines them; the delay send is always 0.
 
 | Kind | Sounds (engine) |
 | --- | --- |
-| **Bass** | 808 BOOM, 808 DIRTY, 808 SLIDE, SUB BASS, PLUGG BASS (they slide between held notes, two octaves under the keys) · REESE, WOBBLE, ACID 303, FUNK BASS, MONO BASS (ANALOG) · FM BASS, BASS GTR (DIGITAL) · CZ BASS (PHASE) · ROUND BASS (FM6) · FAT BASS (TRIO) · WOW BASS (VOICE) · GB BASS (LOFI) · UP BASS, DEEP BASS (SAMPLE) · PLUCK BASS (PHYS) · NES BASS (LOFI) · SAW BASS (ANALOG) |
-| **Keys** | RHODES, DX RHODES, WURLI, M1 PIANO, AFRO KEYS, CLAV (DIGITAL) · GRAND PNO, DUSTY PNO, LOFI KEYS (SAMPLE) · SOFT KEYS (PHASE) · TINE EP (FM6) · FM GRAND (DIGITAL) |
-| **Organ** | SOUL ORGAN, GOSPEL, JAZZ ORGAN, DIRTY B3, HOUSE ORGN (WHEEL) · DRAWBARS (FM6) · ACCORDION (TRIO) · ROCK ORGAN, CHAPEL, REGGAE ORG (WHEEL) |
-| **Pad** | WARM PAD, DARK STR, ATMOS PAD (ANALOG) · SAW PAD, ENSEMBLE (TRIO) · GLASS PAD (DIGITAL) · SOFT PAD (FM6) · CZ STRING (PHASE) · LOFI CLOUD, VIBE HAZE, STR CLOUD, SHIMMER, DRONE (GRAIN) · CHOIR AAH, SOUL OOH (VOICE) · BOWED MTL, CELLO BOW, GLASS BOWL (PHYS) · WIND, OCEAN (NOISE) · CZ PAD (PHASE) · VOX PAD (VOICE) · PNO FREEZE, HORN CLOUD (GRAIN) · SINE PAD (ANALOG) · PULSE PAD (TRIO) |
-| **Lead** | SUPERSAW, G-FUNK LD, FAT LEAD, PAN FLUTE (ANALOG) · SYNC LEAD, HOOVER (TRIO) · TALKBOX, HARMONICA (VOICE) · GAME LEAD (LOFI) · LOFI FLUTE (SAMPLE) · FLUTE DUST (GRAIN) · NZ ARCADE (NOISE) · WAVE LEAD (LOFI) · CZ LEAD (PHASE) · ROBOT (VOICE) · PWM LEAD (ANALOG) · SQR LEAD (TRIO) |
-| **Pluck & bell** | TRAP PLUCK (ANALOG) · RESO PLUCK (PHASE) · PLUGG BELL, TRAP BELL, MUSIC BOX, KALIMBA, MARIMBA, XYLOPHONE, GLOCKEN, CELESTA, STEEL DRUM, HARP (DIGITAL) · VIBES (SAMPLE) · 8BIT ARP (LOFI) · GLASS BELL, WOOD BARS, NYLON PICK (FM6) · STR PLUCK, SITAR, PHYS HARP, BELL TREE, MODAL BAR, THUMB PNO, NYLON GTR, STEEL GTR, MUTED GTR, KOTO, BANJO, TANPURA, CHIMES, BIG BELL, VIBRA BAR, STEEL PAN, WOOD BLOCK (PHYS) · 1BIT BEEP (LOFI) · CZ RESO (PHASE) · TUBE BELL, FM PLUCK (DIGITAL) |
-| **Stab** | MIN STAB, MIN7 STAB, RAVE STAB, DUB CHORD (TRIO: one key plays the chord) · SYN BRASS (ANALOG) · CZ BRASS (PHASE) · BRASS SECT (FM6) · 80S POLY (TRIO) · HORN STAB, STRING STB (SAMPLE) · CHIP CHORD (LOFI) · POWER STAB (TRIO) |
-| **FX** | SCRATCH (scratch, backspin, rewind across the keys) · GM KIT (SAMPLE) · HAND DRUM, MEMB TOMS, TABLA, CONGA, TIMPANI (PHYS) · RAIN, NZ METAL, VINYL, HISS, RISER, NZ SNARE, BITCRUSH, RADIO (NOISE) · CHIP NOISE (LOFI) |
+| **Bass** | SAW BASS, ACID (ANALOG4) · FM BASS (FMTONE) · SUB BASS (SAW) · PWMBASS (PULS) · DIGI BASS (WAV) · WOW BASS (VOICE) · GB BASS, NES BASS (LOFI) |
+| **Keys** | TINE EP (FMTONE) · LOFI KEYS (WAV) |
+| **Organ** | SOUL ORGAN, GOSPEL, JAZZ ORGAN, DIRTY B3, HOUSE ORGN, ROCK ORGAN, CHAPEL, REGGAE ORG (WHEEL) |
+| **Pad** | WARM PAD (ANALOG4) · GLASS PAD (FMTONE) · BIG PAD (SAW) · PWMPAD (PULS) · STRINGS (ENS) · WAVE PAD (WAV) · CHOIR AAH, SOUL OOH, VOX PAD (VOICE) · WIND, OCEAN (NOISE) |
+| **Lead** | PWM LEAD, SYNC LEAD (ANALOG4) · PLUCK LEAD (FMTONE) · SUPERSAW, MONO SAW, DRIFT LD (SAW) · SQUARE, REED (PULS) · OCT PULS (ENS) · SCAN LEAD, SYNC LEAD (WAV) · TALKBOX, HARMONICA, ROBOT (VOICE) · GAME LEAD, WAVE LEAD (LOFI) · NZ ARCADE (NOISE) |
+| **Pluck & bell** | BELL, RESO PLUCK, FIFTH RING (FMTONE) · 8BIT ARP, 1BIT BEEP (LOFI) |
+| **Stab** | BRASS (FMTONE) · MAJOR, MINOR, FIFTHS (ENS: one key plays the chord) · CHIP CHORD (LOFI) |
+| **FX** | KICK, ZAP TOM, NOISE HAT (ANALOG4) · RAIN, NZ METAL, VINYL, HISS, RISER, NZ SNARE, BITCRUSH, RADIO (NOISE) · CHIP NOISE (LOFI) |
 
 To pick an engine directly: SAVE → PRESETS → **KNOB 2**. To start from the engine's defaults: SAVE → TOOLS → **INIT**.
 
-### The twelve engines
+### The ten engines
 
-Each engine's eight parameters are on **EDIT 1** (KNOB 1–4) and **EDIT 2** (KNOB 1–4), tap EDIT once and twice; the screen shows them under the engine's own page names (for example DIGITAL: *OPS*, *MOD*). A dash is an unused knob.
+Each engine's eight parameters are on **EDIT 1** and **EDIT 2** (KNOB 1–4 each); tap EDIT once and twice.
 
-| Engine | Sound | EDIT 1: KNOB 1 · 2 · 3 · 4 | EDIT 2: KNOB 1 · 2 · 3 · 4 |
-| --- | --- | --- | --- |
-| **ANALOG** | virtual analogue: two oscillators, filter | WAVE (SAW, SQR, TRI, SIN, PWM) · DTN detune · MIX · NOIS noise | CUT cutoff · RES resonance · DRV drive · KTR key tracking |
-| **DIGITAL** | 4-operator FM | ALG algorithm 1–8 · R2 · R3 · R4 (operator ratios) | IDX FM amount · MDEC modulator decay · FB feedback · — |
-| **PHASE** | phase distortion (CZ style) | WAVE · WAVE2 (a second wave, or –) · DCW (the distortion amount) · ENV (its envelope) | DTN detune · LINE: MIX / RING · SUB sub-oscillator · — |
-| **LOFI** | 8-bit chip | CHIP: 4BIT, 4B/2, 8BIT, 1BIT, STEP · WAVE: PLS, TRI, SAW, NOIS, WRAM · DUTY (pulse width / wave table) · CRSH crush (DCY on STEP) | SWP pitch sweep · VIB vibrato · ARP: OFF, OCT, MAJ, MIN (chip arpeggio) · TONE |
-| **SAMPLE** | sampler | SET: PIANO, BASS, VIBES, HORNS, STRGS, FLUTE, SCRCH (2.7.2: one scratch over the whole keyboard), PERC, **USR1–USR4** · TUNE ±24 · BITS (bit reduction) · LOOP: OFF / ON | CUT (tone) · — · DRV drive · — |
-| **VOICE** | formant voice (choirs, talkbox) | VOWL vowel · VOWL2 second vowel · TALK (time from one to the other) · SHIFT formant shift ±12 | BUZZ · BRTH breath · Q · RAND |
-| **TRIO** | three oscillators | WAVE (16 combinations) · INT2 · INT3 (intervals of oscillators 2 and 3, ±24) · DTN | MODE: LP, BP, HP, NOT (filter type) · CUT · RES · PW pulse width |
-| **WHEEL** | tonewheel organ | REG (16 drawbar registrations: FLUTE, MELLO, HOLLW, SMOOT, 3BAR, BLUES, GOSPL, ROCK…) · SUB · BODY · TOP (drawbar groups ±8) | PERC: OFF, 2ND, 3RD, 2SOFT, 3SOFT, 2SLOW, 3SLOW · CLICK · DRV · ROTR: OFF, SLOW, FAST (rotary speaker) |
-| **GRAIN** | granular | SRC (any sample set, USR1–USR4 too) · POS position · SIZE grain size · DENS density | PTCH ±24 · SPRD spread · RAND randomness · TONE |
-| **FM6** | six-operator FM, DX7 patches | ALG: PAT (the patch's) or 1–32 · FB feedback · MLVL modulator level (brightness) · MRAT modulator ratio | MEG modulator envelopes slower / faster · VMOD velocity → brightness · DTUN carrier spread · PTCH: F1–F8 factory, B1–B27 your bank |
-| **PHYS** | physical models: strings, bars and bells, drum heads, sympathetic strings (DaisySP and Rings, as Felucca 1.0 ported them; 3 voices a track, SYMP 2) | MODEL: MODAL, STRNG, MEMB, SYMP · STRC structure (MEMB: HARM, SYMP: CHRD the sympathetic strings' chord) · BRIT brightness · DAMP | POS strike / pluck position (SYMP: SYMP, how much they ring) · ACC accent · BOW bowing (MEMB: BEND, SYMP: BUZZ) · EXC the exciter in the mix |
-| **NOISE** | noise, from analogue to digital: colours, crackle, shift registers, metallic tones | MODE: ANLG, DUST, LFSR, META · COLR white → pink → brown · FREQ · RES | TRK key tracking · DENS impulses (LFSR, META: LEN, the register) · DRFT drift · CRSH crush (LFSR, META: CLK, the clock above the key) |
+| Engine | Sound | EDIT knobs (the screen shows the engine's own labels) |
+| --- | --- | --- |
+| **ANALOG4** | two-oscillator analogue (from Mini-Tone), 4 voices, own resonant filter | WAV1 (SIN, TRI, SAW, PLS) · PW1 · TUN1 ±24 · SUB · WAV2 · PW2 · TUN2 ±24 · FIN2 fine. Own pages: MIX, FILTER 1, FILTER 2, F1 ENV, F1 AMT, ENV 2 |
+| **FMTONE** | four-operator FM (from Mini-Tone), 6 voices, own filter | ALGO 1–8 · RAT (ratio set C, A, B) · HARM · DTN · FB · MIX. Own pages: A ENV, B ENV, DEL TRK, FINE, FILTER |
+| **SAW** | detuned saw stack (MONO2K, via Melodee Custom) | UNIL · UNIW · UNIX · DRFT · SUBX · SUB1 · SUB2 · TUNE |
+| **PULS** | pulse and PWM (MONO2K) | UNIL · UNIW · SUB1 · SUB2 · PW · PWAD · PWRS · TUNE |
+| **ENS** | chord / ensemble machine (MONO2K), 3 voices | PCH2 · PCH3 · PCH4 (chord intervals) · WAVE · PW · CHRL · CHRW (chorus) · TUNE |
+| **WAV** | wavetable (MONO2K) | WAVE · SCAN · STIM · SYNC · BITS · DTUN · MIX2 · STEP |
+| **LOFI** | 8-bit chip | CHIP · WAVE · DUTY · CRSH · SWP · VIB · ARP · TONE |
+| **VOICE** | formant voice (choirs, talkbox), 4 voices | VOWL · VOWL2 · TALK · SHIFT ±12 · BUZZ · BRTH · Q · RAND |
+| **WHEEL** | tonewheel organ (drawbars) | REG (16 registrations: FLUTE, MELLO, HOLLW, SMOOT, 3BAR, BLUES, GOSPL, ROCK, TOPS, CLARI, REED, STRNG, CHAPL, BRITE, BASS, FULL) · SUB · BODY · TOP (±8) · PERC (OFF, 2ND, 3RD, soft and slow variants) · CLICK · DRV · ROTR (OFF, SLOW, FAST) |
+| **NOISE** | noise generator | MODE (ANLG, DUST, LFSR, META) · COLR · FREQ · RES · TRK · DENS · DRFT · CRSH |
 
-The **SAMPLE** sets are free recordings (CC0: Versilian Studios VSCO-2 CE and VCSL, Sonic Pi), coloured like a record through an old sampler. **GRAND PNO** is a Steinway recorded note by note; long notes fade as on the real one.
+Every engine except ANALOG4 and FMTONE uses SLOOP's FX → FILTER; ANALOG4 and FMTONE have their own filter pages. The track LFO, the arp, UNISON, MONO and LEGATO work on all ten.
 
 ### Polyphony
 
@@ -798,18 +798,12 @@ The three synth tracks **share one pool of 8 voices**; the drum track has its ow
 
 | Voices | Engines |
 | --- | --- |
-| **8** | ANALOG, DIGITAL, PHASE, LOFI, SAMPLE, TRIO, WHEEL, NOISE |
-| **6** | FM6 |
-| **4** | VOICE |
-| **3** | GRAIN, PHYS (SYMP model: **2**) |
+| **8** | LOFI, WHEEL, NOISE |
+| **6** | FMTONE, SAW, PULS, WAV |
+| **4** | ANALOG4, VOICE |
+| **3** | ENS |
 
-In **MONO** or **LEGATO** a track plays one note at a time; **UNISON** stacks detuned voices within the same cap. When more than one synth track sounds at once, the 8-voice pool is split between them: a part that needs a voice takes the oldest sounding one.
-
-### FM6 and DX7 patches
-
-**FM6** is msfa, the synthesis core of Dexed, as Felucca 1.0 ported it: six operators with their own four-stage envelopes, keyboard scaling, velocity, ratio or fixed frequency and detune; 32 algorithms, feedback, LFO, pitch envelope; six voices per track. The eight EDIT values above are **macros on top of the patch**; the track's FLT moves MLVL (so LFO → FLT still brightens it), SHP the feedback, PIT the pitch.
-
-Edit full patches in the web editor's **FM6** panel (Sound page, on an FM6 track): every operator, **Send to track**, **Store in bank** (B1–B27), **Import SysEx** (a DX7 voice or a 32-voice bank: thousands of DX7 and Dexed patches play on the FM-1; or drop the .syx file on the panel) and **Export SysEx**. **Store cartridge in bank** (2.5) puts a whole 32-voice cartridge on the FM-1 at once: the first 27 voices are ticked (or tick the ones you want, up to 27), and one write puts them in B1, B2… in order; the editor asks before replacing, and the rest of the bank stays. Stop the song first. Before storing you can choose to **also add them to the user presets** (in the free slots, or from a slot you pick): each voice gets a user preset with its name that plays its B slot, so on the FM-1 you pick it by name with **PRESETS** or **SELECT**, like any sound; the editor says which user presets it would replace. (A user preset keeps PTCH, not the patch: the voice itself stays in the bank.) Then pick them on the FM-1 with **PTCH** (EDIT page 2: B1–B27 after the factory F1–F8). A project keeps the track's **PTCH**, not the patch itself: store an edited patch in the bank to keep it.
+In **MONO** or **LEGATO** a track plays one note at a time; **UNISON** stacks detuned voices within the same cap. When more than one synth track sounds at once, the pool is shared.
 
 ---
 
@@ -1124,11 +1118,11 @@ SLOOP 2.5: the editor's **Drum synth** page changes every value of a synthesised
 
 ## 24. The web editor
 
-Open it from the [installer page](https://isod89.github.io/sloop-fm1/), the [editor link](https://isod89.github.io/sloop-fm1/webapp/editor/), or **`OPEN-EDITOR.bat`**, in **Chrome or Edge** with the FM-1 on USB, and press **Connect** (allow MIDI). It follows the device live: turn a knob on the FM-1, the editor moves. It looks like the FM-1: the black screen, the four track colours, the FM-1's own pixel font. The language button switches English / Japanese.
+Open it from the [installer page](https://theidiotwizard.github.io/sloop_custom/), the [editor link](https://theidiotwizard.github.io/sloop_custom/webapp/editor/), or **`OPEN-EDITOR.bat`**, in **Chrome or Edge** with the FM-1 on USB, and press **Connect** (allow MIDI). It follows the device live: turn a knob on the FM-1, the editor moves. It looks like the FM-1: the black screen, the four track colours, the FM-1's own pixel font. The language button switches English / Japanese.
 
 **Offline (2.6).** *Download the editor* (under Connect, or on the installer page) saves the whole editor as one file for a computer, `sloop-editor-2.6.html`, also attached to each [release](https://github.com/isod89/sloop-fm1/releases). Double-click it: it opens in Chrome or Edge without internet (Chrome asks once to allow MIDI) and works as the online one. Its sound library (kept in the browser) is its own, apart from the online editor's: move sounds between them with Export / Import, or a backup.
 
-**As an app, also on Android (2.6).** Open the [online editor](https://isod89.github.io/sloop-fm1/webapp/editor/) or the installer once with internet, then *Install the app* (under Connect, or on the installer page; or Chrome's menu → *Install app* / *Add to Home screen*). From then on the SLOOP app opens the editor without internet, and its link to the installer works offline too (with the firmware it installs). It stays the online site kept by the browser, so it uses the same sound library as the online editor, and it takes each new SLOOP version by itself the next time it opens online. On Android, use the app rather than the downloaded file: Chrome on Android does not allow MIDI in a downloaded file.
+**As an app, also on Android (2.6).** Open the [online editor](https://theidiotwizard.github.io/sloop_custom/webapp/editor/) or the installer once with internet, then *Install the app* (under Connect, or on the installer page; or Chrome's menu → *Install app* / *Add to Home screen*). From then on the SLOOP app opens the editor without internet, and its link to the installer works offline too (with the firmware it installs). It stays the online site kept by the browser, so it uses the same sound library as the online editor, and it takes each new SLOOP version by itself the next time it opens online. On Android, use the app rather than the downloaded file: Chrome on Android does not allow MIDI in a downloaded file.
 
 **Layout:** the side bar has the pages in three groups — **Track** (LIVE, Sound, Sequencer, Tracks, Song), **Sounds** (Library, Samples, Drum kit, Drum synth), **Device** (Projects, Settings) — and the connection. On top: the page title, the messages, and on the Track pages the **four tracks** (number, sound, engine): click one to select it. With the side bar focused, the arrow keys move between pages.
 

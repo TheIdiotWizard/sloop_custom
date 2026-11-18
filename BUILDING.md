@@ -104,7 +104,7 @@ against the same adapter compiled for the host and verify sequencing, live mixer
 `web/make_site.py` includes the preview and caches it for the site app when the WASM build is present:
 
 ```sh
-# Use a release package downloaded from isod89/sloop-fm1, or your own firmware build.
+# Use a release package downloaded from TheIdiotWizard/sloop_custom, or your own firmware build.
 python3 web/make_site.py build/releases/sloop-2.6.fwsc 2.6 build/site
 python3 -m http.server 8766 --bind 127.0.0.1 --directory build/site
 ```

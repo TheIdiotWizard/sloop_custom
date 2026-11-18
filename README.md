@@ -4,20 +4,20 @@
 Free and open source (GPL-3.0), based on <a href="https://github.com/hugelton/Felucca">Felucca</a> by Leo Kuroshita / Hügelton Instruments.</p>
 
 <p align="center">
-<a href="https://isod89.github.io/sloop-fm1/"><b>Install from the browser</b></a> ·
+<a href="https://theidiotwizard.github.io/sloop_custom/"><b>Install from the browser</b></a> ·
 <a href="GUIDE.md">Complete guide</a> ·
 <a href="SLOOP.md">Manual</a> ·
 <a href="DEMARRAGE-RAPIDE-FR.md">Guide en français</a> ·
-<a href="https://isod89.github.io/sloop-fm1/webapp/editor/">Web editor</a> ·
+<a href="https://theidiotwizard.github.io/sloop_custom/webapp/editor/">Web editor</a> ·
 <a href="../../releases">Releases</a> ·
 <a href="../../issues">Report a bug</a>
 </p>
 
 ---
 
-> **sloop_custom** — a personal build of SLOOP. The synth engines are, in order: **ANALOG4** and **FMTONE** (from [Mini-Tone](https://github.com/eldontyrellcorp/Mini-Tone), each with its own resonant filter), **SAW**, **PULS**, **ENS** and **WAV** (MONO2K's machines as ported by [Melodee Custom](https://github.com/TheIdiotWizard/melodee_custom), without Melodee's filter), and SLOOP's **LOFI**, **VOICE**, **WHEEL** (drawbar organ) and **NOISE**. Every engine but ANALOG4 and FMTONE uses SLOOP's FX → FILTER. The drums are unchanged. PHASE, DIGITAL, TRIO, GRAIN, FM6, PHYS, SAMPLE and SLICE are gone, and the instrument sample sets with them. The tracks use the LOOM A colours. Projects and user presets are a new format (FUN7, UPB7): saves from stock SLOOP are refused, and favourites start empty. The rest of this README describes stock SLOOP.
+> **sloop_custom** — a personal build of SLOOP. The synth engines are, in order: **ANALOG4** and **FMTONE** (from [Mini-Tone](https://github.com/eldontyrellcorp/Mini-Tone), each with its own resonant filter), **SAW**, **PULS**, **ENS** and **WAV** (MONO2K's machines as ported by [Melodee Custom](https://github.com/TheIdiotWizard/melodee_custom), without Melodee's filter), and SLOOP's **LOFI**, **VOICE**, **WHEEL** (drawbar organ) and **NOISE**. Every engine but ANALOG4 and FMTONE uses SLOOP's FX → FILTER. The drums are unchanged. PHASE, DIGITAL, TRIO, GRAIN, FM6, PHYS, SAMPLE and SLICE are gone, and the instrument sample sets with them. The tracks use the LOOM A colours. Projects and user presets are a new format (FUN7, UPB7): saves from stock SLOOP are refused, and favourites start empty. The rest of this README is stock SLOOP's, and parts of it (the older release notes, the sampler, FM6, PHYS, DX7 and similar) describe features this build no longer has; [GUIDE.md](GUIDE.md) §17 and [SLOOP.md](SLOOP.md) describe the engines and sounds of this build.
 
-SLOOP turns the FM-1 into a four-track groovebox you play live: **three synths and a drum machine** with 16 sounds on the white keys, twelve synthesis engines, 153 sounds, 37 drum kits, your own samples, a song mode you play with your hands, USB audio, MIDI in on the jack and MIDI clock — and now **physical models** (guitars, sitar, bells, hand drums), a **noise** engine, **six-operator FM with DX7 patches**, **parameter locks**, **micro timing**, **fills**, a **quick chain** of sections and the **sequencer to MIDI out**. House, techno, hip-hop, trap, drum & bass, amapiano, synthwave, lo-fi, ambient, chiptune — it does not pick a style for you. No factory patterns, nothing to load: everything you hear, you play.
+SLOOP turns the FM-1 into a four-track groovebox you play live: **three synths and a drum machine** with 16 sounds on the white keys, ten synthesis engines, 69 sounds, 37 drum kits, a song mode you play with your hands, USB audio, MIDI in on the jack and MIDI clock — and **parameter locks**, **micro timing**, **fills**, a **quick chain** of sections and the **sequencer to MIDI out**. House, techno, hip-hop, trap, drum & bass, amapiano, synthwave, lo-fi, ambient, chiptune — it does not pick a style for you. No factory patterns, nothing to load: everything you hear, you play.
 
 > **Status:** 2.8.5 (FM-1 units with the newer UC25HQ80 flash chip: saving and updating now work — they were taken for an unknown chip). 2.8.4 (fixes: no more distortion at the end of notes, 3.5 mm and USB; UNISON no longer stacks its voices in phase; PHYS strings in tune; NZ ARCADE, SAMPLE and GRAIN follow the top keys; a firm press on a layer button opens its pages; on REC READY a knob changes only its own value; the way back to the official firmware with V16). 2.8.3 (hold a note under others: on a POLY track a note you hold keeps sounding while you record over it and on playback, free take included, it goes on through the notes already there when you overdub, and SEQ → NOTES LEN runs on under later notes — a long bass under a melody; a MONO or LEGATO sound says *MONO: SET VOICE POLY*; no stuck note after a MIDI burst; drums: on a busy beat the kick no longer drops out; a quick button tap no longer flashes its layer page; a sample or slice played again starts with its ATK, no click; the second core: a bad read no longer crashes the FM-1, SLOOP goes on with one core). 2.8.1 (the per-step note sheet, held with OCT+, now shows as a strip along the bottom of the screen instead of a box over the sequencer, so the piano roll and the drum grid stay fully visible; and it reopens on the row you last used, for a quick MOVE). 2.8: a NOTES piano-roll editor for the synth tracks and the same per-step sheet on the drums, the playing section A–D shown on the main screen, resonance on every filter, the FX filter on the drums, drum TUNE on the noise sounds, a settable punch-in fade, steadier MIDI clock in, MIDI Bank Select; fixes: a reliable USB RESCUE, the browser installer finds the FM-1's loader by its handshake, the in-browser return-to-stock removed — use M-UPGRADE. 2.7: two processor cores, fifteen arp modes, KBD HOLD, drum TUNE and DECAY, favourite sounds, looping samples, QUANT off, MIDI 3, your own screen colours; after 2.6's 27 punch-in effects, INSERT and MIDI LEARN. Still a beta: install at your own risk, and please [report](../../issues) what you find. Your projects, presets, samples and settings are kept when you update, and you can go back at any time (see [Going back](#going-back)).
 
@@ -220,8 +220,8 @@ Keys 1, 5, 9 and 13 glow dimly while a layer is held: the first key of each row 
 
 ### Synths and sounds
 
-- **Twelve engines:** analog, 4-op FM, **6-op FM with DX7 patches (FM6, 2.4)**, phase distortion, three-oscillator, tonewheel organ, formant voice, granular, lo-fi chip, sampler, **physical models (PHYS, 2.5)**, **noise (NOISE, 2.5)**.
-- **153 sounds, browsed by kind** — basses (sliding 808s, acid 303, reese, FM, bass guitar), guitars, sitar and koto (physical models), keys (Rhodes, a real Steinway grand, house and afro keys), organs and accordion, pads (string machine, granular clouds), leads (supersaw, talkbox, pan flute, harmonica), plucks and bells (harp, steel drum, glockenspiel, celesta, xylophone), stabs and dub chords — every one level-matched. **32 slots** for your own presets.
+- **Ten engines:** ANALOG4, FMTONE, SAW, PULS, ENS, WAV, LOFI, VOICE, WHEEL (drawbar organ), NOISE.
+- **69 sounds, listed by engine** and filterable by kind: basses, keys, organs, pads, leads, plucks, stabs and FX.
 - Envelopes (with a pitch punch for 808s; 2.6: in note values with ENV SYNC), LFO (2.6: tempo-synced, free-running or unipolar), arpeggiator, glide and voice modes (POLY, MONO, LEGATO, UNISON), per-track drive, **INSERT effect** (2.6: soft / hard clip, wavefolder, fuzz, bit crush, phaser, flanger, chorus) and slicer, ANALOG's filter as LP, BP or HP (2.6), sends to a **stereo chorus**, a **tempo delay** (dotted 1/8 and 1/16 too) and a **stereo reverb**.
 - **Key and chords (SEL):** the key of the song for all synths, 16 scales, one-key chords (triad, 7th, 9th, sus4, power), keys snapped to the scale or the scale on the white keys.
 
@@ -269,7 +269,7 @@ Every button can glow so its label is readable on a black FM-1; the C keys or ev
 ### Memory and safety
 
 - **Autosave:** stop and leave it 2.5 s, your work is kept; at power-on SLOOP comes back exactly as you left it.
-- **1 song of 4 sections (A–D)** (more songs as backup files), **32 user presets**, **27 FM6 patches**, **undo / redo**.
+- **1 song of 4 sections (A–D)** (more songs as backup files), **32 user presets**, **undo / redo**.
 - **Full backup and restore** from the web editor (2.3).
 - **Safe updates:** the installer checks the package (SHA-256) before writing it, the update loader checks it again (CRC) before starting it; an interrupted install finishes when you press Install again; **USB rescue** (OCT− at power-on).
 
@@ -277,7 +277,7 @@ Every button can glow so its label is readable on a black FM-1; the C keys or ev
 
 ### From the browser (recommended)
 
-1. Open **[the SLOOP installer](https://isod89.github.io/sloop-fm1/)** in **Chrome or Edge** on a computer.
+1. Open **[the SLOOP installer](https://theidiotwizard.github.io/sloop_custom/)** in **Chrome or Edge** on a computer.
 2. Connect the FM-1 by USB — a **data** cable, directly (no hub).
 3. Press **INSTALL**, allow MIDI access, and wait for *Done*. The FM-1 restarts on the SLOOP logo.
 
@@ -411,7 +411,7 @@ On USB the FM-1 is also an **audio input named "Felucca"**: 44.1 or 48 kHz (2.5:
 
 ## The web editor
 
-Open it from the [installer page](https://isod89.github.io/sloop-fm1/) (or the [editor link](https://isod89.github.io/sloop-fm1/webapp/editor/)) in Chrome or Edge, with the FM-1 on USB, and press **Connect**. It follows the device live: turn a knob on the FM-1 and the editor moves.
+Open it from the [installer page](https://theidiotwizard.github.io/sloop_custom/) (or the [editor link](https://theidiotwizard.github.io/sloop_custom/webapp/editor/)) in Chrome or Edge, with the FM-1 on USB, and press **Connect**. It follows the device live: turn a knob on the FM-1 and the editor moves.
 
 **Local audio preview.** Build the browser audio engine with `python3 tools/build_preview.py`
 (Emscripten required; see [BUILDING.md](BUILDING.md#browser-audio-preview)), generate and serve the local site,
@@ -445,7 +445,7 @@ Audio preview requires the served site, rather than the downloaded single-file e
 
 **Offline (2.6).** *Download the editor* (under Connect, or on the installer page) saves the whole editor as one file for a computer, `sloop-editor-2.6.html`, also attached to each [release](https://github.com/isod89/sloop-fm1/releases). Double-click it: it opens in Chrome or Edge without internet (Chrome asks once to allow MIDI) and works as the online one. Its sound library (kept in the browser) is its own, apart from the online editor's: move sounds between them with Export / Import, or a backup.
 
-**As an app, also on Android (2.6).** Open the [online editor](https://isod89.github.io/sloop-fm1/webapp/editor/) or the installer once with internet, then *Install the app* (under Connect, or on the installer page; or Chrome's menu → *Install app* / *Add to Home screen*). From then on the SLOOP app opens the editor without internet, and its link to the installer works offline too (with the firmware it installs). It stays the online site kept by the browser, so it uses the same sound library as the online editor, and it takes each new SLOOP version by itself the next time it opens online. On Android, use the app rather than the downloaded file: Chrome on Android does not allow MIDI in a downloaded file.
+**As an app, also on Android (2.6).** Open the [online editor](https://theidiotwizard.github.io/sloop_custom/webapp/editor/) or the installer once with internet, then *Install the app* (under Connect, or on the installer page; or Chrome's menu → *Install app* / *Add to Home screen*). From then on the SLOOP app opens the editor without internet, and its link to the installer works offline too (with the firmware it installs). It stays the online site kept by the browser, so it uses the same sound library as the online editor, and it takes each new SLOOP version by itself the next time it opens online. On Android, use the app rather than the downloaded file: Chrome on Android does not allow MIDI in a downloaded file.
 
 - **Sound** — every parameter of the selected track, the engines and the presets; on an FM6 track the **FM6** panel: every operator, the bank, **Import / Export SysEx** (DX7 voices and banks).
 - **Sequencer** — the steps, as tiles or as a **piano roll**, and the track's length (1–64 steps); on the drum track a grid of 16 sounds × the steps, with levels and ratchets, and the kit. Click a step for its nudge, parameter locks and fill condition. **Export MIDI / Import MIDI**: the selected track as a MIDI file, and back.
@@ -501,14 +501,14 @@ Something else? [Open an issue](../../issues): what you did, what you expected, 
 | | |
 | --- | --- |
 | Tracks | 3 synth parts (8 voices shared) + drums (16 sounds, 6 voices) |
-| Sounds | 153 presets on 12 engines (browsed by kind, level-matched), 6-op FM with DX7 SysEx import and a 27-patch bank, 8 sampled sets (CC0), 4 slots for your own samples (USR1–USR4), 32 user presets |
+| Sounds | 69 presets on 10 engines (listed by engine, filterable by kind, level-matched), 32 user presets (nameable on the device) |
 | Polyphony | 8 voices shared across the synth tracks; per engine played alone: **8** (ANALOG, DIGITAL, PHASE, LOFI, SAMPLE, TRIO, WHEEL, NOISE), **6** (FM6), **4** (VOICE), **3** (GRAIN, PHYS — SYMP model 2); MONO / LEGATO play one note at a time; drums 6 |
 | Drum kits | 37 (5 sampled, 32 synthesised, 16 sounds each), level-matched, plus your own: USR1–USR4 and USR3+4 (about 15 s) |
 | Sequencer | 64 steps per track, own length and division each (1/32 to two bars); chords with a level and ratchet per note; drums with a level and ratchet per sound; ties, slide; per-step parameter locks (24 per track), micro timing (±½ step in 1/64) and fill conditions; swing 0 (straight) to 100 (MPC 75 %); one sample-accurate clock (no drift) |
 | Recording | live, quantised as heard (latency-compensated), overdub; free take (the tempo follows you) or the tempo set; start on the first note or a one-bar count-in; 1, 2 or 4 bars |
 | Performance | layers: punch-in FX, erase, note repeat, step entry, key / chords, mute / solo / fill / tap tempo, song sections and a quick chain of up to 8 |
 | Effects | 27 punch-in effects; master DUST, DUCK, DJ filter, limiter; per track drive, slicer, sends to a stereo chorus, a tempo delay (dotted 1/8 and 1/16 too) and a stereo reverb |
-| Memory | autosave, undo / redo, one song of 4 sections (more as backup files), 32 user presets, 27 FM6 patches, song of 4 sections × 16 steps × 1–64 bars, full backup / restore (editor) |
+| Memory | autosave, undo / redo, one song of 4 sections (more as backup files), 32 user presets, song of 4 sections × 16 steps × 1–64 bars, full backup / restore (editor) |
 | Audio | 44.1 kHz, fixed-point DSP; USB audio input (the master output, 16-bit stereo at 44.1 or 48 kHz, class compliant) |
 | MIDI | USB class-compliant in / out (the keys, or the sequencer too); TRS MIDI IN (3.5 mm); MIDI clock in (USB or TRS), clock only if you like (IN = CLOCK) |
 | Lights | button backlight (3 levels), C keys / white keys, played notes |

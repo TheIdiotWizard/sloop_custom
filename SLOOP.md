@@ -2,7 +2,9 @@
 
 # SLOOP 2.8.5
 
-**A live groovebox firmware for the M-VAVE FM-1 — for any style.** Four tracks — three synths and a drum machine with 16 sounds on the white keys — twelve synthesis engines (six-operator FM with DX7 patches, and now physical models and noise), 153 sounds, 37 drum kits (808, 909, trap, phonk, house, techno, UK garage, jungle, amapiano, reggaeton, synthwave, chiptune, ambient, jazz…), your own samples, ghost notes and ratchets, parameter locks, micro timing and fills, note repeat, one-key chords, 27 punch-in effects, a vinyl / sidechain / DJ-filter master, and a teenage-engineering-style screen that always shows what your hands can do next. No factory patterns, nothing to load: everything you hear, you play.
+> **sloop_custom:** this is a personal build of SLOOP with ten engines (ANALOG4, FMTONE, SAW, PULS, ENS, WAV, LOFI, VOICE, WHEEL, NOISE), engine-ordered presets, nameable user presets and a mod-wheel (CC 1) pitch-depth default. Release notes below the sound-bank and engine sections that mention FM6, PHYS, SAMPLE, GRAIN, TRIO, DIGITAL, PHASE, DX7 or the 12-engine bank describe stock SLOOP. Install and editor: https://theidiotwizard.github.io/sloop_custom/
+
+**A live groovebox firmware for the M-VAVE FM-1 — for any style.** Four tracks — three synths and a drum machine with 16 sounds on the white keys — ten synthesis engines, 69 sounds, 37 drum kits (808, 909, trap, phonk, house, techno, UK garage, jungle, amapiano, reggaeton, synthwave, chiptune, ambient, jazz…), your own samples, ghost notes and ratchets, parameter locks, micro timing and fills, note repeat, one-key chords, 27 punch-in effects, a vinyl / sidechain / DJ-filter master, and a teenage-engineering-style screen that always shows what your hands can do next. No factory patterns, nothing to load: everything you hear, you play.
 
 SLOOP is free and open source (GPL-3.0), based on [Felucca](https://github.com/hugelton/Felucca) by Leo Kuroshita / Hügelton Instruments.
 
@@ -418,41 +420,36 @@ The screen shows the 27 keys as a keyboard: the white keys in four rows of four,
 
 ## The sound bank
 
-153 starting points for any style: house and techno, hip-hop, trap and plugg, drum & bass, amapiano, synthwave, lo-fi, ambient, soul. Every one is a full patch on one of the twelve engines: change it, save your own (32 user presets), or load your own samples. **PRESETS** browses them on a synth track **by kind** — basses, keys, organs, pads, leads, plucks and bells, stabs — the kind shown next to the name (the engine follows); your own presets come after. Every sound is level-matched: they all come out as loud at the same LEVEL. SLOOP starts (on a new project) at **90 BPM** with *808 BOOM* on track 1, *RHODES* on track 2, *LOFI FLUTE* on track 3 and the 808 kit on track 4.
+**69 factory sounds** on ten engines (ANALOG4, FMTONE, SAW, PULS, ENS, WAV, LOFI, VOICE, WHEEL, NOISE), level-matched. **PRESETS** lists them engine by engine; your own presets come at the end of their engine's group, and **KNOB 3** filters by kind (bass, keys, organ, pad, lead, pluck, stab, FX).
 
 | Kind | Sounds (engine) |
 | --- | --- |
-| **Bass** | 808 BOOM, 808 DIRTY, 808 SLIDE, SUB BASS, PLUGG BASS — they slide between held notes, two octaves under the keys · REESE, WOBBLE, ACID 303 (the resonant acid line, sliding where notes overlap), FUNK BASS, MONO BASS (ANALOG) · FM BASS, BASS GTR (DIGITAL) · CZ BASS (PHASE) · ROUND BASS (FM6) · FAT BASS (TRIO) · WOW BASS (VOICE) · GB BASS (LOFI) · UP BASS, DEEP BASS (SAMPLE: a real upright) · PLUCK BASS (PHYS) · NES BASS (LOFI) · SAW BASS (ANALOG) |
-| **Keys** | RHODES, DX RHODES, WURLI, M1 PIANO (the house piano), AFRO KEYS (afro house, amapiano), CLAV (DIGITAL) · GRAND PNO (SAMPLE: a Steinway grand; long notes fade as on the real one), DUSTY PNO, LOFI KEYS (the same grand through an old sampler) · SOFT KEYS (PHASE) · TINE EP (FM6) · FM GRAND (DIGITAL) |
-| **Organ** | SOUL ORGAN, GOSPEL, JAZZ ORGAN, DIRTY B3, HOUSE ORGN (the 90s house organ: bass lines and chords) (WHEEL) · DRAWBARS (FM6) · ACCORDION (TRIO: a musette, two reeds a little apart) · ROCK ORGAN, CHAPEL, REGGAE ORG (WHEEL) |
-| **Pad** | WARM PAD, DARK STR, ATMOS PAD (ANALOG) · SAW PAD, ENSEMBLE (TRIO: the 70s string machine) · GLASS PAD (DIGITAL) · SOFT PAD (FM6) · CZ STRING (PHASE) · LOFI CLOUD, VIBE HAZE, STR CLOUD, SHIMMER, DRONE (GRAIN) · CHOIR AAH, SOUL OOH (VOICE) · BOWED MTL, CELLO BOW, GLASS BOWL (PHYS) · WIND, OCEAN (NOISE) · CZ PAD (PHASE) · VOX PAD (VOICE) · PNO FREEZE, HORN CLOUD (GRAIN) · SINE PAD (ANALOG) · PULSE PAD (TRIO) |
-| **Lead** | SUPERSAW (eight detuned saws: trance, EDM), G-FUNK LD, FAT LEAD, PAN FLUTE (ANALOG) · SYNC LEAD, HOOVER (TRIO) · TALKBOX, HARMONICA (VOICE) · GAME LEAD (LOFI) · LOFI FLUTE (SAMPLE) · FLUTE DUST (GRAIN) · NZ ARCADE (NOISE) · WAVE LEAD (LOFI) · CZ LEAD (PHASE) · ROBOT (VOICE) · PWM LEAD (ANALOG) · SQR LEAD (TRIO) |
-| **Pluck & bell** | TRAP PLUCK (ANALOG) · RESO PLUCK (PHASE) · PLUGG BELL, TRAP BELL, MUSIC BOX, KALIMBA, MARIMBA, XYLOPHONE, GLOCKEN, CELESTA, STEEL DRUM, HARP (DIGITAL) · VIBES (SAMPLE) · 8BIT ARP (LOFI) · GLASS BELL, WOOD BARS, NYLON PICK (FM6) · STR PLUCK, SITAR, PHYS HARP, BELL TREE, MODAL BAR, THUMB PNO, NYLON GTR, STEEL GTR, MUTED GTR, KOTO, BANJO, TANPURA, CHIMES, BIG BELL, VIBRA BAR, STEEL PAN, WOOD BLOCK (PHYS) · 1BIT BEEP (LOFI) · CZ RESO (PHASE) · TUBE BELL, FM PLUCK (DIGITAL) |
-| **Stab** | MIN STAB, MIN7 STAB, RAVE STAB, DUB CHORD (dub techno, into the delay) (TRIO: one key plays the chord) · SYN BRASS (ANALOG) · CZ BRASS (PHASE) · BRASS SECT (FM6) · 80S POLY (TRIO) · HORN STAB, STRING STB (SAMPLE) · CHIP CHORD (LOFI) · POWER STAB (TRIO) |
-| **FX** | SCRATCH — scratch, backspin, rewind across the keys · GM KIT (SAMPLE) · HAND DRUM, MEMB TOMS, TABLA, CONGA, TIMPANI (PHYS) · RAIN, NZ METAL, VINYL, HISS, RISER, NZ SNARE, BITCRUSH, RADIO (NOISE) · CHIP NOISE (LOFI) |
+| **Bass** | SAW BASS, ACID (ANALOG4) · FM BASS (FMTONE) · SUB BASS (SAW) · PWMBASS (PULS) · DIGI BASS (WAV) · WOW BASS (VOICE) · GB BASS, NES BASS (LOFI) |
+| **Keys** | TINE EP (FMTONE) · LOFI KEYS (WAV) |
+| **Organ** | SOUL ORGAN, GOSPEL, JAZZ ORGAN, DIRTY B3, HOUSE ORGN, ROCK ORGAN, CHAPEL, REGGAE ORG (WHEEL) |
+| **Pad** | WARM PAD (ANALOG4) · GLASS PAD (FMTONE) · BIG PAD (SAW) · PWMPAD (PULS) · STRINGS (ENS) · WAVE PAD (WAV) · CHOIR AAH, SOUL OOH, VOX PAD (VOICE) · WIND, OCEAN (NOISE) |
+| **Lead** | PWM LEAD, SYNC LEAD (ANALOG4) · PLUCK LEAD (FMTONE) · SUPERSAW, MONO SAW, DRIFT LD (SAW) · SQUARE, REED (PULS) · OCT PULS (ENS) · SCAN LEAD, SYNC LEAD (WAV) · TALKBOX, HARMONICA, ROBOT (VOICE) · GAME LEAD, WAVE LEAD (LOFI) · NZ ARCADE (NOISE) |
+| **Pluck & bell** | BELL, RESO PLUCK, FIFTH RING (FMTONE) · 8BIT ARP, 1BIT BEEP (LOFI) |
+| **Stab** | BRASS (FMTONE) · MAJOR, MINOR, FIFTHS (ENS: one key plays the chord) · CHIP CHORD (LOFI) |
+| **FX** | KICK, ZAP TOM, NOISE HAT (ANALOG4) · RAIN, NZ METAL, VINYL, HISS, RISER, NZ SNARE, BITCRUSH, RADIO (NOISE) · CHIP NOISE (LOFI) |
 
-The sampled sounds (SAMPLE engine, **SET**: PIANO (a grand), BASS, VIBES, HORNS, STRGS, FLUTE, SCRCH, PERC) are free recordings (CC0: Versilian Studios VSCO-2 CE and VCSL, Sonic Pi), retuned and coloured like a record through an old sampler.
+### The engines
 
-### FM6: six-operator FM and DX7 patches
+| Engine | Sound | EDIT knobs (the screen shows the engine's own labels) |
+| --- | --- | --- |
+| **ANALOG4** | two-oscillator analogue (from Mini-Tone), 4 voices, own resonant filter | WAV1 (SIN, TRI, SAW, PLS) · PW1 · TUN1 ±24 · SUB · WAV2 · PW2 · TUN2 ±24 · FIN2 fine. Own pages: MIX, FILTER 1, FILTER 2, F1 ENV, F1 AMT, ENV 2 |
+| **FMTONE** | four-operator FM (from Mini-Tone), 6 voices, own filter | ALGO 1–8 · RAT (ratio set C, A, B) · HARM · DTN · FB · MIX. Own pages: A ENV, B ENV, DEL TRK, FINE, FILTER |
+| **SAW** | detuned saw stack (MONO2K, via Melodee Custom) | UNIL · UNIW · UNIX · DRFT · SUBX · SUB1 · SUB2 · TUNE |
+| **PULS** | pulse and PWM (MONO2K) | UNIL · UNIW · SUB1 · SUB2 · PW · PWAD · PWRS · TUNE |
+| **ENS** | chord / ensemble machine (MONO2K), 3 voices | PCH2 · PCH3 · PCH4 (chord intervals) · WAVE · PW · CHRL · CHRW (chorus) · TUNE |
+| **WAV** | wavetable (MONO2K) | WAVE · SCAN · STIM · SYNC · BITS · DTUN · MIX2 · STEP |
+| **LOFI** | 8-bit chip | CHIP · WAVE · DUTY · CRSH · SWP · VIB · ARP · TONE |
+| **VOICE** | formant voice (choirs, talkbox), 4 voices | VOWL · VOWL2 · TALK · SHIFT ±12 · BUZZ · BRTH · Q · RAND |
+| **WHEEL** | tonewheel organ (drawbars) | REG (16 registrations: FLUTE, MELLO, HOLLW, SMOOT, 3BAR, BLUES, GOSPL, ROCK, TOPS, CLARI, REED, STRNG, CHAPL, BRITE, BASS, FULL) · SUB · BODY · TOP (±8) · PERC (OFF, 2ND, 3RD, soft and slow variants) · CLICK · DRV · ROTR (OFF, SLOW, FAST) |
+| **NOISE** | noise generator | MODE (ANLG, DUST, LFSR, META) · COLR · FREQ · RES · TRK · DENS · DRFT · CRSH |
 
-**FM6** is the classic six-operator FM synthesis — the sound of the DX7: electric pianos, bells, glassy pads, slap and round basses, brass. It is msfa, the synthesis core of Dexed, ported to whole-number arithmetic by Leo Kuroshita for Felucca 1.0. Each synth track playing FM6 has a full **patch**: six operators with their own four-stage envelopes, keyboard scaling, velocity, ratio or fixed frequency and detune; 32 algorithms, feedback, the LFO, the pitch envelope. FM6 plays six voices per track; its own envelopes shape every note, so the track's ADSR does nothing here.
+Every engine except ANALOG4 and FMTONE uses SLOOP's FX → FILTER; ANALOG4 and FMTONE have their own filter pages. The track LFO, the arp, UNISON, MONO and LEGATO work on all ten.
 
-On the FM-1, the eight **EDIT** values are macros on top of the patch:
-
-| EDIT | Does |
-| --- | --- |
-| **ALG** | *PAT* = the patch's algorithm, 1–32 another one |
-| **FB** | more feedback (0–7): brighter, then noisy |
-| **MLVL** | the level of every modulator (−36 … +36 dB): the brightness |
-| **MRAT** | the modulators' ratio up (ratio mode only): other harmonics |
-| **MEG** | the modulators' envelopes slower (+) or faster (−) |
-| **VMOD** | how much velocity brightens the note |
-| **DTUN** | spreads the carriers apart in pitch: a chorused, wider sound |
-| **PTCH** | loads a patch: **F1–F8** the factory ones, **B1–B27** your bank |
-
-The track's FLT moves MLVL (so LFO → FLT and the matrix still brighten it), SHP the feedback, PIT the pitch.
-
-**Your own patches** live in the web editor's **FM6** panel (Sound tab, when the selected track plays FM6): edit every operator, **Send to track** (it plays at once; tick *Send while editing* to hear every change), **Store in bank** (B1–B27, on the FM-1's flash; stop the song first). **Import SysEx** reads a DX7 file — one voice (163 bytes) or a 32-voice bank (4104 bytes, pick a voice), several in one file, and damaged ones as far as they go — so the thousands of DX7 and Dexed patches on the web play on the FM-1 (2.5: or drop the .syx file on the panel). **Store cartridge in bank** (2.5) stores a whole cartridge at once: tick up to 27 of its voices (the first 27 are ticked) and one write puts them in B1, B2… in order, after asking before it replaces anything; the rest of the bank stays. Choose **also add them to the user presets** and each voice gets a user preset with its name, playing its B slot: on the FM-1, PRESETS and SELECT find them by name. **Export SysEx** and **Export bank as SysEx** write them back for Dexed or a real DX7. A project keeps the track's PTCH, not the patch itself: a patch you sent is the track's until it loads another, so store it in the bank to keep it with the project. A user preset of an FM6 sound keeps the macros and PTCH the same way. The backup holds the bank.
 
 ## Drum kits
 
@@ -523,7 +520,7 @@ Open it from the installer page, or with **`OPEN-EDITOR.bat`** (`http://localhos
 
 **Offline (2.6).** *Download the editor* (under Connect, or on the installer page) saves the whole editor as one file for a computer, `sloop-editor-2.6.html`, also attached to each [release](https://github.com/isod89/sloop-fm1/releases). Double-click it: it opens in Chrome or Edge without internet (Chrome asks once to allow MIDI) and works as the online one. Its sound library (kept in the browser) is its own, apart from the online editor's: move sounds between them with Export / Import, or a backup.
 
-**As an app, also on Android (2.6).** Open the [online editor](https://isod89.github.io/sloop-fm1/webapp/editor/) or the installer once with internet, then *Install the app* (under Connect, or on the installer page; or Chrome's menu → *Install app* / *Add to Home screen*). From then on the SLOOP app opens the editor without internet, and its link to the installer works offline too (with the firmware it installs). It stays the online site kept by the browser, so it uses the same sound library as the online editor, and it takes each new SLOOP version by itself the next time it opens online. On Android, use the app rather than the downloaded file: Chrome on Android does not allow MIDI in a downloaded file.
+**As an app, also on Android (2.6).** Open the [online editor](https://theidiotwizard.github.io/sloop_custom/webapp/editor/) or the installer once with internet, then *Install the app* (under Connect, or on the installer page; or Chrome's menu → *Install app* / *Add to Home screen*). From then on the SLOOP app opens the editor without internet, and its link to the installer works offline too (with the firmware it installs). It stays the online site kept by the browser, so it uses the same sound library as the online editor, and it takes each new SLOOP version by itself the next time it opens online. On Android, use the app rather than the downloaded file: Chrome on Android does not allow MIDI in a downloaded file.
 
 It looks like the FM-1 (its black screen, the four track colours, its own Terminus font). The side bar has the pages — **Track**: Sound, Sequencer, Tracks; **Sounds**: Library, Samples, Drum kit; **Device**: Projects, Settings — and the FM-1's connection. On top: the page, the messages and the **four tracks** (number, sound, engine): click one to edit it; the selected track's colour is the editor's.
 
@@ -537,7 +534,7 @@ The protocol is documented in [web/EDITOR_PROTOCOL.md](web/EDITOR_PROTOCOL.md) (
 
 ## Sound design pages
 
-The full Felucca engine is underneath (all of it in [GUIDE.md](GUIDE.md#16-every-page-knob-by-knob)): twelve synthesis engines (analog, 4-op FM, 6-op FM with DX7 patches, phase distortion, lo-fi chip, sampler, formant voice, three-oscillator, tonewheel organ, granular, physical models, noise), envelopes (with a pitch punch for the 808s), LFO, arpeggiator, scales and chords, glide and voice modes, per-track drive, INSERT effect (2.6: SOFT, HARD, FOLD, FUZZ, CRUSH, PHASR, FLANG, CHOR), slicer and HP / LP filter, ANALOG's filter as LP, BP or HP (2.6), tempo-synced envelope (ENV SYNC) and LFO (LFO 2: SYNC, TRIG, POL) (2.6), chorus / delay / reverb sends (a stereo chorus, a tempo delay — 1/4 to 1/32, triplets, dotted 1/8 and 1/16 — a stereo reverb built as a feedback delay network: dense, no metallic ring), 32 user presets, 4 projects.
+The full Felucca engine is underneath (all of it in [GUIDE.md](GUIDE.md#16-every-page-knob-by-knob)): ten synthesis engines (ANALOG4, FMTONE, SAW, PULS, ENS, WAV, LOFI, VOICE, WHEEL, NOISE), envelopes (with a pitch punch for the 808s), LFO, arpeggiator, scales and chords, glide and voice modes, per-track drive, INSERT effect (2.6: SOFT, HARD, FOLD, FUZZ, CRUSH, PHASR, FLANG, CHOR), slicer and HP / LP filter, ANALOG's filter as LP, BP or HP (2.6), tempo-synced envelope (ENV SYNC) and LFO (LFO 2: SYNC, TRIG, POL) (2.6), chorus / delay / reverb sends (a stereo chorus, a tempo delay — 1/4 to 1/32, triplets, dotted 1/8 and 1/16 — a stereo reverb built as a feedback delay network: dense, no metallic ring), 32 user presets, 4 projects.
 
 ## MIDI keyboards
 
@@ -628,13 +625,13 @@ The glow is a short pulse on every scan of the panel (about 900 times a second):
 | | |
 | --- | --- |
 | Tracks | 3 synth parts (8 voices shared) + drums (16 sounds, 6 voices) |
-| Sounds | 153 presets on 12 engines (browsed by kind, level-matched), 6-operator FM with DX7 SysEx import and a 27-patch bank, 8 sampled sets (CC0), 4 slots for your own samples (USR1–USR4) |
+| Sounds | 69 presets on 10 engines (listed by engine, filterable by kind, level-matched), 32 user presets |
 | Sequencer | 64 steps per track, own length and division each (1/32 to two bars); chords with a level and ratchet per note; drums with a level and ratchet per sound; ties, slide; per-step nudge (±½ step in 1/64), parameter locks (24 per track, any sound parameter) and fill conditions (fill only / no fill); swing 0 (straight) to 100 (MPC 75 %); one sample-accurate clock for steps, arp, rolls, slicer and song (no drift) |
 | Performance | layers (hold a button: keys and knobs change job): punch-in FX, erase, note repeat, step entry, key / chords, mute / solo / fill / tap tempo; live sections on the bar and a quick chain of up to 8 |
 | Drum kits | 37 (5 sampled, 32 synthesised, 16 sounds each), plus your own: USR1–USR4 and USR3+4 (about 15 s) |
 | Effects | 27 punch-in effects (DJ kills, rewind, freeze…); master DUST, DUCK, DJ filter; per track drive, slicer, a one-knob HP / LP filter, sends to a stereo chorus, a tempo delay (dotted 1/8 and 1/16 too) and a stereo reverb; master limiter |
 | Recording | live, quantised as heard (latency-compensated), overdub; records at once while playing; free take sets loop length and tempo, or the tempo set, from the first note or a one-bar count-in |
-| Memory | undo / redo, 4 projects, 32 user presets, 27 FM6 patches, autosave of the working project, song of 4 sections × 16 steps × 1–64 bars |
+| Memory | undo / redo, 4 projects, 32 user presets, autosave of the working project, song of 4 sections × 16 steps × 1–64 bars |
 | Audio | 44.1 kHz, fixed-point DSP; USB audio input (the master output, 16-bit stereo at 44.1 or 48 kHz, class compliant) |
 | MIDI | USB class-compliant in / out; TRS MIDI IN (3.5 mm jack); channels 1–3 the synths, 10 the drums, 4–16 the selected track (2.6: each track's channel in GLO → MIDI); MIDI clock in (USB or TRS), with or without the notes (IN = CLOCK); the sequencer to MIDI out (GLO → MIDI 2 → OUT = SEQ) |
 | Update | over USB from the browser (package SHA-256 and CRC checked) |
