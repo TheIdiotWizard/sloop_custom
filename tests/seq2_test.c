@@ -755,6 +755,31 @@ static void t_filt_reso(void)
         if (y1 > p1) p1 = y1;
     }
     check(p1 > x + x / 4 && p0 < x + x / 10, "FILTER RESO (2.7.2): resonance makes the track filter overshoot a step; clean (40) barely does");
+    /* sloop_custom: 11..15 the scream (fx.c tflt_k, tflt_run): Q 4 .. 64, clipped near the signal's level */
+    {
+        djf_t df; tsvf_t cs; int32_t buf[32], pk = 0, pr = 0, j, blk;
+        uint8_t save = flt_reso;
+        memset(&df, 0, sizeof df);
+        df.mode = -1; df.cut = 60 << 8;
+        flt_reso = 15;
+        check(tflt_k() == 64, "FILTER RESO 15: damping 64 (Q 64)");
+        flt_reso = 11;
+        check(tflt_k() == 1024, "FILTER RESO 11: damping 1024 (Q 4)");
+        flt_reso = 15;
+        tsvf_coef_k(&cs, 60 << 8, tflt_k());
+        for (blk = 0; blk < 200; blk++) {                       /* a burst, then silence: it rings and stays bounded */
+            for (j = 0; j < 32; j++) buf[j] = blk < 4 ? ((j & 8) ? 8000 : -8000) : 0;
+            tflt_run(&df, &cs, buf, 32, 0);
+            for (j = 0; j < 32; j++) {
+                int32_t a = buf[j] < 0 ? -buf[j] : buf[j];
+                if (blk < 4 && a > pk) pk = a;
+                if (blk >= 8 && a > pr) pr = a;
+            }
+        }
+        check(pk <= 8000 * 2 * 4 + 4 && pk > 0, "FILTER RESO 15: the burst's output is clipped near the input's level (bounded)");
+        check(pr > 0 && pr <= 8000 * 4, "FILTER RESO 15: it rings on after the input stops, within the 8000 floor");
+        flt_reso = save;
+    }
     /* the setting's persistence (project.c midi_part) is checked in fm6_test (the full build has panel.c and project.c) */
 }
 

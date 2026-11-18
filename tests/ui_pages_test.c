@@ -795,12 +795,12 @@ int main(int argc, char **argv)
             ok &= flt_reso == 1u && !strcmp(mi_value(MI_FRESO, &col), "1");
             ppm("menu-freso");
             for (j = 0; j < 20; j++) { encs[panel.enc[EN_K1 + mi_row(ui.menu_sel)]] = 1; frame(); }
-            ok &= flt_reso == 10u;                                          /* stops at 10 */
-            tap(B_OCTUP);                                                   /* OCT+ wraps 10 -> 0 */
+            ok &= flt_reso == 15u;                                          /* stops at 15 (11..15: the scream) */
+            tap(B_OCTUP);                                                   /* OCT+ wraps 15 -> 0 */
             ok &= flt_reso == 0u;
             for (j = 0; j < 3; j++) { encs[panel.enc[EN_K1 + mi_row(ui.menu_sel)]] = -1; frame(); }
             ok &= flt_reso == 0u;                                          /* stops at 0 going down */
-            check(ok, "menu FILTER RESO (2.7.2): OFF..10, knob steps and stops, OCT+ wraps");
+            check(ok, "menu FILTER RESO (2.7.2): OFF..15, knob steps and stops, OCT+ wraps");
             ui.menu = 0; go_home();
         }
         {   /* 2.7: your theme (the editor's Theme page): checked, then MENU > COLOR after MONO, by its name */

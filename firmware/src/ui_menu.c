@@ -76,13 +76,13 @@ UI_SMALL static const char *mi_value(uint32_t i, uint16_t *c)
         static const char *const R[3] = {"AUTO", "44.1 KHZ", "48 KHZ"};
         return R[usb_rate % 3u];
     }
-    case MI_FRESO: {                                  /* (2.7.2) the track filter's resonance, 0 (clean) .. 10 (fx.c) */
+    case MI_FRESO: {                                  /* (2.7.2) the track filter's resonance, 0 (clean) .. 10, 11..15 the clipped scream (fx.c) */
         static char b[4];
         if (!flt_reso) {
             *c = C_DIM;
             return "OFF";
         }
-        fmt_int(b, flt_reso > 10u ? 10 : flt_reso);
+        fmt_int(b, flt_reso > 15u ? 15 : flt_reso);
         return b;
     }
     case MI_CPU1:                                     /* the render on both cores (fx.c); live, the sound is the same */
@@ -279,12 +279,12 @@ UI_SMALL static void mi_set(uint32_t i, int32_t s)
             usb_rate = (uint8_t)((usb_rate + 1u) % 3u);
         break;
     case MI_FRESO:                                     /* (2.7.2) 0 (OFF/clean) .. 10, stops at the ends; OCT+ steps round */
-        if (s > 0 && flt_reso < 10u)
+        if (s > 0 && flt_reso < 15u)
             flt_reso++;
         else if (s < 0 && flt_reso > 0u)
             flt_reso--;
         else if (!s)
-            flt_reso = (uint8_t)((flt_reso >= 10u ? 0u : flt_reso + 1u));
+            flt_reso = (uint8_t)((flt_reso >= 15u ? 0u : flt_reso + 1u));
         break;
     case MI_CPU1:                                      /* right ON, left OFF; at once (the next block renders so) */
         cpu1_off = (uint8_t)(s > 0 ? 0u : s < 0 ? 1u : !cpu1_off);

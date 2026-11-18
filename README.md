@@ -50,7 +50,7 @@ SLOOP turns the FM-1 into a four-track groovebox you play live: **three synths a
 - **NOTES editor:** a piano-roll note editor for the synth tracks (SEQ → NOTES). KNOB 1 picks the notes (a chord's notes one by one), KNOB 2 the pitch, KNOB 3 the length, KNOB 4 the force; PRESETS zooms, EDIT deletes. Hold OCT+ on a step for its sheet: SLIDE, NUDGE, FILL, MOVE, COPY, DELETE.
 - **The same per-step sheet on the DRUMS grid:** hold OCT+ on a drum step for RATCHET, NUDGE, FILL, MOVE, COPY, DELETE — the groove, shaped step by step.
 - **The playing section on screen:** the TRACKS screen now shows which section (A to D) is playing, in its own colour.
-- **Filter resonance:** the per-track filter gains a resonance control, 0 (clean, as before) to 10 (AUDIO → FILTER RESO).
+- **Filter resonance:** the per-track filter gains a resonance control, 0 (clean, as before) to 10 (AUDIO → FILTER RESO). **sloop_custom:** 11 to 15 are the *scream* (Q about 4, 8, 16, 32, 64): the filter rings hard and its output is clipped near the signal's level, as MONO2K's resonant filter does.
 - **The FX filter on the drum track:** the FX → FILTER page now works on drums too; sweep and shape the whole kit, live.
 - **Drum TUNE on the noise sounds:** TUNE now shapes the brightness of tone-less sounds (closed hats, shakers, claps) on the synthesised kits.
 - **A smoother punch-in:** a settable fade-in and out for the punch-in effects, from instant to about a third of a second (hold FX, then SELECT).
