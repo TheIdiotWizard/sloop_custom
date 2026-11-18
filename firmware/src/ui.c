@@ -18,6 +18,8 @@ static int up_load_to(track_t *t, uint32_t k);
 static uint32_t up_count(void);
 static uint32_t up_nth(uint32_t n);
 static uint32_t up_rank(uint32_t slot);
+static uint32_t up_kind(uint32_t slot);
+static uint32_t up_engine_of(uint32_t slot);
 static void up_name(uint32_t k, char *b);
 static void up_slot_label(char *b, uint32_t k);
 static void up_ui(uint32_t op, uint32_t k);
@@ -69,7 +71,9 @@ static struct {
     uint8_t confirm_trk;         /* the track the dialog clears */
     uint8_t uslot;               /* SAVE > USER: the selected user preset slot */
     uint8_t upos;                /* sloop_custom, SAVE > NAME: the character under edit (0..11) */
-    char uname[13];              /* .. the name for the next SAVE: 12 characters, spaces for blank (0 = untouched) */
+    char uname[13];              /* .. the name for the next SAVE: 12 characters, spaces for blank (0 = untouched: the sound's own name) */
+    uint8_t utype;               /* .. its sound type: 0 none, 1..8 = BASS .. FX, 0xFF = the sound's own (0 = zero-initialised: set at boot) */
+    uint8_t bfilt;               /* PRESETS > TYPE: 0 all, 1..8 only that sound type (BASS .. FX) */
     /* layers (ui_layers.c): a function button held, the keys and knobs do something else */
     uint8_t layer;               /* the layer drawn (LY_*), LY_PLAY = none */
     uint8_t layer_btn;           /* its button (B_*), NB = none */
@@ -95,24 +99,6 @@ static struct {
     uint32_t graph_sig, head_sig, foot_sig, frame;
     uint8_t graph_top;           /* the graph strip's top G_OY rows hold something */
 } ui;
-
-/* sloop_custom, SAVE > NAME: the name the next SAVE gives the sound (12 characters; blank = the automatic ENGINE + slot) */
-static const char UP_CH[] = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-.+#";
-UI_SMALL static void uname_fix(void)
-{
-    uint32_t i;
-    if (ui.uname[0])
-        return;
-    for (i = 0; i < 12u; i++)
-        ui.uname[i] = ' ';
-    ui.uname[12] = 0;
-}
-UI_SMALL static void uname_clear(void)
-{
-    ui.uname[0] = 0;
-    uname_fix();
-    ui.upos = 0;
-}
 
 UI_SMALL static const page_t *cur_page(void) { return &PAGES[ui.page]; }
 static int32_t accel(uint32_t role, int32_t s, int32_t range);   /* ui_input.c */
@@ -777,33 +763,144 @@ UI_SMALL static void bank_resolve(void)
     }
     bank_ready = 1;
 }
-UI_SMALL static uint32_t base_pos(uint32_t *total)            /* list index of the selected track's preset (no favourites) */
+/* sloop_custom: the PRESETS list is ordered by ENGINE: each engine's factory sounds (BANK order: by sound type inside it),
+ * then its user presets (slot order). An entry's id: its BANK index, or ORD_USER | slot. filt: 0 every sound, else only
+ * the sound type filt (1..8 = BASS .. FX). One pass: the id of entry `want`, the total in *count, the position of entry
+ * `find` in *pos (0xFFFF when it is not in the list) */
+#define ORD_USER 0x100u
+UI_SMALL static uint32_t ord_walk(uint32_t filt, uint32_t want, uint32_t find, uint32_t *count, uint32_t *pos)
 {
-    uint32_t i, cur = 0;
+    uint32_t e, i, k, n = 0, id = 0xFFFFu;
+    if (pos)
+        *pos = 0xFFFFu;
+    for (e = 0; e < NENGINES; e++) {
+        for (i = 0; i < NBANK; i++)
+            if (BANK[i].e == e && (!filt || BANK[i].kind + 1u == filt)) {
+                if (n == want)
+                    id = i;
+                if (pos && i == find)
+                    *pos = n;
+                n++;
+            }
+        for (k = 0; k < UP_SLOTS; k++)
+            if (up_used(k) && up_engine_of(k) == e && (!filt || up_kind(k) == filt)) {
+                if (n == want)
+                    id = ORD_USER | k;
+                if (pos && (ORD_USER | k) == find)
+                    *pos = n;
+                n++;
+            }
+    }
+    if (count)
+        *count = n;
+    return id;
+}
+UI_SMALL static uint32_t ord_filt(void)                       /* the type filter: only on the PRESETS page */
+{
+    return !ui.home && cur_page()->graph == GR_BROWSE ? ui.bfilt : 0u;
+}
+UI_SMALL static uint32_t ord_id_of(const track_t *t)          /* the id of a track's sound in the list, 0xFFFF none */
+{
+    uint32_t i;
     if (!bank_ready)
         bank_resolve();
+    if (user_of(t) < UP_SLOTS)
+        return ORD_USER | user_of(t);
     for (i = 0; i < NBANK; i++)
-        if (BANK[i].e == TSEL->eng_req && bank_pi[i] == TSEL->preset)
-            cur = i;
-    if (user_of(TSEL) < UP_SLOTS)
-        cur = NBANK + up_rank(user_of(TSEL));
-    *total = NBANK + up_count();
-    return cur;
+        if (BANK[i].e == t->eng_req && bank_pi[i] == t->preset)
+            return i;
+    return 0xFFFFu;
+}
+UI_SMALL static uint32_t ord_cur(uint32_t *total)             /* list position of the selected track's sound, 0xFFFF: not in it */
+{
+    uint32_t pos;
+    ord_walk(ord_filt(), 0xFFFFFFFFu, ord_id_of(TSEL), total, &pos);
+    return pos;
+}
+UI_SMALL static uint32_t base_pos(uint32_t *total)            /* list index of the selected track's preset (no favourites) */
+{
+    uint32_t cur = ord_cur(total);
+    return cur == 0xFFFFu ? (*total ? *total - 1u : 0u) : cur;   /* (not in the filtered list: the next turn lands on its first) */
 }
 
 /* list index n (< total) -> engine, *k its preset; NENGINES = user preset, *k its slot (no favourites) */
 UI_SMALL static uint32_t base_at(uint32_t n, uint32_t *k)
 {
+    uint32_t id;
     if (!bank_ready)
         bank_resolve();
-    if (n >= NBANK) {
-        *k = up_nth(n - NBANK);
+    id = ord_walk(ord_filt(), n, 0xFFFFFFFFu, 0, 0);
+    if (id == 0xFFFFu) {
+        *k = 0;
+        return 0;
+    }
+    if (id >= ORD_USER) {
+        *k = id & 0xFFu;
         return NENGINES;
     }
-    *k = bank_pi[n] == 0xFF ? 0u : bank_pi[n];
-    return BANK[n].e;
+    *k = bank_pi[id] == 0xFF ? 0u : bank_pi[id];
+    return BANK[id].e;
 }
-UI_SMALL static const char *base_kind(uint32_t n) { return n < NBANK ? BANK_KIND[BANK[n].kind] : "USER"; }
+UI_SMALL static const char *base_kind(uint32_t n)
+{
+    uint32_t id = ord_walk(ord_filt(), n, 0xFFFFFFFFu, 0, 0), c;
+    if (id < ORD_USER)
+        return BANK_KIND[BANK[id].kind];
+    c = up_kind(id & 0xFFu);
+    return c && c <= 8u ? BANK_KIND[c - 1u] : "USER";
+}
+
+/* sloop_custom, SAVE > NAME: the name and sound type the next SAVE gives the sound. Untouched (uname[0] 0), the name is
+ * the sound's own (a user preset's, else its factory name) and the type its own; blank = the automatic name */
+UI_SMALL static void uname_fix(void)
+{
+    char b[16];
+    uint32_t i, ended = 0;
+    if (ui.uname[0])
+        return;
+    b[0] = 0;
+    if (is_drum(TSEL)) {
+        /* (no sound) */
+    } else if (user_of(TSEL) < UP_SLOTS) {
+        up_name(user_of(TSEL), b);
+    } else {
+        const engine_t *e = ENGINES[TSEL->eng_req % NENGINES];
+        str_cpy(b, e->presets[TSEL->preset % e->npresets].name, sizeof b);
+    }
+    for (i = 0; i < 12u; i++) {
+        char c = b[i];
+        ended |= !c;
+        c = ended ? ' ' : (c >= 'a' && c <= 'z' ? (char)(c - 32) : c);
+        ui.uname[i] = c;
+    }
+    ui.uname[12] = 0;
+    ui.upos = 0;
+}
+UI_SMALL static void uname_blank(void)                         /* CLEAR: 12 spaces (the automatic name) */
+{
+    uint32_t i;
+    for (i = 0; i < 12u; i++)
+        ui.uname[i] = ' ';
+    ui.uname[12] = 0;
+    ui.upos = 0;
+}
+UI_SMALL static void uname_reset(void)                         /* after a save: the sound's own name and type again */
+{
+    ui.uname[0] = 0;
+    ui.utype = 0xFF;
+    ui.upos = 0;
+}
+UI_SMALL static uint32_t utype_get(void)                       /* the type SAVE stores: 0 none, 1..8 */
+{
+    uint32_t id;
+    if (ui.utype != 0xFF && ui.utype <= 8u)
+        return ui.utype;
+    id = ord_id_of(TSEL);
+    if (id < ORD_USER)
+        return BANK[id].kind + 1u;
+    return id == 0xFFFFu ? 0u : up_kind(id & 0xFFu);
+}
+static const char UP_CH[] = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._/#+";
 
 /* SLOOP 2.7: favourites (PRESETS page, KNOB 4): up to 16 sounds at the top of the PRESETS list, kept in the FM-1's
  * settings (project.c, the settings' side record). An entry: a factory sound, its BANK index; a user preset, FAV_USER |
@@ -822,13 +919,18 @@ UI_SMALL static uint32_t fav_list(uint32_t *b)                /* the favourites 
         uint32_t f = fav[i];
         if (f == FAV_NONE)
             continue;
+        uint32_t pos;
         if (f & FAV_USER) {
             if (!up_used(f & 0xFFu))
                 continue;
-            b[n++] = NBANK + up_rank(f & 0xFFu);
+            ord_walk(ord_filt(), 0xFFFFFFFFu, ORD_USER | (f & 0xFFu), 0, &pos);
         } else if (f < NBANK) {
-            b[n++] = f;
+            ord_walk(ord_filt(), 0xFFFFFFFFu, f, 0, &pos);
+        } else {
+            continue;
         }
+        if (pos != 0xFFFFu)
+            b[n++] = pos;
     }
     return n;
 }
@@ -939,10 +1041,18 @@ UI_SMALL static int preset_go_to(track_t *t, uint32_t n)
         return 1;
     if (!bank_ready)
         bank_resolve();
-    total = NBANK + up_count();
-    if (n >= total)
-        return 1;
-    e = base_at(n, &k);                              /* (2.7: the list without the favourites: PC n as before) */
+    {
+        uint32_t id = ord_walk(0u, n, 0xFFFFFFFFu, &total, 0);        /* (the list in full: the filter is only the PRESETS page's) */
+        if (n >= total)
+            return 1;
+        if (id >= ORD_USER) {
+            e = NENGINES;
+            k = id & 0xFFu;
+        } else {
+            e = BANK[id].e;
+            k = bank_pi[id] == 0xFF ? 0u : bank_pi[id];
+        }
+    }                              /* (2.7: the list without the favourites: PC n as before) */
     if (e == NENGINES)
         return up_load_to(t, k);
     if (e != t->eng_req)

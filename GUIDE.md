@@ -182,7 +182,7 @@ The layers are **FX** (punch-in effects), **EDIT** (erase), **ARP** (note repeat
 | **GLO** | GLO pages (GLOBAL, MASTER, SYSTEM, DRUMS) | mix layer |
 | **OCT− / OCT+** | synth track: octave down / up (−3 … +3) · both together: octave 0 | drum track: **ghost** (OCT−) / **hard** (OCT+) hits while held |
 | **ALGORITHM** | select track 1–4, on every screen (inside a layer it waits; not during a free take, on the SONG screen or in the menu) | — |
-| **PRESETS** | on TRACKS, HOME and the PRESETS page: the selected track's **sound** (your favourites first (2.7), then all factory sounds by kind, then your user presets) · drum track: the **kit** · on the DRUMS screen: the kit | — |
+| **PRESETS** | on TRACKS, HOME and the PRESETS page: the selected track's **sound** (your favourites first (2.7), then every sound **by engine**: ANALOG4, FMTONE, SAW, PULS, ENS, WAV, LOFI, VOICE, WHEEL, NOISE, each with its factory sounds and then your own user presets saved on it; sloop_custom) · drum track: the **kit** · on the DRUMS screen: the kit | — |
 | **SELECT** | on TRACKS, inside a layer and on the REC screen: the **tempo** · on a page: previous / next page of its button (stops at the ends) · DRUMS screen: grid ↔ kit · visualiser: the style · menu: the section | — |
 | **KNOB 1–4** | the four dials at the bottom of the screen | — |
 | **MASTER** | output volume (the visualiser ignores it) | — |
@@ -614,7 +614,7 @@ A muted track fades out in a few milliseconds and plays no new notes; its patter
 | **Save / load a section** | SAVE → SECTION: **SECT** A–D, **LOAD** (GO), **SAVE** (GO) |
 | **Erase a saved section** (2.6) | SAVE → SECTION: **SECT** A–D, **ERASE** on KNOB 2 (GO), the song stopped: the slot is *EMPTY* again and its section key goes dark. The steps of the song that played it are taken out (the others keep their order; none left: the default song A B C D). Your working loop is not touched. No undo: save it into another slot first if in doubt |
 | **Save a sound** | SAVE → USER: **SLOT** (1–32), **SAVE** (GO) |
-| **Name a sound** (sloop_custom) | SAVE → NAME: **POS** (KNOB 1: the character, 1–12), **CHAR** (KNOB 2: a space, A–Z, 0–9, `- . + #`), **CLEAR** (GO: blank the name), **SAVE** (GO: store it in the slot picked on USER). The name is also used by SAVE → USER → SAVE; a blank name gives the automatic ENGINE + slot. After a save the name is blank again |
+| **Name a sound** (sloop_custom) | SAVE → NAME: the name, large, with the cursor; **POS** (KNOB 1: the character, 1–12), **CHAR** (KNOB 2: the characters round it show as a strip: space, A–Z, 0–9, `- . _ / #  +`), **TYPE** (KNOB 3: the sound type saved with it: BASS … FX, or none), **SAVE** (KNOB 4: right, two detents: store it in the slot picked on USER; left, two detents: CLEAR the name). The name starts as the sound's own and its type too; blank is the automatic ENGINE + slot name. SAVE → USER → SAVE uses them as well. The type is the label in the PRESETS list and the TYPE filter |
 | **Autosave** | automatic: when the transport is stopped and you have not touched anything for 2.5 s (at most every 20 s), the working project is kept in flash; at power-on SLOOP comes back exactly as you left it |
 
 **One song on the FM-1.** The FM-1 holds one song: **four sections, A–D**, and the order they play in (the SONG screen). A **section** is a loop: the four tracks (sounds, patterns, kit, locks, nudges, fill conditions, the track filter) and the global settings of the loop (tempo, swing, key…). Your **working loop** (what plays in loop mode, kept by the autosave) is apart from them: LOAD copies a section into it, SAVE copies it into a section. A–D are not four songs. **To keep several songs**, save an editor **Backup** file per song (Song & sections tab) and restore the one you want to play. (Before 2.7 the SAVE page was called PROJECT, its slots 1–4: the same four sections.)
@@ -625,7 +625,7 @@ A muted track fades out in a few milliseconds and plays no new notes; its patter
 
 | Page | KNOB 1 | KNOB 2 | KNOB 3 | KNOB 4 |
 | --- | --- | --- | --- | --- |
-| **PRESETS** | the sound (your favourites, then factory by kind, then user presets) | the engine (next / previous) | — | **FAV** (2.7): right adds the sound to your favourites, left removes it |
+| **PRESETS** | the sound (your favourites, then by engine: its factory sounds, then your user presets on it) | the engine (next / previous) | **TYPE** (sloop_custom): only one sound type (ALL, BASS, KEYS, ORGN, PAD, LEAD, PLCK, STAB, FX); the filter works on the PRESETS page only | **FAV** (2.7): right adds the sound to your favourites, left removes it |
 | **USER** | **SLOT** 1–32 | **LOAD** (GO) | **ERASE** (GO) | **SAVE** (GO) |
 | **SECTION** | **SECT** A–D | **ERASE** (GO, 2.6) | **LOAD** (GO) | **SAVE** (GO) |
 | **TOOLS** | **CLRSQ** (GO) | **INIT** (GO) | — | **NEW** (GO) |

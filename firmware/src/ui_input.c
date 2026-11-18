@@ -516,12 +516,20 @@ UI_SMALL static void edit_param(uint32_t slot, int32_t steps)
                 preset_go((uint32_t)(((int32_t)cur + steps % (int32_t)total + (int32_t)total) % (int32_t)total));
         } else if (slot == 1u && !is_drum(TSEL)) {
             select_engine((TSEL->eng_req + (steps > 0 ? 1u : NENGINES - 1u)) % NENGINES);
+        } else if (slot == 2u && !is_drum(TSEL)) {          /* sloop_custom, KNOB 3: TYPE, the list of one sound type only */
+            uint32_t total, cur;
+            ui.bfilt = (uint8_t)(((uint32_t)ui.bfilt + (steps > 0 ? 1u : 8u)) % 9u);
+            cur = ord_cur(&total);
+            if (total && cur == 0xFFFFu) {                   /* the sound is not of that type: the list's first one */
+                uint32_t b[FAV_N];
+                preset_go(fav_list(b));
+            }
         } else if (slot == 3u && !is_drum(TSEL)) {          /* (2.7) KNOB 4: FAV, right adds the sound, left removes it */
             fav_toggle(steps > 0);
         }
         return;
     }
-    if (pg->graph == GR_NAME) {                           /* sloop_custom: KNOB 1 position, KNOB 2 character, KNOBS 3, 4: CLEAR, SAVE (GO) */
+    if (pg->graph == GR_NAME) {                           /* sloop_custom: KNOB 1 position, KNOB 2 character, KNOB 3 sound type, KNOB 4 right SAVE / left CLEAR (two detents) */
         uname_fix();
         if (slot == 0u) {
             ui.upos = (uint8_t)clamp((int32_t)ui.upos + steps, 0, 11);
@@ -534,18 +542,20 @@ UI_SMALL static void edit_param(uint32_t slot, int32_t steps)
             ci = ((ci + steps % n) % n + n) % n;
             ui.uname[ui.upos] = UP_CH[ci];
             ui.arm = 0;
-        } else {
-            if (steps <= 0)
-                return;
-            if (ui.arm != 0xE0u + slot) {                 /* one detent arms, a second one within ~1.5 s acts */
-                ui.arm = (uint8_t)(0xE0u + slot);
+        } else if (slot == 2u) {
+            ui.utype = (uint8_t)(((uint32_t)utype_get() + (steps > 0 ? 1u : 8u)) % 9u);
+            ui.arm = 0;
+        } else if (steps != 0) {
+            uint32_t act = steps > 0 ? 0xE3u : 0xE2u;         /* right SAVE, left CLEAR: one detent arms, a second one acts */
+            if (ui.arm != act) {
+                ui.arm = (uint8_t)act;
                 ui.arm_t = 90;
-                ui_say("AGAIN: ", slot == 2u ? "CLEAR" : "SAVE");
+                ui_say("AGAIN: ", steps > 0 ? "SAVE" : "CLEAR");
                 return;
             }
             ui.arm = 0;
-            if (slot == 2u) {
-                uname_clear();
+            if (steps < 0) {
+                uname_blank();
                 ui_message("NAME CLEARED");
             } else {
                 up_ui(2u, ui.uslot);

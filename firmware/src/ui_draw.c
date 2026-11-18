@@ -503,25 +503,67 @@ UI_SMALL static void graph_user(void)
     }
 }
 
-/* sloop_custom, SAVE > NAME: the 12 characters of the name, the one under edit underlined */
+/* sloop_custom, SAVE > NAME (after Felucca's): the name being typed, large, with the cursor; under it a strip of the
+ * characters round the selected one (KNOB 2 turns it); under that the sound type (KNOB 3), the same way */
+UI_SMALL static void name_wheel(int32_t y, const char *const *items, uint32_t n, uint32_t cur, int32_t pitch, int32_t reach)
+{
+    int32_t d;
+    for (d = -reach; d <= reach; d++) {
+        const char *it = items[((int32_t)cur + d % (int32_t)n + (int32_t)n) % (int32_t)n];
+        const felucca_font_t *f = d ? &FONT_S : &FONT_L;
+        int32_t w = text_w(f, it);
+        cv_text(120 + d * pitch - w / 2, d ? y + 6 : y, f, it, d ? (d == -1 || d == 1 ? C_HI : C_DIM) : C_WHITE);
+    }
+}
 UI_SMALL static void graph_name(void)
 {
-    uint32_t i;
-    char tag[4], hd[16];
+    uint32_t i, n = sizeof UP_CH - 1u, ci = 0, kc, blank = 1;
+    char tag[4], hd[24];
+    const char *ch[sizeof UP_CH];
+    const char *kn[9];
     uname_fix();
     up_slot_label(tag, ui.uslot);
     str_cpy(hd, "SAVE TO ", sizeof hd);
     str_cpy(hd + str_len(hd), tag, 4);
-    cv_text(4, 6, &FONT_S, hd, C_GRAY);
-    for (i = 0; i < 12u; i++) {
+    cv_text(4, 2, &FONT_S, hd, C_GRAY);
+    cv_text(236 - text_w(&FONT_S, ENGINES[TSEL->eng_req % NENGINES]->name), 2, &FONT_S, ENGINES[TSEL->eng_req % NENGINES]->name, C_GRAY);
+    for (i = 0; i < 12u; i++) {                                    /* the name, large; the character under edit lit and underlined */
         char c[2];
-        int32_t x = 10 + (int32_t)i * 17;
+        int32_t x = 12 + (int32_t)i * 18;
         int sel = i == ui.upos;
         c[0] = ui.uname[i] == ' ' ? '_' : ui.uname[i];
         c[1] = 0;
-        cv_text(x, 40, &FONT_S, c, sel ? C_WHITE : (ui.uname[i] == ' ' ? C_DIM : C_HI));
+        blank &= ui.uname[i] == ' ';
+        cv_text(x, 16, &FONT_L, c, sel ? C_WHITE : (ui.uname[i] == ' ' ? C_DIM : C_HI));
         if (sel)
-            cv_rect(x, 56, 10, 2, C_WHITE);
+            cv_rect(x, 41, 14, 2, C_WHITE);
+    }
+    for (i = 0; i < n; i++) {                                      /* the strip: ... X Y [Z] 0 1 ... */
+        if (UP_CH[i] == ui.uname[ui.upos])
+            ci = i;
+    }
+    {
+        static char cs[sizeof UP_CH][2];                           /* one string per character ("SP" for the blank) */
+        for (i = 0; i < n; i++) {
+            cs[i][0] = UP_CH[i];
+            cs[i][1] = 0;
+            ch[i] = i ? cs[i] : "SP";
+        }
+    }
+    name_wheel(54, ch, n, ci, 30, 3);
+    kc = utype_get();                                              /* the sound type: BASS .. FX, "--" none */
+    kn[0] = "--";
+    for (i = 0; i < 8u; i++)
+        kn[i + 1u] = BANK_KIND[i];
+    cv_text(4, 88, &FONT_S, "TYPE", C_GRAY);
+    name_wheel(84, kn, 9, kc, 56, 1);
+    if (blank) {                                                   /* a blank name: the automatic one */
+        char a[24];
+        str_cpy(a, "BLANK = ", sizeof a);
+        str_cpy(a + str_len(a), ENGINES[TSEL->eng_req % NENGINES]->name, 9);
+        str_cpy(a + str_len(a), " ", 2);
+        str_cpy(a + str_len(a), tag + 1, 3);
+        cv_text(4, 112, &FONT_S, a, C_DIM);
     }
 }
 
@@ -986,21 +1028,23 @@ UI_SMALL static void draw_columns(void)
         fmt_int(u + 1, (int32_t)total);
         draw_column(0, "No.", val, u, VAL(0u), -1, ICON_NONE);
         draw_column(1, "ENG", ENGINES[TSEL->eng_req]->name, "", VAL(1u), -1, engine_icon(ENGINES[TSEL->eng_req]->name));
-        draw_column(2, "", "", "", C_HI, -1, ICON_AUTO);
+        draw_column(2, "TYPE", ui.bfilt ? BANK_KIND[ui.bfilt - 1u] : "ALL", "", VAL(2u), -1, ICON_NONE);   /* sloop_custom: KNOB 3 */
         draw_column(3, "FAV", fav_has(fav_key()) ? "ON" : "--", "", VAL(3u), -1, ICON_NONE);   /* (2.7) KNOB 4 */
         return;
     }
-    if (cur_page()->graph == GR_NAME) {                  /* sloop_custom: POS, CHAR, then CLEAR and SAVE (GO) */
+    if (cur_page()->graph == GR_NAME) {                  /* sloop_custom: POS, CHAR, TYPE, then SAVE (right) / CLEAR (left) */
         char p[4], ch[4];
+        uint32_t kc;
         uname_fix();
+        kc = utype_get();
         fmt_int(p, (int32_t)ui.upos + 1);
         ch[0] = ui.uname[ui.upos] == ' ' ? 'S' : ui.uname[ui.upos];
         ch[1] = ui.uname[ui.upos] == ' ' ? 'P' : 0;
         ch[2] = 0;
         draw_column(0, "POS", p, "/12", VAL(0u), (int32_t)ui.upos * 1000 / 11, ICON_AUTO);
         draw_column(1, "CHAR", ch, "", VAL(1u), -1, ICON_AUTO);
-        draw_column(2, "CLEAR", "--", "", C_HI, -1, ICON_AUTO);
-        draw_column(3, "SAVE", "--", "", C_HI, -1, ICON_AUTO);
+        draw_column(2, "TYPE", kc ? BANK_KIND[kc - 1u] : "--", "", VAL(2u), -1, ICON_AUTO);
+        draw_column(3, "SAVE", "--", "CLR<", C_HI, -1, ICON_AUTO);
         return;
     }
     if (cur_page()->graph == GR_USER) {                  /* SLOT, then three GO buttons */

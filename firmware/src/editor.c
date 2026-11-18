@@ -930,7 +930,7 @@ UI_SMALL static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes b
         if (a[0] < UP_SLOTS && (!n0 || up_name_ok(a + 1, n0))) {   /* "" = automatic name */
             for (i = 0; i < n0; i++)
                 nm[i] = (char)a[1 + i];
-            int r = ed_flash_busy() ? -3 : up_store(a[0], nm);
+            int r = ed_flash_busy() ? -3 : up_store(a[0], nm, 0u);
             rc = r == -3 ? 3u : r == 1 ? 1u : r ? 2u : 0u;   /* 1: the drum track is selected; 3: stop first */
         }
         ed_b(a[0]);

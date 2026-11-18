@@ -27,7 +27,8 @@
 #define UP_VER 7u                                /* sloop_custom: another list of engines (SLOOP's 1 is not read) */
 #define UP_BANK_MAGIC 0x37425055u                /* "UPB7" (sloop_custom) */
 typedef struct {
-    uint8_t used, ver, engine, np;               /* UP_USED, UP_VER, engine, P_COUNT when stored */
+    uint8_t used, ver, engine, np;               /* UP_USED, UP_VER (low nibble; the high nibble: the sound type, 0 none,
+                                                  * 1..8 = BASS .. FX, sloop_custom), engine, P_COUNT when stored */
     char name[12];                               /* ASCII 32..126, 0-padded (no 0 when 12 long) */
     int16_t p[UP_PMAX];
     uint8_t note[16], flags[16];                 /* note 0 = rest; flags 1 accent, 2 slide, 4 tie */
@@ -56,7 +57,7 @@ static void *up_stage(void);                                    /* project.c: th
 
 UI_SMALL static int up_valid(const up_rec_t *r)
 {
-    return r->used == UP_USED && r->ver == UP_VER && r->engine < NENGINES && r->np >= 8u && r->np <= UP_PMAX &&
+    return r->used == UP_USED && (r->ver & 15u) == UP_VER && r->engine < NENGINES && r->np >= 8u && r->np <= UP_PMAX &&
            r->name[0];
 }
 
@@ -258,7 +259,7 @@ UI_SMALL static void up_slot_label(char *b, uint32_t k)  /* "U07" */
 
 /* the selected part's sound -> slot k; name 0 or "": engine name + slot number ("ANALOG 07").
  * 1 = the drum track is selected (it has no sound to store) */
-UI_SMALL static int up_store(uint32_t k, const char *name)
+UI_SMALL static int up_store(uint32_t k, const char *name, uint32_t kind)
 {
     up_rec_t r;
     uint32_t i;
@@ -266,7 +267,7 @@ UI_SMALL static int up_store(uint32_t k, const char *name)
         return 1;
     memset(&r, 0, sizeof r);
     r.used = UP_USED;
-    r.ver = UP_VER;
+    r.ver = (uint8_t)(UP_VER | (kind & 15u) << 4);
     r.engine = TSEL->eng_req;
     r.np = P_COUNT;
     if (name && name[0]) {
@@ -345,6 +346,15 @@ UI_SMALL static uint32_t up_nth(uint32_t n)             /* slot of the n-th used
     return 0;
 }
 
+UI_SMALL static uint32_t up_kind(uint32_t slot)         /* sloop_custom: its sound type: 0 none, 1..8 = BASS .. FX */
+{
+    return slot < UP_SLOTS && up_used(slot) ? (uint32_t)(up_rec(slot)->ver >> 4) & 15u : 0u;
+}
+UI_SMALL static uint32_t up_engine_of(uint32_t slot)    /* .. its engine */
+{
+    return slot < UP_SLOTS && up_used(slot) ? up_rec(slot)->engine : 0xFFu;
+}
+
 UI_SMALL static uint32_t up_rank(uint32_t slot)         /* used slots before it */
 {
     uint32_t k, n = 0;
@@ -385,9 +395,9 @@ UI_SMALL static void up_ui(uint32_t op, uint32_t k)     /* 0 load, 1 erase, 2 sa
         nm[12] = 0;
         for (n = 12; n && nm[n - 1] == ' '; n--)
             nm[n - 1] = 0;
-        rc = op == 1u ? up_put(k, 0) : up_store(k, nm[0] ? nm : 0);
+        rc = op == 1u ? up_put(k, 0) : up_store(k, nm[0] ? nm : 0, utype_get());
         if (op == 2u && !rc)
-            uname_clear();
+            uname_reset();
     }
     if (rc == 3)
         ui_message("NO FLASH");                        /* (no RAM mirror to keep it in) */

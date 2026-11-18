@@ -69,6 +69,8 @@ static uint32_t sec_stores, sec_loads;
 static void section_store(uint32_t s) { sec_stores++; live_sec = (int8_t)s; }
 static void section_load(uint32_t s) { sec_loads++; live_sec = (int8_t)s; }
 static int up_used(uint32_t k) { return k < 2; }
+static uint32_t up_kind(uint32_t k) { return k < 2 ? k + 3u : 0u; }
+static uint32_t up_engine_of(uint32_t k) { return k < 2 ? 1u : 0xFFu; }
 static int up_load(uint32_t k) { (void)k; return 0; }
 static int up_load_to(track_t *t, uint32_t k) { (void)t; (void)k; return 0; }
 static int up_arp_of(uint32_t k, int16_t *a) { (void)k; (void)a; return 1; }
