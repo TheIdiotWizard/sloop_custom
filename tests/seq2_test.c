@@ -2010,6 +2010,49 @@ static void t_midicc(void)
         for (j = 0; j < 40u; j++) run_block();
         a->p[P_LEVEL] = 127;                            /* (as the CCs above left it) */
     }
+    {   /* sloop_custom: CC 1 MOD WHEEL: the LFO -> PIT depth, up by 0..6 on top of the sound's own; not stored; CC 121.
+         * Vibrato = the period of the held note wanders: the spread of its zero-crossing intervals, wheel up / own depth
+         * 6 / nothing */
+        static int32_t cap[256 * CTL * 2];
+        uint32_t c, j;
+        int32_t sd[3] = {0, 0, 0};
+        for (c = 0; c < 3u; c++) {                      /* c 0: wheel 127, depth 0.  c 1: no wheel, depth 6.  c 2: neither */
+            int32_t o[CTL * 2], k = 0, i;
+            a->p[P_LEVEL] = 100, a->p[P_ATK] = 0, a->p[P_SUS] = 127, a->p[P_MUTE] = 0;
+            a->eng_req = a->engine = ENGI_ANA4;
+            a->p[P_E0] = 0, a->p[P_E1] = 64, a->p[P_E2] = 0, a->p[P_E3] = 0, a->p[P_E4] = 0, a->p[P_E5] = 64;   /* (a clean sine) */
+            a->p[P_E6] = 0, a->p[P_E7] = 0, a->p[P_ED_PIT] = 0, a->p[P_ED_FLT] = 0, a->p[P_ED_SHP] = 0;
+            a->p[P_FM1_LEVEL] = 64, a->p[P_FM2_LEVEL] = 0, a->p[P_FM3_ATK] = 0, a->p[P_FM3_DEC] = 0, a->p[P_FM3_SUS] = 0;
+            a->p[P_FM3_LEVEL] = 127, a->p[P_FM3_REL] = 0, a->p[P_FM4_DEC] = 0, a->p[P_FM4_SUS] = 0, a->p[P_FM4_LEVEL] = 127;
+            a->p[P_FM4_REL] = 0, a->p[P_FM2_REL] = 0, a->p[P_FM4_ATK] = 0, a->p[P_FTYPE] = 0, a->p[P_ED_FX] = 23, a->p[P_DIST] = 0;
+            a->p[P_TFLT] = 0, a->p[P_REV] = a->p[P_DLY] = a->p[P_CHOR] = 0;
+            a->p[P_LRATE] = 0, a->p[P_LWAVE] = 0, a->p[P_LFADE] = 0, a->p[P_LPHASE] = 32,   /* (a still LFO, at its peak: a constant offset) */
+             a->p[P_LTRIG] = 0, a->p[P_LSYNC] = 0;
+            a->p[P_LD_PIT] = c == 1u ? 6 : 0;
+            cc_push(0, 121, 0); run_block(); run_block();
+            if (!c) { cc_push(0, 1, 127); run_block(); run_block(); }
+            check(c ? mw_dep[0] == 0 : mw_dep[0] == 6, c ? "CC 1: reset (121): the wheel at 0" : "CC 1 = 127 on ch 1: track 1's mod wheel depth 6");
+            mclk_push(0x09u | 0x90u << 8 | 60u << 16 | 100u << 24);
+            for (j = 0; j < 256u; j++) {
+                run_block();
+                mix_block(o, CTL);
+                memcpy(&cap[j * CTL * 2], o, sizeof o);
+            }
+            for (i = 1; i < (int32_t)(256u * CTL); i++)        /* the left channel: rising zero crossings */
+                k += cap[(i - 1) * 2] < 0 && cap[i * 2] >= 0;
+            sd[c] = k;
+            mclk_push(0x09u | 0x80u << 8 | 60u << 16);
+            for (j = 0; j < 40u; j++) run_block();
+        }
+        printf("  CC 1: rising zero crossings: wheel %d, own depth 6 %d, none %d\n", (int)sd[0], (int)sd[1], (int)sd[2]);
+        check(sd[2] > 20 && sd[0] >= sd[2] + 3 && sd[1] >= sd[2] + 3 && sd[0] - sd[1] <= 1 && sd[1] - sd[0] <= 1,
+              "CC 1 on top of LFO -> PIT 0: vibrato as LFO -> PIT 6 gives (the wheel adds to the depth); none without it");
+        check(a->p[P_LD_PIT] == 0, "CC 1 does not change the sound's own LFO -> PIT");
+        cc_push(0, 1, 127); cc_push(0, 121, 0);
+        run_block(); run_block();
+        check(!mw_dep[0], "CC 121 puts the mod wheel back to 0");
+        a->p[P_LD_PIT] = 0, a->p[P_LEVEL] = 127;
+    }
     song.g[G_DRDLY] = 0;
     song.g[G_ROUTE] = 1;
     cc_push(0, 7, 55);

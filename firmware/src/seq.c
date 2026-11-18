@@ -2978,7 +2978,7 @@ static void midi_bend(uint32_t ch, track_t *t, uint32_t d1, uint32_t d2)
  * an engine without one ignores it), 72 / 73 / 75 release / attack / decay, 74 the track's FILTER (64 off,
  * below a low-pass, above a high-pass: on every engine and the drums), 91 / 93 / 94 the reverb, chorus and
  * delay sends. The drum track takes 7, 91 and 94 as GLO > DRUMS LVL, REV and DLY (2.5), and 10 and 74.
- * 2.7.1: 11 EXPRESSION, a gain over the LEVEL (core.h ex_off, every track and the drums), 121 sets it back to full. */
+ * sloop_custom: 1 MOD WHEEL, extra LFO -> PIT depth (mw_dep; learnable: a learned CC 1 is the user's); 2.7.1: 11 EXPRESSION, a gain over the LEVEL (core.h ex_off, every track and the drums), 121 sets it back to full. */
 #define MCC_RES 0xFFu
 #define MCC_CUT 0xFEu                             /* (2.7) CC 74: the engine's own cutoff / brightness, else FILTER */
 static const uint8_t MIDI_CC_MAP[][2] = {
@@ -2991,7 +2991,7 @@ static const uint8_t MIDI_CC_MAP[][2] = {
  * the CC, 7..8 the track, 9..15 the parameter's code, 0 = an empty entry: a common parameter its P_* id + 1 (their
  * ids never move, new ones go before P_E0), an engine parameter ML_E0 + k for P_E0 + k (P_E0 moves when common ones
  * are added). A learned CC no longer reaches the standard map on any channel: the controller is the user's now. The
- * CCs with a meaning of their own (0 / 32 bank select, 1 mod wheel, 6 / 38 data entry, 11 expression, 64 sustain,
+ * CCs with a meaning of their own (0 / 32 bank select, 6 / 38 data entry, 11 expression, 64 sustain,
  * 96..101, 120..127 the channel modes) are never learned. The UI (ui_input.c ml_*) writes the entries with the
  * interrupts off; ml_arm / ml_heard hand it a CC heard while learning */
 #define ML_N 16u
@@ -3005,7 +3005,7 @@ static uint32_t ml_id(uint32_t code)        /* an entry's code -> P_* id, P_COUN
 }
 static int ml_free_cc(uint32_t cc)
 {
-    return cc && cc < 120u && cc != 1u && cc != 6u && cc != 11u && cc != 32u && cc != 38u && cc != 64u &&
+    return cc && cc < 120u && cc != 6u && cc != 11u && cc != 32u && cc != 38u && cc != 64u &&
            (cc < 96u || cc > 101u);
 }
 /* parameter id of track t from a CC value, as a knob over its range */
@@ -3079,12 +3079,19 @@ static void __attribute__((noinline)) midi_cc(track_t *t, uint32_t cc, uint32_t 
     uint32_t i, id = 0xFFFFu;
     if (midi_learned(cc, value))                       /* (a learned CC is the user's: not the map's) */
         return;
+    if (cc == 1u) {                                    /* sloop_custom: the MOD WHEEL: vibrato, the LFO's PIT depth up by 0..6 (about a semitone at most) */
+        if (!is_drum(t))
+            mw_dep[trk_index(t) % NTRK] = (uint8_t)((value * 6u + 63u) / 127u);
+        return;
+    }
     if (cc == 64u) {                                   /* the sustain pedal (2.6): >= 64 down */
         sus_set(t, value >= 64u);
         return;
     }
     if (cc == 11u || cc == 121u) {                     /* (2.7.1) EXPRESSION; RESET ALL CONTROLLERS: full again */
         ex_off[trk_index(t) % NTRK] = (uint8_t)(cc == 11u ? 127u - (value & 127u) : 0u);
+        if (cc == 121u)
+            mw_dep[trk_index(t) % NTRK] = 0;                /* (RESET ALL CONTROLLERS: the mod wheel too) */
         return;
     }
     for (i = 0; i < NELEM(MIDI_CC_MAP); i++)

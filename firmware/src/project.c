@@ -347,7 +347,7 @@ UI_SMALL static void project_apply(const project_t *p)
     panic_req = (1u << NTRK) - 1u;
     drum_mute = 0;                                      /* (the live mutes: a performance's, not the project's) */
     for (k = 0; k < NTRK; k++)
-        ex_off[k] = 0;                                  /* (2.7.1) MIDI EXPRESSION: full again, as after CC 121 */
+        ex_off[k] = mw_dep[k] = 0;                                  /* (2.7.1) MIDI EXPRESSION: full again, as after CC 121 */
     fm1_irq_off();                                      /* the audio ISR must not see half a project */
     proj_apply(p, 1);
     song.sel = (uint8_t)(p->sel < NTRK ? p->sel : 0u);

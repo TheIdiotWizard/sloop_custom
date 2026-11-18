@@ -1009,6 +1009,7 @@ The knobs of a MIDI controller set the sound (the standard CC map of Felucca 1.1
 
 | CC | Sets |
 | --- | --- |
+| 1 | (sloop_custom) the **MOD WHEEL**: vibrato. It raises the track's **LFO → PIT** depth by up to 6 (a bit over a semitone) on top of what the sound has set, so 0 gives back the sound as it was. It needs the LFO running (LFO page: RATE, WAVE). Not stored with the sound; **121** (RESET ALL CONTROLLERS) and a project load put it back to 0. You can also **learn** CC 1 onto any parameter (below): a learned CC 1 does that instead |
 | 5 | GLIDE |
 | 7 | LEVEL (on the drum channel: GLO → DRUMS → LVL) |
 | 10 | PAN |
@@ -1032,7 +1033,7 @@ Any knob of your controller onto any parameter of a track (after Felucca 1.5):
 3. Move the knob on your controller: *CC 21 = T1 CUT*. Go on with other knobs, as many as you like.
 4. **GLO + F#3** again: *LEARN DONE*.
 
-A learned CC sets that track's parameter whatever channel it comes on, and no longer does what the standard map gave it (a CC learned for one parameter is taken off the one it had before; up to 16 CCs). The CCs with a meaning of their own are never learned: bank select (0, 32), mod wheel (1), data entry (6, 38), expression (11), sustain (64), 96–101 and the channel modes (120–127). What is learned is a setting of the FM-1, kept through power-off and projects, and in the web editor's backups (restored with them, on this FM-1 or another); **HOME menu → SYSTEM → MIDI LEARN CLEAR**, OCT+, forgets it all.
+A learned CC sets that track's parameter whatever channel it comes on, and no longer does what the standard map gave it (a CC learned for one parameter is taken off the one it had before; up to 16 CCs). The CCs with a meaning of their own are never learned: bank select (0, 32), data entry (6, 38), expression (11), sustain (64), 96–101 and the channel modes (120–127). What is learned is a setting of the FM-1, kept through power-off and projects, and in the web editor's backups (restored with them, on this FM-1 or another); **HOME menu → SYSTEM → MIDI LEARN CLEAR**, OCT+, forgets it all.
 
 ---
 

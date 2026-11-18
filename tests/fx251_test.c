@@ -7,7 +7,7 @@
  *   lfo 2    SYNC: a cycle a note value; TRIG FREE: a new phrase does not restart it; POL UNI: 0..+1
  *   mutes    the drum track's live mutes: the sequencer skips a muted sound (and its ratchets), the others play
  *   learn    MIDI LEARN's map: a learned CC sets its track's parameter on any channel, not the standard map; while
- *            learning a CC is handed to the UI; the CCs with a meaning of their own are never learned
+ *            learning a CC is handed to the UI; the CCs with a meaning of their own (not CC 1, sloop_custom) are never learned
  * Exit status: the number of failed checks. */
 #include <stdint.h>
 static uint32_t host_slots[4u * 0x14000u / 4u];          /* the user sample slots (a RAM image of the flash) */
@@ -332,8 +332,13 @@ static void t_learn(void)
     cc_in(0, 20, 99);
     check(ml_heard == 21u && trk[1].p[P_DIST] == 5, "while learning: the CC goes to the UI (ml_heard), nothing is set");
     ml_arm = 0, ml_heard = 0;
-    check(!ml_free_cc(1) && !ml_free_cc(64) && !ml_free_cc(0) && !ml_free_cc(121) && ml_free_cc(20) && ml_free_cc(74),
-          "MIDI LEARN: mod wheel, sustain, bank select, the channel modes never learned");
+    check(ml_free_cc(1) && !ml_free_cc(64) && !ml_free_cc(0) && !ml_free_cc(121) && ml_free_cc(20) && ml_free_cc(74),
+          "MIDI LEARN: sustain, bank select, the channel modes never learned; the mod wheel (CC 1, sloop_custom) can be");
+    ml_tab[5] = (uint16_t)(1u | 1u << 7 | (P_DIST + 1u) << 9);      /* CC 1 learned on track 2's DIST: it does that, not the wheel */
+    trk[1].p[P_DIST] = 5, mw_dep[1] = 0;
+    cc_in(1, 1, 127);
+    check(trk[1].p[P_DIST] != 5 && !mw_dep[1], "MIDI LEARN: a learned CC 1 sets its parameter instead of the mod wheel");
+    ml_tab[5] = 0;
     check(ml_id(P_DIST + 1u) == P_DIST && ml_id(ML_E0 + 7u) == P_E7 && ml_id(ML_E0 + 8u) == P_COUNT && ml_id(0) == P_COUNT,
           "MIDI LEARN: an entry's code -> its parameter (an unknown one: none)");
     memset((void *)ml_tab, 0, sizeof ml_tab);

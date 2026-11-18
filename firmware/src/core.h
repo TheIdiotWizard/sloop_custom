@@ -403,6 +403,7 @@ static volatile uint8_t thr_req;
 /* (2.7.1) MIDI CC 11, EXPRESSION, per track: 127 - its value (0, the default: full). A gain over the track's LEVEL (the
  * drums': GLO > DRUMS LVL), 40 log10(v / 127) dB as GM's: the mix is not touched. CC 121 and a project loaded reset it */
 static volatile uint8_t ex_off[NTRK];
+static volatile uint8_t mw_dep[NTRK];   /* sloop_custom: MIDI MOD WHEEL (CC 1): extra LFO -> PIT depth, 0..6 (voice.c), on top of the sound's own */
 static inline int32_t expr_gain(int32_t lvl, uint32_t k)
 {
     uint32_t e = 127u - ex_off[k % NTRK];
