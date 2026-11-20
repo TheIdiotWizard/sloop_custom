@@ -1831,6 +1831,28 @@ int main(int argc, char **argv)
         ui.arm = 0; song.g[G_SLOT] = 1;
         go_home(); frames(4);
     }
+    {   /* sloop_custom: SAVE > NAME: the large name, the character strip and the type strip redraw as the knobs turn (their
+         * graph_signature changes with the cursor, the character and the type, not only the columns' headers) */
+        uint32_t i, s0, s1;
+        go_home(); frame();
+        for (i = 0; i < NPAGES; i++) if (!strcmp(PAGES[i].title, "NAME") && PAGES[i].fam == FAM_SAVE) break;
+        check(i < NPAGES && PAGES[i].graph == GR_NAME, "SAVE > NAME: a page");
+        open_family(PAGES[i].fam); ui.page = (uint8_t)i; ui.fam_last[PAGES[i].fam] = (uint8_t)i; page_entered(); ui.force = 1; frame();
+        ui.home = 0;
+        s0 = graph_signature();
+        encs[panel.enc[EN_K2]] = 1; frames(2);
+        s1 = graph_signature();
+        check(s0 != s1, "NAME: KNOB 2 (the character) changes what the graph draws");
+        s0 = s1;
+        encs[panel.enc[EN_K1]] = 1; frames(2);
+        s1 = graph_signature();
+        check(s0 != s1, "NAME: KNOB 1 (the position) changes what the graph draws");
+        s0 = s1;
+        encs[panel.enc[EN_K3]] = 1; frames(2);
+        s1 = graph_signature();
+        check(s0 != s1, "NAME: KNOB 3 (the type) changes what the graph draws");
+        go_home(); frames(4);
+    }
     {   /* sloop_custom: SAVE > SONG: KNOB 1 picks the song (the current one first), KNOB 2 ERASE, KNOB 3 LOAD, KNOB 4 COPY:
          * GO buttons, one detent arms, a second acts, a turn to the left does nothing */
         uint32_t i;

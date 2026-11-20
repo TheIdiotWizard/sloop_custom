@@ -443,6 +443,11 @@ UI_SMALL static uint32_t graph_signature(void)
     }
     if (pg->graph == GR_SLCR && t->p[P_SLCR])        /* the SLICER's step playing */
         h ^= (sl[song.sel].idx + 1u) * 2654435761u;
+    if (pg->graph == GR_NAME)                        /* (sloop_custom: the name being typed, the cursor, the type: the NAME page's
+                                                      * strips moved with the knobs' headers only before) */
+        h = str_hash(h ^ (ui.upos * 977u + (uint32_t)ui.utype * 31337u + ui.uslot * 7u), ui.uname);
+    if (pg->graph == GR_BROWSE)                      /* (the TYPE filter changes the list and its header) */
+        h ^= ui.bfilt * 40503u;
     if (pg->graph == GR_SONGS)                       /* (sloop_custom: which songs hold something) */
         for (i = 0; i < ST_NSONG; i++)
             h ^= (uint32_t)song_is_used(i) << (8u + i);
