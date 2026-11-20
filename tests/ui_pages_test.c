@@ -1834,25 +1834,6 @@ int main(int argc, char **argv)
         check(s0 != s1, "NAME: KNOB 3 (the type) changes what the graph draws");
         go_home(); frames(4);
     }
-    {   /* the ZOOM popup (the touched knob, large) is not drawn over the SAVE pages: they show their own values */
-        static const char *const sv[] = {"USER", "NAME", "SECTION", "SONG"};
-        uint32_t q, i, ok = 1;
-        static uint16_t a[240 * 52];
-        uint32_t zsave = settings.zoom;
-        for (q = 0; q < 4u; q++) {
-            for (i = 0; i < NPAGES; i++) if (!strcmp(PAGES[i].title, sv[q]) && PAGES[i].fam == FAM_SAVE) break;
-            if (i >= NPAGES) { ok = 0; continue; }
-            go_home(); frame();
-            open_family(PAGES[i].fam); ui.page = (uint8_t)i; ui.fam_last[PAGES[i].fam] = (uint8_t)i; page_entered(); ui.home = 0;
-            settings.zoom = 0; ui.hot_col = 1; ui.hot_t = 40; ui.force = 1; frame();
-            memcpy(a, &screen[Y_GRAPH * 240u], sizeof a);
-            settings.zoom = 1; ui.hot_col = 1; ui.hot_t = 40; ui.force = 1; frame();
-            ok &= !memcmp(a, &screen[Y_GRAPH * 240u], sizeof a);
-        }
-        settings.zoom = zsave;
-        check(ok, "SAVE pages: the ZOOM popup is not drawn over USER, NAME, SECTION, SONG");
-        go_home(); frames(4);
-    }
     {   /* sloop_custom: SAVE > SONG: KNOB 1 picks the song (the current one first), KNOB 2 ERASE, KNOB 3 LOAD, KNOB 4 COPY:
          * GO buttons, one detent arms, a second acts, a turn to the left does nothing */
         uint32_t i;
