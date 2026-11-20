@@ -830,7 +830,7 @@ UI_SMALL static void draw_graph(void)
     const page_t *pg = cur_page();
     const track_t *t = TSEL;
     uint16_t c = TE_COL[song.sel & 3u];               /* LIVE: the curves in the track's colour */
-    uint32_t sig, top, drum_note = !ui.home && is_drum(t) && !page_for_drum(pg);
+    uint32_t sig, top, notop, drum_note = !ui.home && is_drum(t) && !page_for_drum(pg);
     if (!ui.home && pg->graph == GR_TRK) {
         draw_tracks();
         ui.graph_top = 1;                            /* the next graph draws its top rows again */
@@ -900,10 +900,13 @@ UI_SMALL static void draw_graph(void)
             break;
         }
     }
+    {   /* the SAVE pages (and the roll) show their own values: no ZOOM popup over them */
+        notop = pg->graph == GR_BROWSE || pg->graph == GR_SLOTS || pg->graph == GR_USER || pg->graph == GR_NAME || pg->graph == GR_SONGS;
+    }
     top = !ui.home && !drum_note && (pg->graph == GR_BROWSE || pg->graph == GR_SLOTS || pg->graph == GR_USER || pg->graph == GR_NAME || pg->graph == GR_SONGS ||
                                      pg->graph == GR_ROLL || big_page(pg));   /* these draw from the top */
     cv_oy = 0;
-    if (ui.hot_t && settings.zoom && !(top && (big_page(pg) || pg->graph == GR_ROLL) && !drum_note)) {   /* (the big values show it already) */                 /* focus (menu ZOOM): the touched value, large and white */
+    if (ui.hot_t && settings.zoom && !notop && !(top && (big_page(pg) || pg->graph == GR_ROLL) && !drum_note)) {   /* (the big values show it already) */                 /* focus (menu ZOOM): the touched value, large and white */
         int32_t x;
         top = 1;
         cv_rect(0, 0, 150, 50, C_BLACK);
