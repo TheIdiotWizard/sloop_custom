@@ -1156,7 +1156,7 @@ static int project_empty(void)
 static int p_lockable(uint32_t id)
 {
     return id <= P_LD_AMP || id == P_SGATE || (id >= P_DIST && id <= P_REV) || id == P_GLIDE || id == P_PAN ||
-           id == P_DETUNE || (id >= P_SLCR && id <= P_SLDEPTH) || (id >= P_E0 && id <= P_E7) || id == P_TFLT || id == P_TRES ||
+           id == P_DETUNE || (id >= P_SLCR && id <= P_SLDEPTH) || (id >= P_E0 && id <= P_E7) || id == P_TFLT || id == P_TRES || id == P_TKEY || id == P_TDIST ||
            (id >= P_IA && id <= P_IMIX) ||   /* 2.6: the INSERT's values and MIX */
            (id >= P_FM1_ATK && id <= P_FM4_LEVEL);   /* sloop_custom: ANALOG4's and FMTONE's operator slots */
 }
@@ -2975,7 +2975,7 @@ static void midi_bend(uint32_t ch, track_t *t, uint32_t d1, uint32_t d2)
  * A CC acts on the track its channel plays, as the notes do (1-3 the synths, the drum channel the drum
  * track, 4-16 the selected track), and sets its parameter as a knob would: 0..127 over the parameter's
  * range, 64 the middle of a bipolar one. 5 GLIDE, 7 LEVEL, 10 PAN, 71 the engine's resonance (RES or Q;
- * an engine without one ignores it), 72 / 73 / 75 release / attack / decay, 74 the track's FILTER (64 off,
+ * sloop_custom: an engine without one sets the track FILTER's RES (FX > FILTER), as 74 does the cutoff), 72 / 73 / 75 release / attack / decay, 74 the track's FILTER (64 off,
  * below a low-pass, above a high-pass: on every engine and the drums), 91 / 93 / 94 the reverb, chorus and
  * delay sends. The drum track takes 7, 91 and 94 as GLO > DRUMS LVL, REV and DLY (2.5), and 10 and 74.
  * sloop_custom: 1 MOD WHEEL, extra LFO -> PIT depth (mw_dep; learnable: a learned CC 1 is the user's); 2.7.1: 11 EXPRESSION, a gain over the LEVEL (core.h ex_off, every track and the drums), 121 sets it back to full. */
@@ -3117,6 +3117,9 @@ static void __attribute__((noinline)) midi_cc(track_t *t, uint32_t cc, uint32_t 
         } else if (id == P_PAN || id == P_TFLT) {
             d = &TP[id];
             slot = &t->p[id];
+        } else if (id == MCC_RES) {                     /* (sloop_custom) the drum track has no resonance of its own: its filter's */
+            d = &TP[P_TRES];
+            slot = &t->p[P_TRES];
         }
     } else if (id == MCC_RES) {
         const engine_t *e = ENGINES[t->eng_req % NENGINES];
@@ -3125,6 +3128,10 @@ static void __attribute__((noinline)) midi_cc(track_t *t, uint32_t cc, uint32_t 
                 d = &e->edit[i];
                 slot = &t->p[P_E0 + i];
             }
+        if (!d) {                                       /* (sloop_custom) the engine has none: the track FILTER's RES, per track */
+            d = &TP[P_TRES];
+            slot = &t->p[P_TRES];
+        }
     } else {
         d = &TP[id];
         slot = &t->p[id];

@@ -27,6 +27,7 @@ _Static_assert(G_DRDLY == PROJ_NG && G_TXSRC == PROJ_NG + 5u,
 _Static_assert(G_FXFADE == G_CLKOUT + 1u && G_COUNT == G_FXFADE + 1u, "G_FXFADE (2.7.2) is the last global, a setting of the FM-1");
 typedef struct {                               /* one track; the drum track ignores engine / preset */
     int8_t p[P_TRES];                          /* P_LEVEL .. P_FM4_LEVEL, a byte each (pt_get, pt_set) */
+    uint8_t tkey;                              /* sloop_custom: P_TKEY (low nibble) and P_TDIST (high), 0..10 each: the byte that padded p[] to the e[] alignment */
     int16_t e[8];                              /* P_E0 .. P_E7 */
     uint8_t engine, preset;                    /* engine: its low nibble (NENGINES <= 16); sloop_custom: P_TRES in the high one */
     union {
@@ -45,7 +46,7 @@ typedef struct {
 } project_t;
 static int16_t pt_get(const proj_trk_t *t, uint32_t id)   /* p[id] of a stored track */
 {
-    return id < P_TRES ? (int16_t)t->p[id] : id == P_TRES ? (int16_t)(t->engine >> 4) : t->e[(id - P_E0) & 7u];
+    return id < P_TRES ? (int16_t)t->p[id] : id == P_TRES ? (int16_t)(t->engine >> 4) : id == P_TKEY ? (int16_t)(t->tkey & 15u) : id == P_TDIST ? (int16_t)(t->tkey >> 4) : t->e[(id - P_E0) & 7u];
 }
 UI_SMALL static void pt_set(proj_trk_t *t, uint32_t id, int32_t v)
 {
@@ -53,6 +54,10 @@ UI_SMALL static void pt_set(proj_trk_t *t, uint32_t id, int32_t v)
         t->p[id] = (int8_t)clamp(v, -128, 127);
     else if (id == P_TRES)
         t->engine = (uint8_t)((t->engine & 15u) | (uint32_t)clamp(v, 0, 15) << 4);
+    else if (id == P_TKEY)
+        t->tkey = (uint8_t)((t->tkey & 0xF0u) | (uint32_t)clamp(v, 0, 10));
+    else if (id == P_TDIST)
+        t->tkey = (uint8_t)((t->tkey & 15u) | (uint32_t)clamp(v, 0, 10) << 4);
     else
         t->e[(id - P_E0) & 7u] = (int16_t)v;
 }

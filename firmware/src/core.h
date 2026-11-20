@@ -89,6 +89,9 @@ enum {                          /* per-track parameters */
     P_FM4_ATK, P_FM4_DEC, P_FM4_SUS, P_FM4_REL, P_FM4_LEVEL,
     P_TRES,                                    /* sloop_custom: the track filter's RESONANCE, 0 clean .. 10, 11..15 the clipped scream (fx.c);
                                                 * a project keeps it in the engine byte's high nibble (project.c pt_get) */
+    P_TKEY,                                    /* sloop_custom: the track filter's KEY TRACKING, 0..10 = 0..100 % of the played pitch (fx.c) */
+    P_TDIST,                                   /* sloop_custom: the track filter's DIST, a drive in front of it, 0..10 = 0..100 % (fx.c tflt_run);
+                                                * KEY and DIST share one byte of a project, a nibble each (project.c) */
     P_E0, P_E1, P_E2, P_E3, P_E4, P_E5, P_E6, P_E7,
     P_COUNT
 };

@@ -871,7 +871,7 @@ The texture is saved with the project, and each song section (A–D) has its own
 
 ### Per track
 
-- **FILTER** (FX → FILTER, or **FX + KNOB 4** for the selected track): one knob, left a low-pass, right a high-pass, centre off. It stays when you change the sound, can be locked on a step, and is saved with the project. Its **resonance** is **per track**: FX → FILTER, KNOB 2 **RES** (0 clean … 10; **sloop_custom:** 11–15 the scream), kept with the track, the project and a lock like the cutoff. **(2.8) The drum track has it too:** FX → FILTER sweeps and shapes the whole kit, live.
+- **FILTER** (FX → FILTER, or **FX + KNOB 4** for the selected track): one knob, left a low-pass, right a high-pass, centre off. It stays when you change the sound, can be locked on a step, and is saved with the project. Its **resonance** is **per track**: FX → FILTER, KNOB 2 **RES** (0 clean … 10; **sloop_custom:** 11–15 the scream), kept with the track, the project and a lock like the cutoff. **KEY** (KNOB 3, **sloop_custom**, 0–100 % in tens) makes the cutoff follow the pitch you play: at 100 % an octave up opens the filter an octave, at 0 % it stays put. The filter sits on the whole track, so it follows the average of the notes held (and keeps the last one while they die away). **DIST** (KNOB 4, 0–100 % in tens) is a drive *in front of* the filter, as in MONO2K's chain: the signal is pushed into a soft clip at its own peak (so the level stays put and the wave fills out), then the filter works on all those extra harmonics. Heavy DIST with high RES and a sweeping cutoff is the squelchy, acid sound; it also works with the filter knob centred (drive only). **(2.8) The drum track has it too:** FX → FILTER sweeps and shapes the whole kit, live.
 - **Sends** (FX page): DST drive, CHO chorus, DLY delay, REV reverb. The delay and the reverb / chorus settings are global (DLY and REV/CHO pages). The delay's TIME includes dotted 1/8 and 1/16.
 - **SLICER** (FX → SLICER): a tempo gate (GATE) or stutter (STUT), 16 patterns, 1/8 to 32T, with a depth.
 - **INSERT** (FX → INSERT and INSERT 2, 2.6, after Felucca 1.5): one effect on the track alone, right after its drive; the drum track has one too, on the whole kit and its sends. MIX sets dry / wet. A, B and C change with the type:
@@ -1013,7 +1013,7 @@ The knobs of a MIDI controller set the sound (the standard CC map of Felucca 1.1
 | 10 | PAN |
 | 11 | (2.7.1) **EXPRESSION**: a volume pedal over the track's LEVEL (on the drum channel: over DRUMS LVL), 127 full, 0 silent, as on a GM synth. It does not change LEVEL (your mix and what you save stay as they are). Full again at power-on, when a project or section is loaded, and with CC 121 |
 | 121 | (2.7.1) RESET ALL CONTROLLERS: the expression full again |
-| 71 | the engine's resonance (RES or Q: ANALOG, TRIO, VOICE, NOISE; the others ignore it) |
+| 71 | the engine's resonance (RES or Q: ANALOG, TRIO, VOICE, NOISE); **sloop_custom:** an engine without one sets the track's **FX → FILTER RES** instead, as 74 does the cutoff (per channel, never the master filter) |
 | 72 · 73 · 75 | release · attack · decay |
 | 74 | (2.7) the engine's own cutoff or brightness, dark to bright: ANALOG / SAMPLE CUT, TRIO CUT, PHASE DCW, LOFI / GRAIN TONE, FM6 MLVL, PHYS BRIT, NOISE FREQ. DIGITAL, VOICE, WHEEL and the drum track: the track's FILTER (64 off, lower a low-pass, higher a high-pass), as before |
 | 91 · 93 · 94 | the reverb, chorus and delay sends (on the drum channel 91 and 94 are GLO → DRUMS → REV and DLY) |

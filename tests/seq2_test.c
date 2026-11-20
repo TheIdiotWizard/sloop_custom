@@ -765,7 +765,7 @@ static void t_filt_reso(void)
         tsvf_coef_k(&cs, 60 << 8, tflt_k(15));
         for (blk = 0; blk < 200; blk++) {                       /* a burst, then silence: it rings and stays bounded */
             for (j = 0; j < 32; j++) buf[j] = blk < 4 ? ((j & 8) ? 8000 : -8000) : 0;
-            tflt_run(&df, &cs, buf, 32, 0, 15);
+            tflt_run(&df, &cs, buf, 32, 0, 15, 0);
             for (j = 0; j < 32; j++) {
                 int32_t a = buf[j] < 0 ? -buf[j] : buf[j];
                 if (blk < 4 && a > pk) pk = a;
@@ -774,6 +774,43 @@ static void t_filt_reso(void)
         }
         check(pk <= 8000 * 2 * 4 + 4 && pk > 0, "FILTER RESO 15: the burst's output is clipped near the input's level (bounded)");
         check(pr > 0 && pr <= 8000 * 4, "FILTER RESO 15: it rings on after the input stops, within the 8000 floor");
+    }
+    /* KEY TRACKING (P_TKEY, fx.c tflt_key): the cutoff follows the pitch played, 1.168 steps a semitone at 100 % */
+    {
+        djf_t df; track_t *t = &trk[0]; int32_t o0, o50, o100, down, i, save = t->p[P_TKEY];
+        voice_t vsave[NVOICE];
+        memcpy(vsave, t->v, sizeof vsave); for (i = 0; i < NVOICE; i++) t->v[i].active = 0;
+        memset(&df, 0, sizeof df);
+        t->v[0].active = 1; t->v[0].stage = 2; t->v[0].note = 72;
+        t->p[P_TKEY] = 0;   o0 = tflt_key(&df, t);
+        t->p[P_TKEY] = 10; for (i = 0; i < 20; i++) o100 = tflt_key(&df, t);
+        check(o0 == 0 && o100 > 13 * 256 && o100 < 15 * 256, "KEY 100 %: an octave above middle C opens the cutoff ~14 steps (an octave)");
+        memset(&df, 0, sizeof df);
+        t->p[P_TKEY] = 5; for (i = 0; i < 20; i++) o50 = tflt_key(&df, t);
+        check(o50 > o100 * 45 / 100 && o50 < o100 * 55 / 100, "KEY 50 %: half of it");
+        t->v[0].note = 48; for (i = 0; i < 40; i++) down = tflt_key(&df, t);
+        check(down < 0, "KEY: a note below middle C closes it");
+        t->v[0].active = 0; i = tflt_key(&df, t);
+        check(i == down, "KEY: with no voice held (the release) it keeps the last pitch");
+        t->p[P_TKEY] = save; memcpy(t->v, vsave, sizeof vsave);
+    }
+    /* DIST (P_TDIST, fx.c tflt_drive): a drive in front of the filter: the level stays near the input's peak, the wave fills out */
+    {
+        int32_t buf[32], ref[32], j, pk = 0, e0 = 0, e1 = 0;
+        for (j = 0; j < 32; j++) ref[j] = buf[j] = (j & 8) ? 6000 : -6000, ref[j] = (j * 700) % 12000 - 6000, buf[j] = ref[j];
+        tflt_drive(buf, 32, 0 + 10);
+        for (j = 0; j < 32; j++) { int32_t a = buf[j] < 0 ? -buf[j] : buf[j]; if (a > pk) pk = a; e0 += ref[j] < 0 ? -ref[j] : ref[j]; e1 += a; }
+        check(pk <= 6000 + 8 && pk > 4000 && e1 > e0 + e0 / 8, "DIST 100 %: the peak stays at the input's, the average level rises (the wave fills out)");
+        {
+            int32_t d1 = 0, d10 = 0;
+            for (j = 0; j < 32; j++) buf[j] = ref[j];
+            tflt_drive(buf, 32, 10);
+            for (j = 0; j < 32; j++) d10 += buf[j] > ref[j] ? buf[j] - ref[j] : ref[j] - buf[j];
+            for (j = 0; j < 32; j++) buf[j] = ref[j];
+            tflt_drive(buf, 32, 1);
+            for (j = 0; j < 32; j++) d1 += buf[j] > ref[j] ? buf[j] - ref[j] : ref[j] - buf[j];
+            check(d1 > 0 && d1 < d10 / 2, "DIST 10 %: well gentler than 100 % (the wave changes less)");
+        }
     }
     /* the setting's persistence (project.c midi_part) is checked in fm6_test (the full build has panel.c and project.c) */
 }
@@ -1977,8 +2014,10 @@ static void t_midicc(void)
     for (i = 0; i < P_COUNT; i++) before[i] = b->p[i];
     cc_push(1, 71, 127); cc_push(1, 1, 99); cc_push(1, 64, 127);   /* FMTONE has no RES knob; mod wheel, sustain: not mapped */
     run_block(); run_block();
-    for (i = 0; i < P_COUNT; i++) same &= b->p[i] == before[i];
-    check(res < 8u && a->p[P_E0 + res] == 127 && same, "2.5: CC71 = the engine's RES; an engine without one, and unmapped CCs, change nothing");
+    for (i = 0; i < P_COUNT; i++) same &= i == P_TRES || b->p[i] == before[i];
+    check(res < 8u && a->p[P_E0 + res] == 127 && same && a->p[P_TRES] == 0, "2.5: CC71 = the engine's RES (the track FILTER's RES untouched); unmapped CCs change nothing");
+    check(b->p[P_TRES] == 15 && b->p[P_TKEY] == 0 && song.g[G_FILT] == 0, "sloop_custom: CC71 on an engine without RES (FMTONE) sets that track's FILTER RES, not the master filter");
+    check(trk[2].p[P_TRES] == 0 && a->p[P_TFLT] == 0, "... and only on its channel's track");
     check(sus_on[1] == 1u, "2.6: CC 64 (sustain) on ch 2: track 2's pedal down (no parameter changed)");
     cc_push(1, 64, 0); run_block();                     /* (the pedal up again) */
     song.sel = 2;
@@ -1994,6 +2033,9 @@ static void t_midicc(void)
     check(song.g[G_DRLVL] == 0 && song.g[G_DRREV] == 127 && song.g[G_DRDLY] == 64 && TDRUM->p[P_PAN] == -64 && TDRUM->p[P_TFLT] == 63
           && TDRUM->p[P_ATK] == before[P_ATK] && TDRUM->p[P_DLY] == before[P_DLY],
           "2.5: the drum channel: 7 / 91 / 94 = DRUMS LVL / REV / DLY, 10 PAN, 74 FILTER; 73 ignored");
+    cc_push(drch, 71, 127);
+    run_block(); run_block();
+    check(TDRUM->p[P_TRES] == 15 && song.g[G_FILT] == 0, "sloop_custom: the drum channel's CC71 = the drum track's FILTER RES");
     {   /* 2.7.1: CC 11 EXPRESSION, a gain over the LEVEL (the mix untouched); CC 121 full again */
         int32_t o[CTL * 2], pk[3] = {0, 0, 0};
         uint32_t ph, j, lv = song.g[G_DRLVL];

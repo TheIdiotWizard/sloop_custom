@@ -33,9 +33,9 @@ int main(void)
     uint32_t i, t, e;
     int bad = 0, ok;
 
-    bad += check("layout: the ten of 2.6, then the 20 operator slots and RES just before P_E0 (84), P_COUNT 92",
-                 P_VLEAD + 1 == P_ITYPE && P_LPOL + 1 == P_FM1_ATK && P_FM4_LEVEL + 1 == P_TRES && P_TRES + 1 == P_E0 && P_E0 == 84 &&
-                 P_COUNT == 92 && P_SLDEPTH + 1 == P_CHORD);
+    bad += check("layout: the ten of 2.6, then the 20 operator slots, RES, KEY and DIST just before P_E0 (86), P_COUNT 94",
+                 P_VLEAD + 1 == P_ITYPE && P_LPOL + 1 == P_FM1_ATK && P_FM4_LEVEL + 1 == P_TRES && P_TRES + 1 == P_TKEY && P_TKEY + 1 == P_TDIST && P_TDIST + 1 == P_E0 && P_E0 == 86 &&
+                 P_COUNT == 94 && P_SLDEPTH + 1 == P_CHORD);
     printf("  format 7: %u bytes\n", (unsigned)sizeof(project_t));
     bad += check("format 7 fits one flash object (3840 bytes); 4 slots fit .noinit (with panel, settings, dbg, bootguard)",
                  sizeof(project_t) <= 3840u && 4u * sizeof(project_t) <= 0x3D50u - 256u);

@@ -1200,8 +1200,8 @@ int main(int argc, char **argv)
         tap(B_FX); SEL(1);
         check(!strcmp(PT(), "FILTER"), "SELECT on FX: next page, the track FILTER");
         TSEL->p[P_TFLT] = -32; ui.force = 1; frames(2); ppm("page-filter");
-        check(!strcmp(ui.big_l[0], "FILT") && !strcmp(ui.big_v[0], "LP50") && !strcmp(ui.big_l[1], "RES") && !ui.big_l[2][0],
-              "FILTER page: cutoff (LP50 %) and RES drawn large");
+        check(!strcmp(ui.big_l[0], "FILT") && !strcmp(ui.big_v[0], "LP50") && !strcmp(ui.big_l[1], "RES") && !strcmp(ui.big_l[2], "KEY") && !strcmp(ui.big_l[3], "DIST"),
+              "FILTER page: cutoff (LP50 %), RES, KEY and DIST drawn large");
         {   /* the big value in the graph strip: white pixels in the middle of the screen */
             uint32_t x, y, lit = 0;
             for (y = Y_GRAPH + 30; y < Y_GRAPH + 90; y++)

@@ -1251,7 +1251,7 @@ const LVX = {
   /* the master: FILT DUST DUCK, the drums' REV DLY, the delay (TIME is a list), the reverb, the chorus, TEXTURE, SWING */
   GP: [29, 27, 28, 26, 32, 4, 5, 6, 7, 8, 9, 10, 11, 37, 38, 39, 40, 41, 42, 43, 1],
   GP_STEP: [4, 37, 41, 42, 43],
-  BPM: 0, E0: 84, NE: 8,   /* (sloop_custom: P_E0 84, after the 20 operator slots and RES) */
+  BPM: 0, E0: 86, NE: 8,   /* (sloop_custom: P_E0 86, after the 20 operator slots, RES, KEY and DIST) */
   NSCENE: 8, MORPH_BARS: [0, 1, 2, 4, 8, 16],
   /* a scene from the page's values: tracks [{level, mute, engine, preset, p: {id: v}, e: [8]}], g: {id: v}, bpm */
   capture(tracks, g, opt = {}) {
@@ -1325,9 +1325,9 @@ const LVX = {
 /* v7: the parameters a step can lock (firmware seq.c p_lockable: the sound, not the sequencer / arp / key / voice
    mode); ids as core.h: LEVEL .. LFO dests, GATE, the sends, GLIDE, PAN, DETUNE, the SLICER, FILTER, the engine's 8;
    from 2.6 (pe0 63) also the INSERT's A B C and MIX (54..57). pe0: the device's (the newest when none) */
-const lockable = (id, pe0 = typeof dev !== "undefined" && dev && dev.info ? dev.info.pe0 : 84) => id <= 16 || id === 32 || (id >= 33 && id <= 36) || id === 38 || id === 39
+const lockable = (id, pe0 = typeof dev !== "undefined" && dev && dev.info ? dev.info.pe0 : 86) => id <= 16 || id === 32 || (id >= 33 && id <= 36) || id === 38 || id === 39
   || id === 44 || (id >= 45 && id <= 48) || id === 50 || (pe0 >= 63 && id >= 54 && id <= 57) || (id >= pe0 && id <= pe0 + 7)
-  || (pe0 >= 83 && id >= 63 && id <= 82) || (pe0 >= 84 && id === 83);   /* (sloop_custom: ANALOG4's and FMTONE's operator slots, P_FM1_ATK .. P_FM4_LEVEL) */
+  || (pe0 >= 83 && id >= 63 && id <= 82) || (pe0 >= 84 && (id === 83 || (pe0 >= 85 && id === 84) || (pe0 >= 86 && id === 85)));   /* (sloop_custom: ANALOG4's and FMTONE's operator slots, P_FM1_ATK .. P_FM4_LEVEL) */
 const MICRO = { MIN: -32, MAX: 31 };                 /* a step's nudge in 1/64 of a step (- early, + late), sent + 64 */
 /* v8: a step's fill condition (firmware core.h FC_*): 0 normal, 1 plays only during a fill, 2 silent during one; 2 bits a
    step, 4 steps a byte (step i: byte i >> 2, bits 2 (i & 3)..), the 16 bytes sent pack7 */
@@ -2947,7 +2947,7 @@ function makeMockDevice(opt = {}) {
     /* sloop_custom: the 20 operator slots (P_FM1_ATK .. P_FM4_LEVEL), as TP names them; an engine's own names: ENG[].slots */
     ...[1, 2, 3, 4].flatMap(() => [D("ATK", F.TIME, 0, 127, 0), D("DEC", F.TIME, 0, 127, 0), D("SUS", F.PCT, 0, 127, 127),
       D("REL", F.TIME, 0, 127, 0), D("LVL", F.PCT, 0, 127, 127)]),
-    D("RES", F.INT, 0, 15, 0),                  /* sloop_custom: the track filter's resonance (P_TRES; 11..15 the scream) */
+    D("RES", F.INT, 0, 15, 0), D("KEY", F.PCT, 0, 10, 0), D("DIST", F.PCT, 0, 10, 0),                  /* sloop_custom: the track filter's resonance (P_TRES; 11..15 the scream) */
   ];
   const GP = [
     D("BPM", F.BPM, 40, 240, 90), D("SWING", F.SWING, 0, 100, 0), E("CLICK", ["OFF", "REC", "ON"], 0), D("TUNE", F.INT, -50, 50, 0),
@@ -5890,7 +5890,7 @@ const stepEdit = new Map(); /* index -> time of the last edit */
 
 /* parameter ids (firmware/src/core.h); used only when P_COUNT / G_COUNT match */
 /* pcount 71 / pe0 63: 2.6's INSERT, filter TYPE, ENV SYNC, LFO 2 (P_ITYPE 53 .. P_LPOL 62, after Felucca 1.4 / 1.5) */
-const EXPECT = { pcount: [61, 71, 92], gcount: [32, 33, 45, 46, 47, 48, 49, 50], pe0: [53, 63, 84] };   /* (sloop_custom: 92 / 84, the 20 operator slots) */   /* gcount 33: 2.5's drum DLY (G_DRDLY); 45: 2.6's GLO > MIDI, TEXTURE, BEND; 46: 2.7's FX CH; 47: DR MAP; 48: REMOTE; 49: CLK OUT; 50: 2.7.2's FX FADE */
+const EXPECT = { pcount: [61, 71, 94], gcount: [32, 33, 45, 46, 47, 48, 49, 50], pe0: [53, 63, 86] };   /* (sloop_custom: 94 / 86, the 20 operator slots) */   /* gcount 33: 2.5's drum DLY (G_DRDLY); 45: 2.6's GLO > MIDI, TEXTURE, BEND; 46: 2.7's FX CH; 47: DR MAP; 48: REMOTE; 49: CLK OUT; 50: 2.7.2's FX FADE */
 const P = { LEVEL: 0, SLEN: 29, CHORD: 49 };
 const LAYOUT = (pe0) => {
   const v251 = pe0 >= 63;                         /* (2.6: the pages the device has for the new parameters) */
@@ -5907,7 +5907,7 @@ const LAYOUT = (pe0) => {
         ["A ENV", 0, [63, 64, 65, 67], 1], ["B ENV", 0, [68, 69, 70, 72], 1], ["DEL TRK", 0, [66, 71, 73, 74], 1],
         ["FINE", 0, [76, 78, 79], 1], ["FILTER", 0, [58, 80, 81, 82], 1])] },
     { t: "VOICE", pages: [["LEVEL", 0, [0]], ["VOICE", 0, [37, 38, 41, 42]], ["VOICE 2", 0, [43, 44, 39, 40]]] },
-    { t: "FX", pages: [["FX", 0, [33, 34, 35, 36]], ["FILTER", 0, pe0 >= 84 ? [50, 83] : [50]], ["SLICER", 0, [45, 46, 47, 48]],
+    { t: "FX", pages: [["FX", 0, [33, 34, 35, 36]], ["FILTER", 0, pe0 >= 86 ? [50, 83, 84, 85] : pe0 >= 85 ? [50, 83, 84] : pe0 >= 84 ? [50, 83] : [50]], ["SLICER", 0, [45, 46, 47, 48]],
       ...opt(v251, ["INSERT", 0, [53, 54, 55, 56]], ["INSERT 2", 0, [57]]), ["DLY", 1, [4, 5, 6, 7]], ["REV/CHO", 1, [8, 9, 10, 11]]] },
     { t: "SEL", pages: [["SEL", 0, [25, 26, 27, 49]], ["SEL 2", 0, [28, 51, 52]]] },
     { t: "ARP", pages: [["ARP", 0, [17, 18, 19, 20]], ["ARP 2", 0, [21, 22, 23, 24]]] },

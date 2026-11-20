@@ -605,7 +605,7 @@ UI_SMALL static void track_defaults_steps(track_t *t) { steps_clear(t); }
 UI_SMALL static int param_kept(uint32_t i)
 {
     return i == P_LEVEL || i == P_PAN || i == P_MUTE || (i >= P_SLEN && i <= P_SGATE) ||
-           (i >= P_ROOT && i <= P_QUANT) || i == P_CHORD || i == P_TFLT || i == P_TRES || i == P_STRUM || i == P_VLEAD;
+           (i >= P_ROOT && i <= P_QUANT) || i == P_CHORD || i == P_TFLT || i == P_TRES || i == P_TKEY || i == P_TDIST || i == P_STRUM || i == P_VLEAD;
 }
 
 /* preset pi of the engine the track asked for: the whole sound (not the pattern parameters) */
