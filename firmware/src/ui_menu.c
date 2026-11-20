@@ -11,12 +11,12 @@ enum { MI_COLOR, MI_ZOOM, MI_ACCEL, MI_LIGHTS, MI_KEYS, MI_NOTES, MI_LOWCUT, MI_
 #if FELUCCA_CDC
        MI_SERIAL,
 #endif
-       MI_RATE, MI_FRESO, MI_ADV, MI_DPREV, MI_CPU1, MI_PANEL, MI_LCLEAR, MI_ABOUT, MI_COUNT };
+       MI_RATE, MI_ADV, MI_DPREV, MI_CPU1, MI_PANEL, MI_LCLEAR, MI_ABOUT, MI_COUNT };
 static const char *const MI_NAME[MI_COUNT] = {"COLOR", "ZOOM", "KNOB ACCEL", "LIGHTS", "KEYS", "NOTES", "SPEAKER LOWCUT", "USB AUDIO",
 #if FELUCCA_CDC
                                               "USB SERIAL",
 #endif
-                                              "USB RATE", "FILTER RESO", "STEP ADVANCE", "DRUM PREVIEW", "2ND CORE", "HARDWARE CALIBRATION", "MIDI LEARN CLEAR", "ABOUT"};
+                                              "USB RATE", "STEP ADVANCE", "DRUM PREVIEW", "2ND CORE", "HARDWARE CALIBRATION", "MIDI LEARN CLEAR", "ABOUT"};
 enum { MS_SCREEN, MS_LIGHTS, MS_AUDIO, MS_SEQ, MS_SYSTEM, MS_COUNT };   /* (2.7.1: SEQ) */
 static const char *const MS_NAME[MS_COUNT] = {"SCREEN", "LIGHTS", "AUDIO", "SEQ", "SYSTEM"};   /* (AUDIO: and USB) */
 static const uint8_t MS_FIRST[MS_COUNT + 1] = {MI_COLOR, MI_LIGHTS, MI_LOWCUT, MI_ADV, MI_CPU1, MI_COUNT};   /* rows of each */
@@ -76,15 +76,6 @@ UI_SMALL static const char *mi_value(uint32_t i, uint16_t *c)
         static const char *const R[3] = {"AUTO", "44.1 KHZ", "48 KHZ"};
         return R[usb_rate % 3u];
     }
-    case MI_FRESO: {                                  /* (2.7.2) the track filter's resonance, 0 (clean) .. 10, 11..15 the clipped scream (fx.c) */
-        static char b[4];
-        if (!flt_reso) {
-            *c = C_DIM;
-            return "OFF";
-        }
-        fmt_int(b, flt_reso > 15u ? 15 : flt_reso);
-        return b;
-    }
     case MI_CPU1:                                     /* the render on both cores (fx.c); live, the sound is the same */
         *c = mi_cpu1_have() ? C_HI : C_DIM;
         return cpu1_off ? "OFF" : "ON";
@@ -111,7 +102,7 @@ UI_SMALL static void draw_menu(void)
     uint32_t sig = ui.menu * 7u + ui.menu_sel * 131u + settings.palette * 1009u + settings.lowcut * 7919u +
                    settings.zoom * 104729u + lights_lvl * 1299709u + lights_keys * 15485863u + ml_count() * 2654435u +
                    lights_notes * 32452843u + usb_full * 49979687u + usb_serial * 86028121u + usb_rate * 15486719u + theme_shown() * 32452867u + theme.crc + cpu1_off * 122949829u +
-                   knob_accel_off * 179424673u + drum_preview * 236887691u + step_adv_off * 373587883u + flt_reso * 512927357u;
+                   knob_accel_off * 179424673u + drum_preview * 236887691u + step_adv_off * 373587883u;
     if (!ui.force && sig == ui.menu_sig)
         return;
     ui.menu_sig = sig;
@@ -277,14 +268,6 @@ UI_SMALL static void mi_set(uint32_t i, int32_t s)
             usb_rate--;
         else if (!s)
             usb_rate = (uint8_t)((usb_rate + 1u) % 3u);
-        break;
-    case MI_FRESO:                                     /* (2.7.2) 0 (OFF/clean) .. 10, stops at the ends; OCT+ steps round */
-        if (s > 0 && flt_reso < 15u)
-            flt_reso++;
-        else if (s < 0 && flt_reso > 0u)
-            flt_reso--;
-        else if (!s)
-            flt_reso = (uint8_t)((flt_reso >= 15u ? 0u : flt_reso + 1u));
         break;
     case MI_CPU1:                                      /* right ON, left OFF; at once (the next block renders so) */
         cpu1_off = (uint8_t)(s > 0 ? 0u : s < 0 ? 1u : !cpu1_off);

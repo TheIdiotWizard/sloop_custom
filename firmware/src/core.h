@@ -87,6 +87,8 @@ enum {                          /* per-track parameters */
     P_FM2_ATK, P_FM2_DEC, P_FM2_SUS, P_FM2_REL, P_FM2_LEVEL,
     P_FM3_ATK, P_FM3_DEC, P_FM3_SUS, P_FM3_REL, P_FM3_LEVEL,
     P_FM4_ATK, P_FM4_DEC, P_FM4_SUS, P_FM4_REL, P_FM4_LEVEL,
+    P_TRES,                                    /* sloop_custom: the track filter's RESONANCE, 0 clean .. 10, 11..15 the clipped scream (fx.c);
+                                                * a project keeps it in the engine byte's high nibble (project.c pt_get) */
     P_E0, P_E1, P_E2, P_E3, P_E4, P_E5, P_E6, P_E7,
     P_COUNT
 };

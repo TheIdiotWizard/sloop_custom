@@ -740,14 +740,14 @@ static void t_recmode(void)
 
 /* SLOOP 2.4 fixes: a MIDI START cuts a count-in short (the master counts); swing is off on the
  * triplet grids; a DIV change in the first beat after PLAY does not lose a step */
-/* (2.7.2) menu AUDIO > FILTER RESO: the track filter's SVF gains resonance (fx.c tflt_reso -> dsp.c tsvf_coef), and the
+/* (2.7.2) per-track RES (P_TRES): the track filter's SVF gains resonance (fx.c tflt_reso -> dsp.c tsvf_coef), and the
  * setting rides in spare bits of the settings object (project.c midi_part), transparent at 0 */
 static void t_filt_reso(void)
 {
     tsvf_t c0, c1;
     int32_t z0[2] = {0, 0}, z1[2] = {0, 0}, i, p0 = 0, p1 = 0, x = 10000;
     tsvf_coef(&c0, 60 << 8, 40);                      /* the clean filter, as the track filter always was (FILTER RESO 0) */
-    tsvf_coef(&c1, 60 << 8, 40 + 10 * 7);             /* FILTER RESO 10 (fx.c tflt_reso: 40 + 10 * 7 = 110) */
+    tsvf_coef_k(&c1, 60 << 8, tflt_k(10));            /* RES 10 (fx.c tflt_k) */
     for (i = 0; i < 400; i++) {                       /* a step in: a resonant filter overshoots and rings, a clean one does not */
         int32_t y0 = tsvf_lp(&c0, x, &z0[0], &z0[1]);
         int32_t y1 = tsvf_lp(&c1, x, &z1[0], &z1[1]);
@@ -758,18 +758,14 @@ static void t_filt_reso(void)
     /* sloop_custom: 11..15 the scream (fx.c tflt_k, tflt_run): Q 4 .. 64, clipped near the signal's level */
     {
         djf_t df; tsvf_t cs; int32_t buf[32], pk = 0, pr = 0, j, blk;
-        uint8_t save = flt_reso;
         memset(&df, 0, sizeof df);
         df.mode = -1; df.cut = 60 << 8;
-        flt_reso = 15;
-        check(tflt_k() == 64, "FILTER RESO 15: damping 64 (Q 64)");
-        flt_reso = 11;
-        check(tflt_k() == 1024, "FILTER RESO 11: damping 1024 (Q 4)");
-        flt_reso = 15;
-        tsvf_coef_k(&cs, 60 << 8, tflt_k());
+        check(tflt_k(15) == 64, "FILTER RESO 15: damping 64 (Q 64)");
+        check(tflt_k(11) == 1024, "FILTER RESO 11: damping 1024 (Q 4)");
+        tsvf_coef_k(&cs, 60 << 8, tflt_k(15));
         for (blk = 0; blk < 200; blk++) {                       /* a burst, then silence: it rings and stays bounded */
             for (j = 0; j < 32; j++) buf[j] = blk < 4 ? ((j & 8) ? 8000 : -8000) : 0;
-            tflt_run(&df, &cs, buf, 32, 0);
+            tflt_run(&df, &cs, buf, 32, 0, 15);
             for (j = 0; j < 32; j++) {
                 int32_t a = buf[j] < 0 ? -buf[j] : buf[j];
                 if (blk < 4 && a > pk) pk = a;
@@ -778,7 +774,6 @@ static void t_filt_reso(void)
         }
         check(pk <= 8000 * 2 * 4 + 4 && pk > 0, "FILTER RESO 15: the burst's output is clipped near the input's level (bounded)");
         check(pr > 0 && pr <= 8000 * 4, "FILTER RESO 15: it rings on after the input stops, within the 8000 floor");
-        flt_reso = save;
     }
     /* the setting's persistence (project.c midi_part) is checked in fm6_test (the full build has panel.c and project.c) */
 }

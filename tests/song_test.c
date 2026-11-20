@@ -66,8 +66,14 @@ int main(void)
     sw(3);
     check(has_note(0, 60) && has_note(2, 62) && !proj_ok(&proj_slot[1]), "song 4 again: A and C as stored, B empty");
     check(arrangement.count == 2, "... and its order of two steps");
+    trk[0].p[P_TRES] = 13; trk[1].p[P_TRES] = 4;                 /* per-track filter RES (kept in the engine byte's high nibble) */
+    section_store(0); sections_write();
+    sw(0); sw(3);
+    check(trk[0].p[P_TRES] == 13 && trk[1].p[P_TRES] == 4, "per-track RES survives a song switch there and back");
     boot_as_main();                                              /* a power-on: the FM-1 comes back on song 4 */
     check(song_cur == 3 && has_note(0, 60) && has_note(2, 62), "a power-on keeps the song and its sections");
+    check(proj_ok(&proj_slot[0]) && pt_get(&proj_slot[0].t[0], P_TRES) == 13 && pt_get(&proj_slot[0].t[1], P_TRES) == 4 &&
+          (proj_slot[0].t[0].engine & 15u) < NENGINES, "... and the stored section keeps the RES, the engine unharmed");
     check(arrangement.count == 2 && arrangement.reserved[0] == 3, "... and its order");
     cp(5);
     check(song_is_used(5) && song_cur == 3, "copy to song 6: used, still on song 4");

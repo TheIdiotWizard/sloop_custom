@@ -118,8 +118,6 @@ static void lim_block(lim_t *s, int32_t *l, int32_t *r, uint32_t n)
     s->w = w;
 }
 static volatile uint8_t fx_lowcut;     /* settings: 12 dB/oct ~110 Hz for the small speaker */
-static uint8_t flt_reso;               /* (2.7.2) menu AUDIO > FILTER RESO: 0..15 (11..15: the clipped scream), the track filter's resonance (fx.c
-                                        * tflt_reso); 0 = the clean filter as before. One setting for every track's filter */
 static int32_t lc_l1, lc_l2, lc_r1, lc_r2, dc_l, dc_r, dce_l, dce_r;
 
 /* DC blocker (~2 Hz), always on: a leaky integrator of the input (Q6 state) subtracted from it.
@@ -367,19 +365,17 @@ typedef struct {
 } djf_t;
 static djf_t djf, tflt[NTRK];
 
-/* (2.7.2) the track filter's SVF resonance (tsvf_coef's reso) for the FILTER RESO setting: 40 (clean, as the filter
- * always was) at 0, up to 110 at 10 (a strong but still stable peak; tflt_run leaves 4x headroom for it). The master
- * DJ filter (G_FILT) and the tape TONE keep the fixed 40. */
-static int32_t tflt_reso(void) { return 40 + (int32_t)(flt_reso > 10u ? 10u : flt_reso) * 7; }
-/* the damping (Q12) of the track filter: FILTER RESO 0..10 as above; 11..15 (sloop_custom, after Melodee's FILTER M2K,
- * whose resonant two-pole reaches Q 1000 and is clipped): Q 4, 8, 16, 32, 64 (damping 1024 .. 64). Past 10 the filter
- * rings and tflt_run clips what comes out of it (the scream) so the level stays near the signal's */
-#define FLT_SCREAM 10u
-static int32_t tflt_k(void)
+/* (2.7.2, per track in sloop_custom) the track filter's resonance P_TRES (FX > FILTER, KNOB 2) -> the damping (Q12) for
+ * tsvf_coef_k: 0 is the clean filter as it always was (reso 40), 1..10 up to reso 110 (a strong but still stable peak;
+ * tflt_run leaves 4x headroom for it); 11..15, after Melodee's FILTER M2K (its resonant two-pole reaches Q 1000 and is
+ * clipped): Q 4, 8, 16, 32, 64 (damping 1024 .. 64). Past 10 the filter rings and tflt_run clips what comes out of it
+ * (the scream) so the level stays near the signal's. The master DJ filter (G_FILT) and the tape TONE keep the fixed 40. */
+#define FLT_SCREAM 10
+static int32_t tflt_k(int32_t r)
 {
     static const int16_t K[5] = {1024, 512, 256, 128, 64};
-    return flt_reso > FLT_SCREAM ? K[(flt_reso > 15u ? 15u : flt_reso) - FLT_SCREAM - 1u]
-                                 : 8192 - tflt_reso() * 7600 / 127;
+    r = r < 0 ? 0 : r > 15 ? 15 : r;
+    return r > FLT_SCREAM ? K[r - FLT_SCREAM - 1] : 8192 - (40 + r * 7) * 7600 / 127;
 }
 /* the knob v -> this block's coefficients in *c; 0 = bypassed (nothing to do). k: the damping, Q12 (tsvf_coef_k) */
 static int djf_block(djf_t *f, int32_t v, tsvf_t *c, int32_t k)
@@ -425,13 +421,13 @@ static void djf_run(djf_t *f, const tsvf_t *c, int32_t *b, uint32_t n, uint32_t 
     }
 }
 /* a track's filter on a signal at 4x its level (b >> 2 into the filter's range, back << 2) */
-static void tflt_run(djf_t *f, const tsvf_t *c, int32_t *b, uint32_t n, uint32_t ch)
+static void tflt_run(djf_t *f, const tsvf_t *c, int32_t *b, uint32_t n, uint32_t ch, int32_t reso)
 {
     uint32_t i;
     int32_t lim = 0;
     for (i = 0; i < n; i++)
         b[i] >>= 2;
-    if (flt_reso > FLT_SCREAM) {                        /* the scream: the ceiling is twice the block's input peak (8000 at least) */
+    if (reso > FLT_SCREAM) {                            /* the scream: the ceiling is twice the block's input peak (8000 at least) */
         for (i = 0; i < n; i++)
             lim = b[i] > lim ? b[i] : -b[i] > lim ? -b[i] : lim;
         lim = lim < 4000 ? 8000 : lim * 2;
@@ -723,8 +719,8 @@ static void mix_part_run(track_t *t, uint32_t n, mixacc_t *mx, int32_t *b)
         {
             tsvf_t fc;                                  /* the track's FILTER (P_TFLT), after the SLICER */
             djf_t *f = &tflt[(uint32_t)(t - trk) % NTRK];
-            if (djf_block(f, t->p[P_TFLT], &fc, tflt_k()))
-                tflt_run(f, &fc, b, n, 0);
+            if (djf_block(f, t->p[P_TFLT], &fc, tflt_k(t->p[P_TRES])))
+                tflt_run(f, &fc, b, n, 0, t->p[P_TRES]);
         }
         int32_t lvl0, dl, gl0, dgl, gr0, dgr;          /* (2.7) LEVEL (and a new sound's trim) and PAN glide (drums.c
                                                          * mix_glide), ramped sample by sample inside the block */
@@ -863,7 +859,7 @@ static void mix_drums(uint32_t n, mixacc_t *mx)
     int flt;
     drums.a0 = TDRUM->att;                              /* the drum track's mute / solo fade */
     drums.a1 = 32767 - gain_next(TDRUM);
-    flt = n <= CTL && djf_block(f, TDRUM->p[P_TFLT], &fc, tflt_k());   /* the drum track's FILTER */
+    flt = n <= CTL && djf_block(f, TDRUM->p[P_TFLT], &fc, tflt_k(TDRUM->p[P_TRES]));   /* the drum track's FILTER */
     if (flt || (n <= CTL && (TDRUM->p[P_ITYPE] | TDRUM->ins_run))) {   /* .. or its INSERT: left, right, the sends */
         int32_t *dl = drum_buf[0], *dr = drum_buf[1], *dv = drum_buf[2], *dd = drum_buf[3];
         for (i = 0; i < n; i++)
@@ -871,10 +867,10 @@ static void mix_drums(uint32_t n, mixacc_t *mx)
         slicer_drums(dl, dr, dv, dd, n);
         drum_insert(dl, dr, dv, dd, n);                 /* (2.6: off, nothing) */
         if (flt) {
-            tflt_run(f, &fc, dl, n, 0);
-            tflt_run(f, &fc, dr, n, 1);
-            tflt_run(f, &fc, dv, n, 2);
-            tflt_run(f, &fc, dd, n, 3);
+            tflt_run(f, &fc, dl, n, 0, TDRUM->p[P_TRES]);
+            tflt_run(f, &fc, dr, n, 1, TDRUM->p[P_TRES]);
+            tflt_run(f, &fc, dv, n, 2, TDRUM->p[P_TRES]);
+            tflt_run(f, &fc, dd, n, 3, TDRUM->p[P_TRES]);
         }
         for (i = 0; i < n; i++) {
             mx->l[i] += dl[i];

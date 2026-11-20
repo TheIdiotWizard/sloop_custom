@@ -26,9 +26,9 @@ _Static_assert(G_DRDLY == PROJ_NG && G_TXSRC == PROJ_NG + 5u,
                "the globals a project holds, then G_DRDLY (then 2.6's GLO > MIDI: settings of the FM-1)");
 _Static_assert(G_FXFADE == G_CLKOUT + 1u && G_COUNT == G_FXFADE + 1u, "G_FXFADE (2.7.2) is the last global, a setting of the FM-1");
 typedef struct {                               /* one track; the drum track ignores engine / preset */
-    int8_t p[P_E0];                            /* P_LEVEL .. P_FM4_LEVEL, a byte each (pt_get, pt_set) */
+    int8_t p[P_TRES];                          /* P_LEVEL .. P_FM4_LEVEL, a byte each (pt_get, pt_set) */
     int16_t e[8];                              /* P_E0 .. P_E7 */
-    uint8_t engine, preset;
+    uint8_t engine, preset;                    /* engine: its low nibble (NENGINES <= 16); sloop_custom: P_TRES in the high one */
     union {
         step_t step[NSTEP];
         dstep_t dstep[NSTEP];                  /* (the drum track: 16 lanes, the same size) */
@@ -45,12 +45,14 @@ typedef struct {
 } project_t;
 static int16_t pt_get(const proj_trk_t *t, uint32_t id)   /* p[id] of a stored track */
 {
-    return id < P_E0 ? (int16_t)t->p[id] : t->e[(id - P_E0) & 7u];
+    return id < P_TRES ? (int16_t)t->p[id] : id == P_TRES ? (int16_t)(t->engine >> 4) : t->e[(id - P_E0) & 7u];
 }
 UI_SMALL static void pt_set(proj_trk_t *t, uint32_t id, int32_t v)
 {
-    if (id < P_E0)
+    if (id < P_TRES)
         t->p[id] = (int8_t)clamp(v, -128, 127);
+    else if (id == P_TRES)
+        t->engine = (uint8_t)((t->engine & 15u) | (uint32_t)clamp(v, 0, 15) << 4);
     else
         t->e[(id - P_E0) & 7u] = (int16_t)v;
 }
@@ -166,9 +168,9 @@ UI_SMALL static void proj_capture(project_t *p)        /* what is playing now, a
     proj_tx_put(p);
     for (i = 0; i < NTRK; i++) {
         uint32_t k;
+        p->t[i].engine = trk[i].eng_req;               /* (before the values: P_TRES goes in its high nibble) */
         for (k = 0; k < P_COUNT; k++)
             pt_set(&p->t[i], k, trk[i].p[k]);
-        p->t[i].engine = trk[i].eng_req;
         p->t[i].preset = trk[i].preset;
         memcpy(p->t[i].step, trk[i].step, sizeof trk[i].step);
         for (k = 0; k < NSTEP; k++)
@@ -197,7 +199,7 @@ static void proj_apply(const project_t *p, int all)
     for (k = 0; k < NTRK; k++) {
         track_t *t = &trk[k];
         const proj_trk_t *s = &p->t[k];
-        uint32_t e = k < NPART ? s->engine % NENGINES : 0u;
+        uint32_t e = k < NPART ? (s->engine & 15u) % NENGINES : 0u;
         t->eng_req = (uint8_t)e;
         t->user = 0;                                    /* (no user preset slot is saved) */
         t->lk_n = 0;                                    /* (the locks in force: the values come from the project) */
@@ -380,7 +382,7 @@ UI_SMALL static void proj_foreign_parts(const project_t *p)
 {
     uint32_t k;
     for (k = 0; k < NPART; k++)
-        if (p->t[k].preset != 0xFFu && p->t[k].engine >= NENGINES) {
+        if (p->t[k].preset != 0xFFu && (p->t[k].engine & 15u) >= NENGINES) {
             set_engine_of(&trk[k], TRK_DEF[k][0]);
             apply_preset_to(&trk[k], TRK_DEF[k][1]);
         }
@@ -638,7 +640,7 @@ UI_SMALL static void midi_part_fill(uint8_t *b)
     b[2u * ML_N + 4u] = (uint8_t)(midi_set[5] | (fxfade > 15u ? 15u : fxfade) << 4);   /* BEND (bits 0-3); 2.7.2: FX FADE bits 4-7 (0 = none: the byte reads as 2.6's BEND) */
     b[2u * ML_N + 5u] = midi_set[6];                /* (2.7) GLO > MIDI 3: FX CH (2.6 read this spare byte as nothing) */
     b[2u * ML_N + 6u] = (uint8_t)(midi_set[7] | midi_set[9] << 1 |
-                                  (flt_reso > 15u ? 15u : flt_reso) << 2);   /* (2.7) GLO > MIDI 3: DR MAP, bit 1 CLK OUT
+                                  0u << 2);   /* (2.7) GLO > MIDI 3: DR MAP, bit 1 CLK OUT
                                                                       * (a spare byte to 2.6); 2.7.2: FILTER RESO in bits
                                                                       * 2..5 (0 = none: the byte then reads as 2.7's) */
     b[2u * ML_N + 7u] = midi_set[8];                /* (2.7) GLO > MIDI 3: REMOTE (the last spare byte) */
@@ -683,9 +685,6 @@ UI_SMALL static void midi_part_read(const uint8_t *b, uint32_t n)
         song.g[G_FXCH] = midi_set[6];
         midi_set[7] = (uint8_t)(b[2u * ML_N + 6u] & 1u);             /* (2.7) DR MAP */
         midi_set[9] = (uint8_t)((b[2u * ML_N + 6u] >> 1) & 1u);      /* (2.7) CLK OUT */
-        flt_reso = (uint8_t)((b[2u * ML_N + 6u] >> 2) & 15u);        /* (2.7.2) FILTER RESO (bits 2..5); older: 0 */
-        if (flt_reso > 15u)
-            flt_reso = 15u;
         song.g[G_DRMAP] = midi_set[7];
         song.g[G_CLKOUT] = midi_set[9];
         midi_set[8] = (uint8_t)(b[2u * ML_N + 7u] <= 16u ? b[2u * ML_N + 7u] : 0u);   /* (2.7) REMOTE */

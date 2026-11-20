@@ -787,28 +787,9 @@ int main(int argc, char **argv)
         tap(B_OCTUP);
         check(usb_serial == 0u && ui.menu == 1, "menu USB SERIAL: OCT+ toggles back to OFF");
 #else
-        check(MS_FIRST[MS_AUDIO + 1] - MS_FIRST[MS_AUDIO] == 4u && MI_RATE == MI_USB + 1 && MI_FRESO == MI_RATE + 1,
-              "2.7.2: FM-1 build AUDIO is LOWCUT, USB AUDIO, USB RATE, FILTER RESO (no USB SERIAL: FELUCCA_CDC 0)");
+        check(MS_FIRST[MS_AUDIO + 1] - MS_FIRST[MS_AUDIO] == 3u && MI_RATE == MI_USB + 1,
+              "FM-1 build AUDIO is LOWCUT, USB AUDIO, USB RATE (no USB SERIAL: FELUCCA_CDC 0)");
 #endif
-        {   /* (2.7.2) menu AUDIO > FILTER RESO: 0 (OFF) .. 10, its knob steps and stops, OCT+ wraps, read back (fx.c) */
-            uint16_t col;
-            uint32_t j;
-            int ok;
-            flt_reso = 0;
-            ui.menu = 1; ui.menu_sel = MI_FRESO; ui.force = 1; frame();
-            ok = !strcmp(mi_value(MI_FRESO, &col), "OFF");
-            encs[panel.enc[EN_K1 + mi_row(ui.menu_sel)]] = 1; frame();     /* its knob (KNOB 4) right */
-            ok &= flt_reso == 1u && !strcmp(mi_value(MI_FRESO, &col), "1");
-            ppm("menu-freso");
-            for (j = 0; j < 20; j++) { encs[panel.enc[EN_K1 + mi_row(ui.menu_sel)]] = 1; frame(); }
-            ok &= flt_reso == 15u;                                          /* stops at 15 (11..15: the scream) */
-            tap(B_OCTUP);                                                   /* OCT+ wraps 15 -> 0 */
-            ok &= flt_reso == 0u;
-            for (j = 0; j < 3; j++) { encs[panel.enc[EN_K1 + mi_row(ui.menu_sel)]] = -1; frame(); }
-            ok &= flt_reso == 0u;                                          /* stops at 0 going down */
-            check(ok, "menu FILTER RESO (2.7.2): OFF..15, knob steps and stops, OCT+ wraps");
-            ui.menu = 0; go_home();
-        }
         {   /* 2.7: your theme (the editor's Theme page): checked, then MENU > COLOR after MONO, by its name */
             theme_t th;
             int ok = 1, k;
@@ -1219,8 +1200,8 @@ int main(int argc, char **argv)
         tap(B_FX); SEL(1);
         check(!strcmp(PT(), "FILTER"), "SELECT on FX: next page, the track FILTER");
         TSEL->p[P_TFLT] = -32; ui.force = 1; frames(2); ppm("page-filter");
-        check(!strcmp(ui.big_l[0], "FILT") && !strcmp(ui.big_v[0], "LP50") && !ui.big_l[1][0],
-              "FILTER page: its one value drawn large (LP50 %)");
+        check(!strcmp(ui.big_l[0], "FILT") && !strcmp(ui.big_v[0], "LP50") && !strcmp(ui.big_l[1], "RES") && !ui.big_l[2][0],
+              "FILTER page: cutoff (LP50 %) and RES drawn large");
         {   /* the big value in the graph strip: white pixels in the middle of the screen */
             uint32_t x, y, lit = 0;
             for (y = Y_GRAPH + 30; y < Y_GRAPH + 90; y++)

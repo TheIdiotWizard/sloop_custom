@@ -123,6 +123,7 @@ static const param_desc_t TP[P_COUNT] = {
     [P_SLDEPTH] = PD("DEPTH", F_PCT, 0, 127, 127),
     [P_CHORD] = PE("CHORD", N_CHORD, 0),
     [P_TFLT] = PD("FILT", F_FILT, -64, 63, 0),
+    [P_TRES] = PD("RES", F_INT, 0, 15, 0),         /* sloop_custom: the track filter's resonance: 0 clean .. 10, 11..15 the scream (fx.c tflt_k) */
     [P_STRUM] = PD("STRUM", F_INT, -60, 60, 0),   /* ms a note: > 0 low to high (down), < 0 high to low */
     [P_VLEAD] = PE("VLEAD", N_ONOFF, 0),
     /* 2.6, after Felucca 1.5 / 1.4. The INSERT (fx.c track_insert): TYPE OFF = as before. A B C as the editor
@@ -423,7 +424,7 @@ static const page_t PAGES[] = {
     {"LFO 2", FAM_LFO, SC_TRACK, GR_LFO, {P_LSYNC, P_LTRIG, P_LPOL, 0xFF}},   /* 2.6 (Felucca 1.4): SYNC TRIG POL */
     {"LFO DEST", FAM_LFO, SC_TRACK, GR_NONE, {P_LD_PIT, P_LD_FLT, P_LD_SHP, P_LD_AMP}},
     {"FX", FAM_FX, SC_TRACK, GR_FX, {P_DIST, P_CHOR, P_DLY, P_REV}},
-    {"FILTER", FAM_FX, SC_TRACK, GR_NONE, {P_TFLT, 0xFF, 0xFF, 0xFF}},   /* the track's filter (drum track too) */
+    {"FILTER", FAM_FX, SC_TRACK, GR_NONE, {P_TFLT, P_TRES, 0xFF, 0xFF}},   /* the track's filter (drum track too) */
     {"SLICER", FAM_FX, SC_TRACK, GR_SLCR, {P_SLCR, P_SLPAT, P_SLRATE, P_SLDEPTH}},   /* drum track too */
     {"INSERT", FAM_FX, SC_TRACK, GR_INS, {P_ITYPE, P_IA, P_IB, P_IC}},   /* 2.6 (Felucca 1.5): the track's INSERT (fx.c), */
     {"INSERT 2", FAM_FX, SC_TRACK, GR_INS, {P_IMIX, 0xFF, 0xFF, 0xFF}},  /* .. its dry / wet; the drum track too */

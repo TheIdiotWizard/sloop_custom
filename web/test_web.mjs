@@ -45,7 +45,7 @@ async function editorMock() {
   const rq = async (r, o) => link.request(r, o);
   const info = E.parse[E.CMD.INFO](await rq(E.req.info()));
   ok(info.nengines === 10 && js(info.engines) === js(["ANALOG4", "FMTONE", "SAW", "PULS", "ENS", "WAV", "LOFI", "VOICE", "WHEEL", "NOISE"])
-    && info.pcount === 91 && info.pe0 === 83,   /* (sloop_custom: its engines, the 20 operator slots) */
+    && info.pcount === 92 && info.pe0 === 84,   /* (sloop_custom: its engines, the 20 operator slots) */
     "editor: INFO");
   let descs = 0;
   for (let i = 0; i < info.pcount; i++) if (E.parse[E.CMD.DESC](await rq(E.req.desc(0, i))).label) descs++;
@@ -241,14 +241,14 @@ async function editorLibrarian() {
   const p0 = fut.patches[0].p;
   ok(fut.patches.length === 2 && p0.length === info.pcount + 1 && p0[5] === null && p0[6] === cap.p[5] && p0[info.pcount] === cap.p[info.pcount - 1]
     && fut.patches[0].engine === 1 && fut.patches[1].engine === 0, "library file: other ids / engine order mapped by label and name");
-  /* (sloop_custom) a library written by SLOOP 2.6 .. 2.8 (71 parameters, the engine's from 63) read here (91, from 83): the
+  /* (sloop_custom) a library written by SLOOP 2.6 .. 2.8 (71 parameters, the engine's from 63) read here (92, from 84): the
    * engine's values land on the new ids, the 20 operator slots stay unset (their defaults) */
-  const keysOld = [...keys.slice(0, 63), ...keys.slice(83)];
-  const oldFile = JSON.parse(JSON.stringify(E.libraryFile("old", [{ ...cap, p: [...cap.p.slice(0, 63), ...cap.p.slice(83)] }],
+  const keysOld = [...keys.slice(0, 63), ...keys.slice(84)];
+  const oldFile = JSON.parse(JSON.stringify(E.libraryFile("old", [{ ...cap, p: [...cap.p.slice(0, 63), ...cap.p.slice(84)] }],
     { keys: keysOld, engines: info.engines, firmware: "SLOOP 2.8", pe0: 63 })));
   const up = E.readLibraryFile(oldFile, ctx), pu = up.patches[0].p;
-  ok(oldFile.pCount === 71 && pu.length === 91 && pu.slice(83).join() === cap.p.slice(83).join() && pu[62] === cap.p[62]
-    && pu.slice(63, 83).every((x) => x == null), "library file: a SLOOP 2.8 one (71 parameters) read here: E1..E8 at 83..90, the slots unset");
+  ok(oldFile.pCount === 71 && pu.length === 92 && pu.slice(84).join() === cap.p.slice(84).join() && pu[62] === cap.p[62]
+    && pu.slice(63, 84).every((x) => x == null), "library file: a SLOOP 2.8 one (71 parameters) read here: E1..E8 at 84..90, the slots unset");
   const lost = E.readLibraryFile({ ...file, patches: [{ ...file.patches[0], engineName: "WAVETABLE" }] }, ctx);
   ok(lost.patches.length === 0 && lost.skipped === 1, "library file: a patch for an unknown engine is skipped");
   const bankFile = E.libraryFile("bank", [{ ...g, engineName: info.engines[0], slot: 10 }], ctx);
@@ -256,14 +256,14 @@ async function editorLibrarian() {
   const old = E.readLibraryFile({ format: "felucca-patch", version: 1, engine: 0, preset: 4, engineName: info.engines[0], presetName: "ACID", p: d2.p, steps: E.stepsFromPattern(cap.pattern) }, ctx);
   ok(old.patches.length === 1 && eq(old.patches[0].p, d2.p) && js(old.patches[0].pattern) === js(cap.pattern), "library file: reads the old \"Save to file\" format");
   /* (sloop_custom) a "Save to file" of SLOOP 2.6 .. 2.8 (71 values, the engine's from 63, no pCount) here: the engine's 8
-   * at 83..90; and one of this build written back for 2.8's layout */
-  const p71 = [...d2.p.slice(0, 63), ...d2.p.slice(83)];
+   * at 84..90; and one of this build written back for 2.8's layout */
+  const p71 = [...d2.p.slice(0, 63), ...d2.p.slice(84)];
   const o71 = E.readLibraryFile({ format: "felucca-patch", version: 1, engine: 0, preset: 4, engineName: info.engines[0], p: p71 }, ctx).patches[0].p;
-  const p91 = E.readLibraryFile({ format: "felucca-patch", version: 1, engine: 0, preset: 4, engineName: info.engines[0], p: d2.p, pCount: 91, pE0: 83 },
-    { ...ctx, keys: keys.slice(0, 63).concat(keys.slice(83)) }).patches[0].p;
-  ok(o71.length === 91 && o71.slice(83).join() === d2.p.slice(83).join() && o71.slice(63, 83).every((x) => x == null) && o71[62] === d2.p[62]
-    && p91.length === 71 && p91.slice(63).join() === d2.p.slice(83).join(),
-    "library file: a \"Save to file\" of another version is read by count (the engine's 8 in their place, 71 <-> 91)");
+  const p91 = E.readLibraryFile({ format: "felucca-patch", version: 1, engine: 0, preset: 4, engineName: info.engines[0], p: d2.p, pCount: 92, pE0: 84 },
+    { ...ctx, keys: keys.slice(0, 63).concat(keys.slice(84)) }).patches[0].p;
+  ok(o71.length === 92 && o71.slice(84).join() === d2.p.slice(84).join() && o71.slice(63, 84).every((x) => x == null) && o71[62] === d2.p[62]
+    && p91.length === 71 && p91.slice(63).join() === d2.p.slice(84).join(),
+    "library file: a \"Save to file\" of another version is read by count (the engine's 8 in their place, 71 <-> 92)");
   let threw = false;
   try { E.readLibraryFile({ format: "something" }, ctx); } catch (e) { threw = true; }
   ok(threw, "library file: unknown format -> error");
@@ -647,7 +647,7 @@ async function editorV5() {
   const C = E.CMD;
   const { m, rq, ev, done } = attachMock({ watchMs: 1000 });
   const info = E.parse[C.INFO](await rq(E.req.info()));
-  ok(info.proto === 12 && /SLOOP/.test(info.version) && info.pcount === 91 && info.gcount === 50 && info.pe0 === 83, "v5..v12: INFO ends with the protocol version (12: LIVE); 50 globals (2.5: drum DLY; 2.6: GLO > MIDI, TEXTURE, BEND; 2.7: FX CH, DR MAP, REMOTE, CLK OUT; 2.7.2: FX FADE)");
+  ok(info.proto === 12 && /SLOOP/.test(info.version) && info.pcount === 92 && info.gcount === 50 && info.pe0 === 84, "v5..v12: INFO ends with the protocol version (12: LIVE); 50 globals (2.5: drum DLY; 2.6: GLO > MIDI, TEXTURE, BEND; 2.7: FX CH, DR MAP, REMOTE, CLK OUT; 2.7.2: FX FADE)");
   /* the firmware says the same: ED_DRUM_STEP is command 33, INFO sends 5, P_CHORD / the master globals as the mock has them */
   const ec = readFileSync(join(HERE, "../firmware/src/editor.c"), "utf8"), pc = readFileSync(join(HERE, "../firmware/src/params.c"), "utf8");
   const en = (/enum \{ ED_INFO = 1,([^}]*)\}/.exec(ec) || [])[1] || "";
@@ -736,9 +736,9 @@ async function editorV7() {
   const lockableC = (id) => id <= ids.P_LD_AMP || id === ids.P_SGATE || (id >= ids.P_DIST && id <= ids.P_REV) || id === ids.P_GLIDE || id === ids.P_PAN
     || id === ids.P_DETUNE || (id >= ids.P_SLCR && id <= ids.P_SLDEPTH) || (id >= ids.P_E0 && id <= ids.P_E7) || id === ids.P_TFLT
     || (id >= ids.P_IA && id <= ids.P_IMIX)    /* 2.6: the INSERT's values */
-    || (id >= ids.P_FM1_ATK && id <= ids.P_FM4_LEVEL);   /* sloop_custom: the operator slots */
-  let same = ids.P_COUNT === 91 && ids.P_E0 === 83 && /id >= P_FM1_ATK && id <= P_FM4_LEVEL/.test(sc);
-  for (let id = 0; id < 91; id++) same = same && !!E.lockable(id, 83) === !!lockableC(id);
+    || (id >= ids.P_FM1_ATK && id <= ids.P_FM4_LEVEL) || id === ids.P_TRES;   /* sloop_custom: the operator slots, the track filter's RES */
+  let same = ids.P_COUNT === 92 && ids.P_E0 === 84 && /id >= P_FM1_ATK && id <= P_FM4_LEVEL/.test(sc);
+  for (let id = 0; id < 92; id++) same = same && !!E.lockable(id, 84) === !!lockableC(id);
   for (let id = 0; id < 71; id++) same = same && !!E.lockable(id, 63) === (id < 63 ? !!lockableC(id) : true);   /* (SLOOP 2.6: E 63..70) */
   for (let id = 0; id < 61; id++) same = same && !!E.lockable(id, 53) === (id >= 53 || !!lockableC(id));   /* (older firmware: E 53..60) */
   ok(same && /id <= P_LD_AMP \|\| id == P_SGATE \|\| \(id >= P_DIST && id <= P_REV\) \|\| id == P_GLIDE \|\| id == P_PAN/.test(sc)
@@ -1312,7 +1312,7 @@ function editorLivePro() {
   const gwant = ["G_FILT", "G_DUST", "G_DUCK", "G_DRREV", "G_DRDLY", "G_DTIME", "G_DFDBK", "G_DCOLOR", "G_DMIX", "G_RSIZE", "G_RDAMP", "G_CRATE", "G_CDEPTH",
     "G_TXSRC", "G_TXLVL", "G_TXTONE", "G_TXMOVE", "G_TXRATE", "G_TXWHEN", "G_TXDUCK", "G_SWING"].map((k) => gn.indexOf(k));
   ok(js(X.TP) === js(want) && ids.P_E0 === X.E0 && js(X.GP) === js(gwant) && gn.indexOf("G_BPM") === X.BPM,
-    "live pro: the scenes' parameters == core.h P_* / G_* (P_E0 83)");
+    "live pro: the scenes' parameters == core.h P_* / G_* (P_E0 84)");
   const p = (lvl, pan, flt, ins, e0) => { const a = []; a[39] = pan; a[50] = flt; a[53] = ins; a[X.E0] = e0; return { level: lvl, mute: 0, engine: 0, preset: 0, p: a }; };
   const A = X.capture([p(100, -20, 0, 0, 10), p(80, 0, 0, 0, 0)], { 29: 0, 27: 0, 0: 90 });
   const B = X.capture([p(20, 40, 30, 2, 50), { ...p(80, 0, 0, 0, 0), engine: 3 }], { 29: 40, 27: 60, 0: 120 }, { tempo: true });
