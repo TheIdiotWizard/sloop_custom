@@ -289,7 +289,7 @@ UI_SMALL static int up_store(uint32_t k, const char *name, uint32_t kind)
 }
 
 /* slot k -> the selected part's sound: engine and every parameter except its mix (LEVEL,
- * PAN, MUTE: the TRACKS faders) and its pattern parameters (param_kept). LIVE: the pattern
+ * PAN, MUTE: the TRACKS faders) and its pattern parameters (param_kept); sloop_custom: the track FILTER comes with it. LIVE: the pattern
  * stored in the record is not loaded: changing the sound never changes the sequence.
  * 0 ok, 1 empty (or the drum track is selected) */
 UI_SMALL static int up_load_to(track_t *t, uint32_t k)       /* user preset k into track t (2.6: any track, MIDI PC) */

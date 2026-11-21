@@ -599,13 +599,15 @@ UI_SMALL static int seq_is_empty(const track_t *t) { return track_empty(t); }
 UI_SMALL static void track_defaults_steps(track_t *t) { steps_clear(t); }
 
 /* what loading a sound (factory or user preset) leaves alone: the mix (LEVEL, PAN, MUTE:
- * the TRACKS faders, and the track FILTER), the pattern parameters (LEN, DIV, SWING, GATE) and the key the part plays
- * in (ROOT, SCALE, QNT, CHORD: the song's; SEL + key sets the root of every part). The SLICER is
+ * the TRACKS faders), the pattern parameters (LEN, DIV, SWING, GATE) and the key the part plays
+ * in (ROOT, SCALE, QNT, CHORD: the song's; SEL + key sets the root of every part). sloop_custom: the track FILTER (cutoff,
+ * RES, KEY, DIST) is part of the sound, as the sends are: a user preset brings the one it was saved with, a factory
+ * preset a flat one. The SLICER is
  * part of the sound: a factory preset turns it OFF (its defaults), a user preset brings its own */
 UI_SMALL static int param_kept(uint32_t i)
 {
     return i == P_LEVEL || i == P_PAN || i == P_MUTE || (i >= P_SLEN && i <= P_SGATE) ||
-           (i >= P_ROOT && i <= P_QUANT) || i == P_CHORD || i == P_TFLT || i == P_TRES || i == P_TKEY || i == P_TDIST || i == P_STRUM || i == P_VLEAD;
+           (i >= P_ROOT && i <= P_QUANT) || i == P_CHORD || i == P_STRUM || i == P_VLEAD;
 }
 
 /* preset pi of the engine the track asked for: the whole sound (not the pattern parameters) */

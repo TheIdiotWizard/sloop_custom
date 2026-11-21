@@ -45,6 +45,16 @@ int main(void)
     static uint8_t prs[4 * 4096], songs0[8 * 4096];
     harness_init();
     memset(nor, 0xFF, sizeof nor);
+    {   /* the track FILTER is part of the sound: a user preset brings the one it was saved with, a factory preset a flat one */
+        track_t *t = &trk[0];
+        t->p[P_TFLT] = 30; t->p[P_TRES] = 9; t->p[P_TKEY] = 4; t->p[P_TDIST] = 6;
+        up_store(5, "FILT TEST", 0);
+        t->p[P_TFLT] = -20; t->p[P_TRES] = 0; t->p[P_TKEY] = 0; t->p[P_TDIST] = 0;
+        up_load_to(t, 5);
+        check(t->p[P_TFLT] == 30 && t->p[P_TRES] == 9 && t->p[P_TKEY] == 4 && t->p[P_TDIST] == 6, "a user preset loads the filter it was saved with");
+        apply_preset_to(t, 1);
+        check(t->p[P_TFLT] == 0 && t->p[P_TRES] == 0 && t->p[P_TKEY] == 0 && t->p[P_TDIST] == 0, "a factory preset loads a flat filter");
+    }
     boot_as_main();
     check(song_cur == 0 && flash_ok, "a first power-on: song 1, flash found");
     put_note(0, 48);
