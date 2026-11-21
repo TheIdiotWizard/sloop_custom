@@ -86,7 +86,7 @@ static void host_tracks_init(void)                /* as felucca_init: defaults, 
         for (i = 0; i < P_E0; i++)
             trk[k].p[i] = TP[i].def;
         if (k < NPART)                             /* (sloop_custom) the engine's EDIT defaults, as set_engine_of: zeros */
-            for (i = 0; i < 8u; i++)               /* were ANALOG's saw, they are ANALOG4's sine */
+            for (i = 0; i < 8u; i++)               /* were ANALOG's saw, they are GOLANA's sine */
                 trk[k].p[P_E0 + i] = ENGINES[trk[k].engine % NENGINES]->edit[i].def;
         steps_clear(&trk[k]);
     }
@@ -117,7 +117,7 @@ static void host_preset_req(track_t *t, uint32_t e, uint32_t pi)
     }
     preset_extras(t->p, p);
     fm6_track_loaded(t);                          /* FM6: the preset's patch (ui.c apply_preset_to) */
-    if (ENGINES[e]->loaded)                       /* sloop_custom: the operator slots (ANALOG4, FMTONE) */
+    if (ENGINES[e]->loaded)                       /* sloop_custom: the operator slots (GOLANA, FMTONE) */
         ENGINES[e]->loaded(t);
 }
 static void host_preset(track_t *t, uint32_t e, uint32_t pi)
@@ -187,8 +187,8 @@ static int tracks_demo(const char *dir, const char *name, uint32_t solo)
     }
     host_tracks_init();
     song.g[G_BPM] = 120;
-    host_preset(t1, ENGI_ANA4, 4);                  /* (sloop_custom) ANALOG4 WARM PAD, FMTONE TINE EP (POLY: the keys' */
-    host_preset(t2, ENGI_DYN, 0);                /* chord), LOFI GAME LEAD (the lead, as before) */
+    host_preset(t1, ENGI_GOLANA, 4);                  /* (sloop_custom) GOLANA WARM PAD, FMTONE TINE EP (POLY: the keys' */
+    host_preset(t2, ENGI_FMTONE, 0);                /* chord), LOFI GAME LEAD (the lead, as before) */
     host_preset(t3, ENGI_LOFI, 0);
     for (i = 0; i < 16u; i++) {
         uint8_t n = ACID[i];
@@ -539,9 +539,9 @@ static int rec_test(void)
     int ok_len, ok_short, ok_half, ok_cap, ok_swing, ok_mono, ok_chord, fail;
     host_tracks_init();
     song.g[G_BPM] = 120;
-    host_preset(t1, ENGI_ANA4, 4);                  /* POLY pad (sloop_custom: ANALOG4 WARM PAD) */
-    host_preset(t2, ENGI_ANA4, 4);
-    host_preset(t3, ENGI_ANA4, 1);                  /* a lead (ANALOG4 PWM LEAD) */
+    host_preset(t1, ENGI_GOLANA, 4);                  /* POLY pad (sloop_custom: GOLANA WARM PAD) */
+    host_preset(t2, ENGI_GOLANA, 4);
+    host_preset(t3, ENGI_GOLANA, 1);                  /* a lead (GOLANA PWM LEAD) */
     t1->p[P_VOICE] = t2->p[P_VOICE] = V_POLY;
     t3->p[P_VOICE] = V_MONO;
     t2->p[P_SLEN] = 4;
@@ -759,8 +759,8 @@ static int tracks_test(const char *dir)
     printf("tracks: one part, 8 notes held + drums (host -O2, ns per sample, heaviest preset per engine):");
     for (e = 0; e < NENGINES; e++)
         printf(" %s %s %.1f%s", ENGINES[e]->name, ENGINES[e]->presets[heavy[e]].name, best_e[e], e + 1u < NENGINES ? "," : "\n");
-    {   /* (sloop_custom) FMTONE, ANALOG4, VOICE (their heaviest presets) at once: 3 + 3 + 2 notes = the budget of 8 */
-        enum { EA = ENGI_DYN, EB = ENGI_ANA4, EV = ENGI_FORMANT };
+    {   /* (sloop_custom) FMTONE, GOLANA, VOICE (their heaviest presets) at once: 3 + 3 + 2 notes = the budget of 8 */
+        enum { EA = ENGI_FMTONE, EB = ENGI_GOLANA, EV = ENGI_FORMANT };
         uint8_t parts[NPART][3] = {{EA, (uint8_t)heavy[EA], 3}, {EB, (uint8_t)heavy[EB], 3}, {EV, (uint8_t)heavy[EV], 2}};
         uint8_t full[NPART][3] = {{EA, (uint8_t)heavy[EA], 8}, {EB, (uint8_t)heavy[EB], 8}, {EV, (uint8_t)heavy[EV], 4}};
         uint8_t vv[NPART][3] = {{EV, (uint8_t)heavy[EV], 4}, {EV, (uint8_t)heavy[EV], 4}, {0, 0, 0}};
@@ -772,7 +772,7 @@ static int tracks_test(const char *dir)
         two_voice = tracks_cost(vv, &bm3);
         none = tracks_cost(idle, 0);
         printf("tracks: worst single part: %s %s %.1f ns\n", ENGINES[worst_e]->name, ENGINES[worst_e]->presets[worst_p].name, worst);
-        printf("tracks: FMTONE + ANALOG4 + VOICE + drums, 3 + 3 + 2 notes: %.1f ns (%.2f x the worst single part), "
+        printf("tracks: FMTONE + GOLANA + VOICE + drums, 3 + 3 + 2 notes: %.1f ns (%.2f x the worst single part), "
                "%u voices\n", four, four / worst, bm);
         printf("tracks: the same, 8 + 8 + 4 notes asked for (budget keeps %u): %.1f ns (%.2f x)\n", bm2, four_full,
                four_full / worst);
@@ -810,7 +810,7 @@ int main(int argc, char **argv)
     }
     fm6_track_loaded(&inst);                            /* FM6: the preset's patch */
     inst.preset = (uint8_t)(ENGINES[eng]->npresets ? preset % ENGINES[eng]->npresets : 0);
-    if (ENGINES[eng]->loaded)                           /* sloop_custom: the operator slots (ANALOG4, FMTONE) */
+    if (ENGINES[eng]->loaded)                           /* sloop_custom: the operator slots (GOLANA, FMTONE) */
         ENGINES[eng]->loaded(&inst);
     inst.p[P_VOICE] = (int16_t)mono;
     inst.p[P_CHOR] = argc > 5 ? atoi(argv[5]) : 24;      /* as felucca_init */

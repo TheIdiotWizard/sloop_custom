@@ -52,7 +52,7 @@ int main(void)
         t->p[P_TFLT] = -20; t->p[P_TRES] = 0; t->p[P_TKEY] = 0; t->p[P_TDIST] = 0;
         up_load_to(t, 5);
         check(t->p[P_TFLT] == 30 && t->p[P_TRES] == 9 && t->p[P_TKEY] == 4 && t->p[P_TDIST] == 6, "a user preset loads the filter it was saved with");
-        apply_preset_to(t, 1);
+        t->eng_req = ENGI_ENS; apply_preset_to(t, 1);   /* (an ENS sound: no filter of its own) */
         check(t->p[P_TFLT] == 0 && t->p[P_TRES] == 0 && t->p[P_TKEY] == 0 && t->p[P_TDIST] == 0, "a factory preset loads a flat filter");
     }
     boot_as_main();

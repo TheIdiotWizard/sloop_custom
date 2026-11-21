@@ -138,7 +138,7 @@ int main(void)
         printf("boot_sound: over Clipper's project: track 1 %s %s, TRN %d\n", ENGINES[trk[0].eng_req]->name,
                ENGINES[trk[0].eng_req]->presets[trk[0].preset].name, trk[0].p[P_TRANS]);
         check(trk[0].eng_req == TRK_DEF[0][0] && trk[0].preset == TRK_DEF[0][1] && trk[0].p[P_TRANS] == TP[P_TRANS].def,
-              "over Clipper's working project: track 1 gets its default sound (sloop_custom: ANALOG4 SAW BASS, its TRN 0)");
+              "over Clipper's working project: track 1 gets its default sound (sloop_custom: GOLANA SAW BASS, its TRN 0)");
         check(trk[0].step[0].time == ST_NOTE && trk[0].step[0].note[0] == 48, "... and keeps its pattern");
         key_check("over Clipper's working project");
     }

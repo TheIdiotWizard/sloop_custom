@@ -80,7 +80,7 @@ static void scene_setup(uint32_t s)
         break;
     case 1:
         for (k = 0; k < NPART; k++) {
-            host_preset(&trk[k], ENGI_DYN, 2 * k);   /* (sloop_custom: FMTONE, its voices in the arena; FM6 before) */
+            host_preset(&trk[k], ENGI_FMTONE, 2 * k);   /* (sloop_custom: FMTONE, its voices in the arena; FM6 before) */
             chords(&trk[k], k, 4, 52 + 3 * k);
         }
         break;
@@ -95,8 +95,8 @@ static void scene_setup(uint32_t s)
         }
         break;
     case 4:
-        host_preset(&trk[0], ENGI_ANA4, 4);              /* (sloop_custom) ANALOG4 */
-        host_preset(&trk[1], ENGI_DYN, 1);
+        host_preset(&trk[0], ENGI_GOLANA, 4);              /* (sloop_custom) GOLANA */
+        host_preset(&trk[1], ENGI_FMTONE, 1);
         host_preset(&trk[2], ENGI_DRAWBAR, 2);
         for (k = 0; k < NPART; k++) {
             trk[k].p[P_ITYPE] = (int16_t)(k == 0u ? 1 : k == 1u ? 5 : 7);   /* SOFT, CRUSH, FLANG */
@@ -136,7 +136,7 @@ static void scene_setup(uint32_t s)
         song.g[G_TXDUCK] = 1;
         break;
     default:
-        host_preset(&trk[0], ENGI_ANA4, 4);              /* (sloop_custom) ANALOG4, WAV, DRAWBAR (GRAIN before) */
+        host_preset(&trk[0], ENGI_GOLANA, 4);              /* (sloop_custom) GOLANA, WAV, DRAWBAR (GRAIN before) */
         host_preset(&trk[1], ENGI_WAV, 0);
         host_preset(&trk[2], ENGI_DRAWBAR, 0);
         trk[0].p[P_DIST] = 60;
@@ -186,7 +186,7 @@ static void scene_block(uint32_t s, uint32_t b)          /* what the UI would do
             for (k = 1; k < NPART; k++) {
                 sound_change(&trk[k]);
                 panic_req |= (uint8_t)(1u << k);
-                host_preset_req(&trk[k], k == 1u ? ENGI_DYN : ENGI_DRAWBAR, 4 + k);   /* (FM6 before) */
+                host_preset_req(&trk[k], k == 1u ? ENGI_FMTONE : ENGI_DRAWBAR, 4 + k);   /* (FM6 before) */
             }
         }
         if (b == 650u)

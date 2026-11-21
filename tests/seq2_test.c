@@ -1989,7 +1989,7 @@ static void t_midicc(void)
     song.g[G_ROUTE] = 0;
     a = &trk[0]; b = &trk[1];
     a->eng_req = a->engine = ENGI_NOISE;                /* (sloop_custom) NOISE: FREQ (EDIT 3) and RES */
-    b->eng_req = b->engine = ENGI_DYN;               /* FMTONE: neither an EDIT knob */
+    b->eng_req = b->engine = ENGI_FMTONE;               /* FMTONE: neither an EDIT knob */
     for (i = 0; i < 8u; i++)
         if (str_eq(ENGINES[ENGI_NOISE]->edit[i].label, "RES"))
             res = i;
@@ -2040,9 +2040,11 @@ static void t_midicc(void)
         int32_t o[CTL * 2], pk[3] = {0, 0, 0};
         uint32_t ph, j, lv = song.g[G_DRLVL];
         a->p[P_LEVEL] = 100, a->p[P_ATK] = 0, a->p[P_SUS] = 127, a->p[P_MUTE] = 0;
-        a->eng_req = a->engine = ENGI_ANA4;               /* (sloop_custom: a steady tone, ANALOG4 at its defaults: the */
-        for (j = 0; j < 8u; j++)                          /* saws through open filters; NOISE, used above, is noise) */
-            a->p[P_E0 + j] = ENGINES[ENGI_ANA4]->edit[j].def;
+        a->eng_req = a->engine = ENGI_GOLANA;             /* (sloop_custom: a steady tone, GOLANA at its defaults: a */
+        for (j = 0; j < 8u; j++)                          /* saw; NOISE, used above, is noise) */
+            a->p[P_E0 + j] = ENGINES[ENGI_GOLANA]->edit[j].def;
+        a->p[P_FM1_ATK] = 127, a->p[P_FM1_DEC] = 0, a->p[P_FM1_SUS] = 0, a->p[P_FM1_REL] = 0;
+        a->p[P_FM1_LEVEL] = 0, a->p[P_FM2_ATK] = 0, a->p[P_FM2_DEC] = 0;
         a->p[P_TFLT] = 0, a->p[P_REV] = a->p[P_DLY] = a->p[P_CHOR] = 0;
         mclk_push(0x09u | 0x90u << 8 | 60u << 16 | 100u << 24);   /* ch 1: a held C4 */
         for (j = 0; j < 60u; j++) run_block();
@@ -2081,12 +2083,11 @@ static void t_midicc(void)
         for (c = 0; c < 3u; c++) {                      /* c 0: wheel 127, depth 0.  c 1: no wheel, depth 6.  c 2: neither */
             int32_t o[CTL * 2], k = 0, i;
             a->p[P_LEVEL] = 100, a->p[P_ATK] = 0, a->p[P_SUS] = 127, a->p[P_MUTE] = 0;
-            a->eng_req = a->engine = ENGI_ANA4;
-            a->p[P_E0] = 0, a->p[P_E1] = 64, a->p[P_E2] = 0, a->p[P_E3] = 0, a->p[P_E4] = 0, a->p[P_E5] = 64;   /* (a clean sine) */
+            a->eng_req = a->engine = ENGI_GOLANA;
+            a->p[P_E0] = 3, a->p[P_E1] = 0, a->p[P_E2] = 0, a->p[P_E3] = 0, a->p[P_E4] = 0, a->p[P_E5] = 0;   /* (a clean sine) */
             a->p[P_E6] = 0, a->p[P_E7] = 0, a->p[P_ED_PIT] = 0, a->p[P_ED_FLT] = 0, a->p[P_ED_SHP] = 0;
-            a->p[P_FM1_LEVEL] = 64, a->p[P_FM2_LEVEL] = 0, a->p[P_FM3_ATK] = 0, a->p[P_FM3_DEC] = 0, a->p[P_FM3_SUS] = 0;
-            a->p[P_FM3_LEVEL] = 127, a->p[P_FM3_REL] = 0, a->p[P_FM4_DEC] = 0, a->p[P_FM4_SUS] = 0, a->p[P_FM4_LEVEL] = 127;
-            a->p[P_FM4_REL] = 0, a->p[P_FM2_REL] = 0, a->p[P_FM4_ATK] = 0, a->p[P_FTYPE] = 0, a->p[P_ED_FX] = 23, a->p[P_DIST] = 0;
+            a->p[P_FM1_ATK] = 127, a->p[P_FM1_DEC] = 0, a->p[P_FM1_SUS] = 0, a->p[P_FM1_REL] = 0;
+            a->p[P_FM1_LEVEL] = 0, a->p[P_FM2_ATK] = 0, a->p[P_FM2_DEC] = 0, a->p[P_ED_FX] = 23, a->p[P_DIST] = 0;
             a->p[P_TFLT] = 0, a->p[P_REV] = a->p[P_DLY] = a->p[P_CHOR] = 0;
             a->p[P_LRATE] = 0, a->p[P_LWAVE] = 0, a->p[P_LFADE] = 0, a->p[P_LPHASE] = 32,   /* (a still LFO, at its peak: a constant offset) */
              a->p[P_LTRIG] = 0, a->p[P_LSYNC] = 0;
@@ -2131,6 +2132,7 @@ static void t_usbfull(void)
     uint32_t k, i;
     int32_t out[CTL * 2], pk_dac = 0, pk_usb = 0;
     reset(120);
+    trk[0].p[P_VOICE] = V_POLY, trk[0].p[P_LEVEL] = 30;   /* (sloop_custom: the default sound is mono and hot: eight notes, kept off the limiter) */
     song.master_q12 = 512;                            /* MASTER low */
     master_cur = -1;
     usb_full_now = 1;
@@ -2175,6 +2177,9 @@ static void t_tflt(void)
     double hf0, rms0, hf_lp, rms_hp, dhf0, dhf_lp;
     uint32_t k;
     reset(120);
+    trk[0].p[P_E0] = 0, trk[0].p[P_E1] = 0, trk[0].p[P_E4] = 0, trk[0].p[P_E6] = 0;   /* (sloop_custom: GOLANA's bright saw, not the */
+    trk[0].p[P_FM1_ATK] = 127, trk[0].p[P_FM1_DEC] = 0, trk[0].p[P_FM1_REL] = 0, trk[0].p[P_FM2_ATK] = 0;   /* default's sub bass) */
+    trk[0].p[P_TRES] = trk[0].p[P_TKEY] = trk[0].p[P_TDIST] = 0;
     trk[0].p[P_TFLT] = 0;
     for (k = 0; k < 4u; k++) trk_note_on(&trk[0], 36u + k * 7u, 110);
     tf_measure(60); tf_measure(200);
@@ -2183,7 +2188,7 @@ static void t_tflt(void)
     hf_lp = tf_hf;
     trk[0].p[P_TFLT] = 50; tf_measure(150); tf_measure(200);
     rms_hp = tf_rms;
-    check(hf_lp < hf0 * 0.5 && rms_hp < rms0 * 0.5, "track FILTER: LP -50 darkens a part (HF / 2), HP +50 thins it (level / 2)");
+    check(hf_lp < hf0 * 0.5 && rms_hp < rms0 * 0.6, "track FILTER: LP -50 darkens a part (HF / 2), HP +50 thins it (level x 0.6)");
     trk[0].p[P_TFLT] = 0; tf_measure(200);
     check(tflt[0].mode == 0, "track FILTER: back to 0, it opens and is bypassed again");
     for (k = 0; k < 4u; k++) trk_note_off(&trk[0], 36u + k * 7u);

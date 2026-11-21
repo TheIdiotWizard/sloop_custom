@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-3.0-only
  * Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments */
 /* Host test of the project format (firmware/src/project.c, -DPROJ_HOST part). sloop_custom writes and reads format 7
- * ("FUN7": every parameter before P_E0 in a signed byte, the 20 operator slots of ANALOG4 and FMTONE among them, P_E0..
+ * ("FUN7": every parameter before P_E0 in a signed byte, the 20 operator slots of GOLANA and FMTONE among them, P_E0..
  * P_E7 in 16 bits); SLOOP's own formats are not read (a clean slate: their engine numbers are other engines here), nor
  * is a damaged image. The working project round trip, sections, the globals a project keeps, and an image's values
  * brought back inside their ranges. Run by tests/run_tests.sh (needs build/gen). */
@@ -10,9 +10,9 @@
 #include "hostsim.c"
 #undef main
 #define PROJ_HOST 1
-static uint32_t trk_def_engine(uint32_t i)       /* ui.c TRK_DEF: ANALOG4, PAR, SAW */
+static uint32_t trk_def_engine(uint32_t i)       /* ui.c TRK_DEF: GOLANA, FMTONE, GOLANA */
 {
-    static const uint8_t E[NPART] = {ENGI_ANA4, ENGI_PAR, ENGI_SAW};
+    static const uint8_t E[NPART] = {ENGI_GOLANA, ENGI_FMTONE, ENGI_GOLANA};
     return i < NPART ? E[i] : 0u;
 }
 #include "../firmware/src/project.c"
@@ -48,9 +48,9 @@ int main(void)
         }
         bad += check("format 7: every parameter before P_E0 fits a signed byte (TP's and every engine's slots)", fits);
     }
-    {   /* the operator slots go with the project: ANALOG4's on track 1, FMTONE's (its FINE, -64..63) on track 2 */
+    {   /* the operator slots go with the project: GOLANA's on track 1, FMTONE's (its FINE, -64..63) on track 2 */
         host_tracks_init();
-        trk[0].eng_req = trk[0].engine = ENGI_ANA4, trk[1].eng_req = trk[1].engine = ENGI_DYN;
+        trk[0].eng_req = trk[0].engine = ENGI_GOLANA, trk[1].eng_req = trk[1].engine = ENGI_FMTONE;
         trk[0].p[P_FM3_LEVEL] = 37, trk[0].p[P_FM4_DEC] = 5, trk[0].p[P_FM2_REL] = 4, trk[0].p[P_FTYPE] = 2;
         trk[1].p[P_FM3_REL] = -64, trk[1].p[P_FM4_ATK] = 63, trk[1].p[P_FM4_DEC] = -7, trk[1].p[P_FM1_LEVEL] = 99;
         trk[1].p[P_E4] = -50;                      /* (FMTONE HARM) */
@@ -58,11 +58,11 @@ int main(void)
         proj_capture(&q);
         host_tracks_init();
         proj_apply(&q, 1);
-        ok = trk[0].engine == ENGI_ANA4 && trk[1].engine == ENGI_DYN && trk[0].p[P_FM3_LEVEL] == 37 &&
+        ok = trk[0].engine == ENGI_GOLANA && trk[1].engine == ENGI_FMTONE && trk[0].p[P_FM3_LEVEL] == 37 &&
              trk[0].p[P_FM4_DEC] == 5 && trk[0].p[P_FM2_REL] == 4 && trk[0].p[P_FTYPE] == 2 && trk[1].p[P_FM3_REL] == -64 &&
              trk[1].p[P_FM4_ATK] == 63 && trk[1].p[P_FM4_DEC] == -7 && trk[1].p[P_FM1_LEVEL] == 99 && trk[1].p[P_E4] == -50 &&
              lock_find(&trk[1], 3, P_FM2_LEVEL, 0) >= 0 && trk[1].lock[lock_find(&trk[1], 3, P_FM2_LEVEL, 0)].val == 12;
-        bad += check("operator slots: ANALOG4's and FMTONE's (FINE -64 .. 63) and a lock on one, capture -> apply", ok);
+        bad += check("operator slots: GOLANA's and FMTONE's (FINE -64 .. 63) and a lock on one, capture -> apply", ok);
     }
     {   /* format 7 as stored: read back; damaged, cut short, or another format's magic: no project */
         host_tracks_init();

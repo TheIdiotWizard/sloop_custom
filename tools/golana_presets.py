@@ -1,0 +1,117 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-only
+"""Golana's 25 factory sounds (github.com/Gadlele/Golana golana_factory.c) as GOLANA engine presets of sloop_custom.
+
+  tools/golana_presets.py /path/to/Golana/firmware/src/golana_factory.c firmware/src/golana_presets.h
+
+Each sound keeps its oscillators, mixer, SUB and DRIFT, its amp ADSR, glide, voice mode, arpeggiator, chorus and reverb send.
+Golana's filter becomes the track FILTER (preset_t.flt): its cutoff, resonance and key tracking, and the filter EG's INT folded
+into the cutoff as a fixed lift (the EG itself, the second LFO and the patch bay are not in the engine). Its delay is dropped
+(sloop's factory sounds load without one)."""
+import math
+import re
+import sys
+
+src, out = sys.argv[1], sys.argv[2]
+text = open(src).read()
+
+ENUM = {}
+for name, vals in (("W", "SAW PULSE TRI SINE MORPH"), ("X", "SAW SQR TRI MIX"), ("L", "SAW SQR TRI SIN SH"),
+                   ("F", "LPF24 LPF12 BPF HPF"), ("Q", "FEG AEG LFO1 LFO2 VELO KBD"),
+                   ("D", "PITCH OSC2 CTRL1 NOISE CUT AMP LFO2F"), ("U", "SQR1 SQR2 SIN1 SIN2 SAW1 SAW2 MIX1 MIX2")):
+    for i, v in enumerate(vals.split()):
+        ENUM["%s_%s" % (name, v)] = i
+ENUM.update({"V_POLY": 0, "V_MONO": 1, "V_LEGATO": 2, "V_UNISON": 3})
+
+# Golana's INIT (core.h GL_* defaults, golana_prog.c gl_defaults)
+D = dict(O1WAVE=0, O1C1=0, O1C2=0, O2WAVE=0, O2MOD=0, O2SEMI=0, O2TUNE=0, CUTOFF=100, MIX1=127, MIX2=0, NOISE=0, FTYPE=0,
+         RESO=20, FEGINT=0, KTRK=32, DIST=0, L1FREQ=60, SUBTYPE=0, SUB=0, DRIFT=0, FOLD=0, MFX=0, ARPON=0, ARPTYPE=0,
+         P_ATK=0, P_DEC=64, P_SUS=127, P_REL=40, P_GLIDE=0, P_VOICE=0, P_DETUNE=30, P_SPRD=0, P_DLY=0, P_REV=0, P_AOCT=1,
+         P_ARATE=2, P_AGATE=90, FS=64)
+
+progs = {}
+for m in re.finditer(r"static const gl_set_t (F_\w+)\[\] = \{(.*?)\n\};", text, re.S):
+    body = re.sub(r"/\*.*?\*/", "", m.group(2), flags=re.S)
+    sets = re.findall(r"S\(([^,]+),\s*([^)]+)\)", body)
+    progs[m.group(1)] = sets
+order = re.findall(r'PROG\("([^"]+)", (F_\w+)\)', text)
+assert len(order) == 25, len(order)
+
+SYM = {"GL_O1WAVE": "O1WAVE", "GL_O1C1": "O1C1", "GL_O1C2": "O1C2", "GL_O2WAVE": "O2WAVE", "GL_O2MOD": "O2MOD",
+       "GL_O2SEMI": "O2SEMI", "GL_O2TUNE": "O2TUNE", "GL_CUTOFF": "CUTOFF", "GL_MIX1": "MIX1", "GL_MIX2": "MIX2",
+       "GL_NOISE": "NOISE", "GL_FTYPE": "FTYPE", "GL_RESO": "RESO", "GL_FEGINT": "FEGINT", "GL_KTRK": "KTRK",
+       "GL_DIST": "DIST", "GL_L1FREQ": "L1FREQ", "GL_SUBTYPE": "SUBTYPE", "GL_SUB": "SUB", "GL_DRIFT": "DRIFT",
+       "GL_FOLD": "FOLD", "GL_MFX": "MFX", "GL_ARPON": "ARPON", "GL_ARPTYPE": "ARPTYPE", "GL_FS": "FS"}
+
+
+def val(tok):
+    tok = tok.strip()
+    return ENUM[tok] if tok in ENUM else int(tok)
+
+
+RES_Q = [0.72] + [0.72 + (2.55 - 0.72) * r / 10 for r in range(1, 11)] + [4, 8, 16, 32, 64]
+
+
+def knob_lp(idx):
+    return max(-64, min(-1, round((idx - 127) / 1.40625)))
+
+
+def flt(p):
+    cut = p["CUTOFF"] + max(0, p["FEGINT"]) * 0.8      # the filter EG's sweep, as a fixed lift
+    if p["FTYPE"] > 1 or cut >= 118:                    # a BPF / HPF is not carried; a wide-open low-pass is flat
+        f = [0, 0, 0, 0]
+    else:
+        k = 8192 - p["RESO"] * 7600 / 127
+        q = 8192 / k
+        res = min(range(16), key=lambda r: abs(math.log(RES_Q[r] / q)))
+        key = round(max(0, p["KTRK"]) / 63 * 10)
+        f = [knob_lp(cut), res, key, 0]
+    if p["DIST"]:
+        f[3] = 4
+    return f
+
+
+AM = {0: 1, 1: 2, 2: 3, 3: 3, 4: 4, 5: 4, 6: 3, 7: 3, 8: 3, 9: 3}     # GL_ARPTYPE -> sloop's N_AMODE (UP DN UPDN RND)
+
+
+def entry(name, sets):
+    p = dict(D)
+    for k, v in sets:
+        k = k.strip()
+        if k in SYM:
+            p[SYM[k]] = val(v)
+        elif k.startswith("P_") and k in D:
+            p[k] = val(v)
+    ex = []
+    if p["P_VOICE"] == 3:
+        ex += ["P_VOICE + 1, 3", "P_DETUNE + 1, %d" % p["P_DETUNE"]]
+    if p["P_GLIDE"]:
+        ex.append("P_GLIDE + 1, %d" % p["P_GLIDE"])
+    assert len(ex) <= 4
+    fx = "FX(0, %d, 0, %d)" % (50 if p["MFX"] in (1, 3) else 0, p["P_REV"])
+    arp = ", ARP(%d, %d, %d, %d)" % (AM[p["ARPTYPE"]], p["P_ARATE"], p["P_AOCT"], p["P_AGATE"]) if p["ARPON"] else ""
+    xp = ", XP(%s)" % ", ".join(ex) if ex else ""
+    mono = 1 if p["P_VOICE"] == 2 else 0
+    e = [p["O1WAVE"], p["O1C1"], p["O1C2"], p["L1FREQ"], p["O2WAVE"], p["O2MOD"], p["O2SEMI"], p["O2TUNE"]]
+    f = flt(p)
+    pre = '    {"%s", {%s}, {%d, %d, %d, %d}, 0, %d, %s%s%s, .flt = {%s}},' % (
+        name, ", ".join(map(str, e)), p["P_ATK"], p["P_DEC"], p["P_SUS"], p["P_REL"], mono, fx, arp, xp, ", ".join(map(str, f)))
+    x = "    {{%d, %d, %d}, %d, {%d, %d}, %d},   /* %s */" % (p["MIX1"], p["MIX2"], p["NOISE"], p["FOLD"], p["SUBTYPE"], p["SUB"],
+                                                          p["DRIFT"], name)
+    return pre, x, f
+
+
+lines = ["/* SPDX-License-Identifier: GPL-3.0-only */",
+         "/* Generated by tools/golana_presets.py from Golana's factory sounds (golana_factory.c, Gadlele, GPL-3.0); do not edit.",
+         " * Each preset: WAVE CTRL1 DEPTH RATE WAVE2 MOD SEMI TUNE, the amp ADSR, mono, sends, arpeggiator, extras, then the track",
+         " * FILTER (FILT RES KEY DIST) that stands for Golana's. GOL_X: the slots of MIXER and SUB / DRIFT. */",
+         "static const preset_t GOLANA_PRESETS[] = {"]
+xs = ["static const gol_x_t GOL_X[NELEM(GOLANA_PRESETS)] = {"]
+for name, key in order:
+    a, b, f = entry(name, progs[key])
+    lines.append(a)
+    xs.append(b)
+lines.append("};")
+xs.append("};")
+open(out, "w").write("\n".join(lines + [""] + xs) + "\n")
+print("%d presets -> %s" % (len(order), out))

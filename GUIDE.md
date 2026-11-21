@@ -8,7 +8,7 @@ SLOOP is a free, open-source (GPL-3.0) firmware for the M-VAVE FM-1, based on [F
 
 ---
 
-> **sloop_custom:** this is a personal build of SLOOP with twelve engines (ANALOG4, STAT, SAW, PULS, ENS, WAV, LOFI, VOICE, WHEEL, NOISE, PAR, DYN), engine-ordered presets, nameable user presets and a mod-wheel (CC 1) pitch-depth default. Release notes below the sound-bank and engine sections that mention FM6, PHYS, SAMPLE, GRAIN, TRIO, DIGITAL, PHASE, DX7 or the 12-engine bank describe stock SLOOP. Install and editor: https://theidiotwizard.github.io/sloop_custom/
+> **sloop_custom:** this is a personal build of SLOOP with eight engines (FMTONE, ENS, WAV, LOFI, VOICE, WHEEL, NOISE, GOLANA), engine-ordered presets, nameable user presets and a mod-wheel (CC 1) pitch-depth default. Release notes below the sound-bank and engine sections that mention FM6, PHYS, SAMPLE, GRAIN, TRIO, DIGITAL, PHASE, DX7 or the 12-engine bank describe stock SLOOP. Install and editor: https://theidiotwizard.github.io/sloop_custom/
 
 ## How to read this guide
 
@@ -52,7 +52,7 @@ The 11 black keys are F#3, G#3, A#3, C#4, D#4, F#4, G#4, A#4, C#5, D#5, F#5. The
 14. [Song mode: sections, chains, songs](#14-song-mode-sections-chains-songs)
 15. [The screens](#15-the-screens)
 16. [Every page, knob by knob](#16-every-page-knob-by-knob)
-17. [The sounds and the twelve engines](#17-the-sounds-and-the-ten-engines)
+17. [The sounds and the eight engines](#17-the-sounds-and-the-eleven-engines)
 18. [Effects: master, punch-in, per track](#18-effects-master-punch-in-per-track)
 19. [The visualiser](#19-the-visualiser)
 20. [The HOME menu and the lights](#20-the-home-menu-and-the-lights)
@@ -184,7 +184,7 @@ The layers are **FX** (punch-in effects), **EDIT** (erase), **ARP** (note repeat
 | **GLO** | GLO pages (GLOBAL, MASTER, SYSTEM, DRUMS) | mix layer |
 | **OCT− / OCT+** | synth track: octave down / up (−3 … +3) · both together: octave 0 | drum track: **ghost** (OCT−) / **hard** (OCT+) hits while held |
 | **ALGORITHM** | select track 1–4, on every screen (inside a layer it waits; not during a free take, on the SONG screen or in the menu) | — |
-| **PRESETS** | on TRACKS, HOME and the PRESETS page: the selected track's **sound** (your favourites first (2.7), then every sound **by engine**: ANALOG4, STAT, SAW, PULS, ENS, WAV, LOFI, VOICE, WHEEL, NOISE, PAR, DYN, each with its factory sounds and then your own user presets saved on it; sloop_custom) · drum track: the **kit** · on the DRUMS screen: the kit | — |
+| **PRESETS** | on TRACKS, HOME and the PRESETS page: the selected track's **sound** (your favourites first (2.7), then every sound **by engine**: FMTONE, ENS, WAV, LOFI, VOICE, WHEEL, NOISE, each with its factory sounds and then your own user presets saved on it; sloop_custom) · drum track: the **kit** · on the DRUMS screen: the kit | — |
 | **SELECT** | on TRACKS, inside a layer and on the REC screen: the **tempo** · on a page: previous / next page of its button (stops at the ends) · DRUMS screen: grid ↔ kit · visualiser: the style · menu: the section | — |
 | **KNOB 1–4** | the four dials at the bottom of the screen | — |
 | **MASTER** | output volume (the visualiser ignores it) | — |
@@ -758,43 +758,41 @@ Notes:
 
 ---
 
-## 17. The sounds and the twelve engines
+## 17. The sounds and the eight engines
 
 ### The sound bank
 
-**69 factory sounds** on the twelve engines, level-matched. **PRESETS** lists them **by engine**, in the engine order below (all the ANALOG4 sounds, then STAT, and so on); your own user presets sit at the end of their engine's group. The sound's kind is shown next to its name. **KNOB 3 (TYPE)** filters the list by kind. The effect sends of a loaded sound are as the sound defines them; the delay send is always 0.
+**87 factory sounds** on the eight engines, level-matched. **PRESETS** lists them **by engine**, in the engine order below (all the FMTONE sounds, then ENS, and so on); your own user presets sit at the end of their engine's group. The sound's kind is shown next to its name. **KNOB 3 (TYPE)** filters the list by kind. The effect sends of a loaded sound are as the sound defines them; the delay send is always 0.
 
 | Kind | Sounds (engine) |
 | --- | --- |
-| **Bass** | SAW BASS, ACID (ANALOG4) · FM BASS (DYN) · SUB BASS (SAW) · PWMBASS (PULS) · DIGI BASS (WAV) · WOW BASS (VOICE) · GB BASS, NES BASS (LOFI) |
-| **Keys** | EPIANO (DYN) · LOFI KEYS (WAV) |
+| **Bass** | FM BASS (FMTONE) · DIGI BASS (WAV) · WOW BASS (VOICE) · GB BASS, NES BASS (LOFI) |
+| **Keys** | TINE EP (FMTONE) · LOFI KEYS (WAV) |
 | **Organ** | SOUL ORGAN, GOSPEL, JAZZ ORGAN, DIRTY B3, HOUSE ORGN, ROCK ORGAN, CHAPEL, REGGAE ORG (WHEEL) |
-| **Pad** | WARM PAD (ANALOG4) · GLASPAD (PAR) · BIG PAD (SAW) · PWMPAD (PULS) · STRINGS (ENS) · WAVE PAD (WAV) · CHOIR AAH, SOUL OOH, VOX PAD (VOICE) · WIND, OCEAN (NOISE) |
-| **Lead** | PWM LEAD, SYNC LEAD (ANALOG4) · FM KEYS (STAT) · SUPERSAW, MONO SAW, DRIFT LD (SAW) · SQUARE, REED (PULS) · OCT PULS (ENS) · SCAN LEAD, SYNC LEAD (WAV) · TALKBOX, HARMONICA, ROBOT (VOICE) · GAME LEAD, WAVE LEAD (LOFI) · NZ ARCADE (NOISE) |
-| **Pluck & bell** | FMBELL (STAT) · TING, GLASSKY (PAR) · 8BIT ARP, 1BIT BEEP (LOFI) |
-| **Stab** | FMPAD (STAT) · MAJOR, MINOR, FIFTHS (ENS: one key plays the chord) · CHIP CHORD (LOFI) |
-| **FX** | KICK, ZAP TOM, NOISE HAT (ANALOG4) · RAIN, NZ METAL, VINYL, HISS, RISER, NZ SNARE, BITCRUSH, RADIO (NOISE) · CHIP NOISE (LOFI) |
+| **Pad** | GLASS PAD (FMTONE) · STRINGS (ENS) · WAVE PAD (WAV) · CHOIR AAH, SOUL OOH, VOX PAD (VOICE) · WIND, OCEAN (NOISE) |
+| **Lead** | PLUCK LEAD (FMTONE) · OCT PULS (ENS) · SCAN LEAD, SYNC LEAD (WAV) · TALKBOX, HARMONICA, ROBOT (VOICE) · GAME LEAD, WAVE LEAD (LOFI) · NZ ARCADE (NOISE) |
+| **Pluck & bell** | BELL, RESO PLUCK, FIFTH RING (FMTONE) · 8BIT ARP, 1BIT BEEP (LOFI) |
+| **Stab** | BRASS (FMTONE) · MAJOR, MINOR, FIFTHS (ENS: one key plays the chord) · CHIP CHORD (LOFI) |
+| **FX** | RAIN, NZ METAL, VINYL, HISS, RISER, NZ SNARE, BITCRUSH, RADIO (NOISE) · CHIP NOISE (LOFI) |
 
 To pick an engine directly: SAVE → PRESETS → **KNOB 2**. To start from the engine's defaults: SAVE → TOOLS → **INIT**.
 
-### The twelve engines
+### The eleven engines
 
 Each engine's eight parameters are on **EDIT 1** and **EDIT 2** (KNOB 1–4 each); tap EDIT once and twice.
 
 | Engine | Sound | EDIT knobs (the screen shows the engine's own labels) |
 | --- | --- | --- |
-| **ANALOG4** | two-oscillator analogue (from Mini-Tone), 4 voices, own resonant filter | WAV1 (SIN, TRI, SAW, PLS) · PW1 · TUN1 ±24 · SUB · WAV2 · PW2 · TUN2 ±24 · FIN2 fine. Own pages: MIX, FILTER 1, FILTER 2, F1 ENV, F1 AMT, ENV 2 |
-| **STAT / PAR / DYN** | MONO2K's FM machines (m2k-fm branch): STAT = two-operator static FM, PAR = three operators in parallel, DYN = dynamic FM; 6 voices | STAT: 1FRQ 1FIN 1ENV 1FB 2FRQ 2VOL TONE TUNE · PAR: 1FRQ 1ENV 2FRQ 2ENV 3FRQ 3ENV TONE TUNE · DYN: 1FRQ 1FEN 1VOL 1VEN 2FRQ 2ENV 2FB TUNE. The presets bring MONO2K's filter (FX → FILTER: cutoff, RES, KEY, DIST). |
-| **SAW** | detuned saw stack (MONO2K, via Melodee Custom) | UNIL · UNIW · UNIX · DRFT · SUBX · SUB1 · SUB2 · TUNE |
-| **PULS** | pulse and PWM (MONO2K) | UNIL · UNIW · SUB1 · SUB2 · PW · PWAD · PWRS · TUNE |
+| **FMTONE** | four-operator FM (from Mini-Tone), 6 voices, own filter | ALGO 1–8 · RAT (ratio set C, A, B) · HARM · DTN · FB · MIX. Own pages: A ENV, B ENV, DEL TRK, FINE, FILTER |
 | **ENS** | chord / ensemble machine (MONO2K), 3 voices | PCH2 · PCH3 · PCH4 (chord intervals) · WAVE · PW · CHRL · CHRW (chorus) · TUNE |
 | **WAV** | wavetable (MONO2K) | WAVE · SCAN · STIM · SYNC · BITS · DTUN · MIX2 · STEP |
 | **LOFI** | 8-bit chip | CHIP · WAVE · DUTY · CRSH · SWP · VIB · ARP · TONE |
 | **VOICE** | formant voice (choirs, talkbox), 4 voices | VOWL · VOWL2 · TALK · SHIFT ±12 · BUZZ · BRTH · Q · RAND |
 | **WHEEL** | tonewheel organ (drawbars) | REG (16 registrations: FLUTE, MELLO, HOLLW, SMOOT, 3BAR, BLUES, GOSPL, ROCK, TOPS, CLARI, REED, STRNG, CHAPL, BRITE, BASS, FULL) · SUB · BODY · TOP (±8) · PERC (OFF, 2ND, 3RD, soft and slow variants) · CLICK · DRV · ROTR (OFF, SLOW, FAST) |
-| **NOISE** | noise generator | MODE (ANLG, DUST, LFSR, META) · COLR · FREQ · RES · TRK · DENS · DRFT · CRSH |
+| **NOISE** | noise generator | MODE (ANLG, DUST, LFSR, META) · COLR · FREQ · RES · TRK · DENS · DRFT
+| **GOLANA** | Golana's oscillator section (Gadlele, GPL-3.0): 2 oscillators, sub, noise, wavefolder, 6 voices | OSC 1: WAVE (SAW, PULSE, TRI, SINE, MORPH) · CTRL1 · DEPTH · RATE (a triangle LFO on CTRL1) · OSC 2: WAVE2 · MOD (OFF, RING, SYNC, R+S) · SEMI · TUNE · MIXER: OSC1 · OSC2 · NOISE · FOLD · SUB DRIFT: TYPE · SUB · DRIFT. Its filter is the track FILTER (FX → FILTER), which the 25 factory sounds set | · CRSH |
 
-Every engine except ANALOG4 uses SLOOP's FX → FILTER; ANALOG4 has its own filter pages. The track LFO, the arp, UNISON, MONO and LEGATO work on all twelve.
+Every engine except FMTONE uses SLOOP's FX → FILTER; FMTONE has its own filter page. (ANALOG4, SAW and PULS are retired in this build.) The track LFO, the arp, UNISON, MONO and LEGATO work on all eight.
 
 ### Polyphony
 
@@ -803,8 +801,8 @@ The three synth tracks **share one pool of 8 voices**; the drum track has its ow
 | Voices | Engines |
 | --- | --- |
 | **8** | LOFI, WHEEL, NOISE |
-| **6** | STAT, PAR, DYN, SAW, PULS, WAV |
-| **4** | ANALOG4, VOICE |
+| **6** | FMTONE, WAV, GOLANA |
+| **4** | VOICE |
 | **3** | ENS |
 
 In **MONO** or **LEGATO** a track plays one note at a time; **UNISON** stacks detuned voices within the same cap. When more than one synth track sounds at once, the pool is shared.

@@ -21,19 +21,15 @@ enum { V_POLY, V_MONO, V_LEGATO, V_UNISON };   /* P_VOICE */
  * VOICE (eng_formant.c), DRAWBAR and NOISE. A clean slate: the stores of SLOOP itself are not read (project.c FUN7,
  * upreset.c UP_VER). The retired engines' code that other parts still need (eng_sample.c: the drum kits' samples, the
  * user sample slots; eng_fm6.c: compiled, never played) stays; their indices are past NENGINES, which no track holds. */
-#define NENGINES 12u
-#define ENGI_ANA4 0u
-#define ENGI_STAT 1u             /* sloop_custom m2k-fm: MONO2K's FM+STAT in FMTONE's place; FM+PAR and FM+DYN appended (eng_m2k.c) */
-#define ENGI_SAW 2u              /* SAW PULS ENS WAV: 2..5 (eng_m2k.c m2k_kind) */
-#define ENGI_PULS 3u
-#define ENGI_ENS 4u
-#define ENGI_WAV 5u
-#define ENGI_LOFI 6u
-#define ENGI_FORMANT 7u
-#define ENGI_DRAWBAR 8u
-#define ENGI_NOISE 9u
-#define ENGI_PAR 10u
-#define ENGI_DYN 11u
+#define NENGINES 8u
+#define ENGI_FMTONE 0u           /* sloop_custom: ANALOG4, SAW and PULS are retired */
+#define ENGI_ENS 1u              /* ENS WAV: 1..2 (eng_m2k.c m2k_kind) */
+#define ENGI_WAV 2u
+#define ENGI_LOFI 3u
+#define ENGI_FORMANT 4u
+#define ENGI_DRAWBAR 5u
+#define ENGI_NOISE 6u
+#define ENGI_GOLANA 7u          /* sloop_custom: Golana's oscillator section (eng_golana.c, Gadlele) */
 #define ENGI_FM6 0xF0u           /* (retired: no track's engine; eng_fm6.c is compiled for the editor's FM6 bank only) */
 #define ENGI_GRAIN 0xF1u
 #define ENGI_PHYS 0xF2u
@@ -175,7 +171,7 @@ typedef struct {
     int8_t x[8];                 /* more of the patch: up to 4 (track parameter id + 1, value) pairs, 0 = none
                                   * (glide, pitch / LFO modulation, voice mode...: preset_extras) */
     int8_t flt[4];               /* sloop_custom: the track FILTER the sound brings: FILT, RES, KEY, DIST (0 = flat: P_TFLT,
-                                  * P_TRES, P_TKEY, P_TDIST; MONO2K's FM sounds carry theirs, tools/m2k_fm_presets.py) */
+                                  * P_TRES, P_TKEY, P_TDIST; melodee's FMTONE sounds carry theirs) */
 } preset_t;
 #define FX(d, c, dl, r) .fx = {(d) + 1, (c) + 1, (dl) + 1, (r) + 1}
 #define ARP(m, rt, o, g) .arp = {(m) + 1, (rt) + 1, (o) + 1, (g) + 1}

@@ -298,6 +298,7 @@ int main(int argc, char **argv)
     fm1_in.notes = 0; frame(); check(punch.req == -1, "black key up: the mix comes back");
     encs[panel.enc[EN_K2]] = 10; frame(); check(song.g[G_DUST] > 0, "FX + KNOB 2: DUST");
     encs[panel.enc[EN_K1]] = -10; frame(); check(song.g[G_FILT] < 0, "FX + KNOB 1: the filter (low-pass)");
+    TSEL->p[P_TFLT] = 0;   /* (the default sound brings its own filter) */
     encs[panel.enc[EN_K4]] = 12; frame(); check(TSEL->p[P_TFLT] > 0 && song.g[G_FILT] < 0, "FX + KNOB 4: the selected track's FILTER (high-pass)");
     ui.force = 1; frame(); ppm("layer-punch-trkflt");
     {   /* (2.7.2) SELECT in the FX layer sets the punch-in FX fade (not the tempo); shown top right */
@@ -1669,32 +1670,32 @@ int main(int argc, char **argv)
         check(ins_d, "the drum track: the INSERT page in FX");
         go_home(); frames(16);
 
-        /* sloop_custom: an engine's own pages (params.c page_t.own): ANALOG4's FILTER 1, none on the others */
-        song.sel = 0; set_engine_of(&trk[0], ENGI_ANA4); trk[0].engine = trk[0].eng_req; go_home(); frame();
-        WALK(FAM_EDIT, "FILTER 1", flt_a);
+        /* sloop_custom: an engine's own pages (params.c page_t.own): GOLANA's MIXER, FMTONE's FILTER, none on ENS */
+        song.sel = 0; set_engine_of(&trk[0], ENGI_GOLANA); trk[0].engine = trk[0].eng_req; go_home(); frame();
+        WALK(FAM_EDIT, "MIXER", flt_a);
         open_family(FAM_EDIT); frame();
-        for (j = 0; j < 30u && strcmp(PAGES[ui.page].title, "FILTER 1"); j++) { encs[panel.enc[EN_SELECT]] = 1; frame(); }
+        for (j = 0; j < 30u && strcmp(PAGES[ui.page].title, "MIXER"); j++) { encs[panel.enc[EN_SELECT]] = 1; frame(); }
         ui.force = 1; frame(); ppm("page-filter");
-        {   /* on EDIT > FILTER 1, ALGORITHM to a track that is not ANALOG4: not left on a page it does not have */
+        {   /* on EDIT > MIXER, ALGORITHM to a track that is not GOLANA: not left on a page it does not have */
             int16_t bpm0 = song.g[G_BPM];
             encs[panel.enc[EN_ALGO]] = 1; frames(2);
-            check(song.sel == 1u && trk[1].eng_req != ENGI_ANA4 && PAGES[ui.page].fam == FAM_EDIT &&
-                  strcmp(PAGES[ui.page].title, "FILTER 1") && page_shown(cur_page()),
-                  "EDIT > FILTER 1, then a track that is not ANALOG4: another EDIT page it has, not FILTER 1");
+            check(song.sel == 1u && trk[1].eng_req != ENGI_GOLANA && PAGES[ui.page].fam == FAM_EDIT &&
+                  strcmp(PAGES[ui.page].title, "MIXER") && page_shown(cur_page()),
+                  "EDIT > MIXER, then a track that is not GOLANA: another EDIT page it has, not MIXER");
             encs[panel.enc[EN_SELECT]] = 1; frame();
             check(song.g[G_BPM] == bpm0, "  and SELECT turns pages there, not the tempo");
             song.sel = 0; go_home(); frame();
         }
-        set_engine_of(&trk[0], ENGI_DYN); trk[0].engine = trk[0].eng_req; go_home(); frame();
-        WALK(FAM_EDIT, "FILTER 1", flt_o);
+        set_engine_of(&trk[0], ENGI_FMTONE); trk[0].engine = trk[0].eng_req; go_home(); frame();
+        WALK(FAM_EDIT, "MIXER", flt_o);
         {
             int flt_f = 0;
             WALK(FAM_EDIT, "FILTER", flt_f);
-            check(flt_a && !flt_o && !flt_f, "EDIT: ANALOG4's FILTER 1 on ANALOG4 only; no engine pages on DYN");
-            set_engine_of(&trk[0], ENGI_SAW); trk[0].engine = trk[0].eng_req; go_home(); frame();
+            check(flt_a && !flt_o && flt_f, "EDIT: GOLANA's MIXER on GOLANA only; FMTONE's FILTER on FMTONE");
+            set_engine_of(&trk[0], ENGI_ENS); trk[0].engine = trk[0].eng_req; go_home(); frame();
             flt_f = 0;
             WALK(FAM_EDIT, "FILTER", flt_f);
-            check(!flt_f, "EDIT: no FILTER page on SAW (the track's FX > FILTER instead)");
+            check(!flt_f, "EDIT: no FILTER page on ENS (the track's FX > FILTER instead)");
         }
         set_engine_of(&trk[0], TRK_DEF[0][0]); apply_preset_to(&trk[0], TRK_DEF[0][1]); trk[0].engine = trk[0].eng_req;
         go_home(); frames(16);

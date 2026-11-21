@@ -362,11 +362,12 @@ static void unison_spread(track_t *t, voice_t *v, uint32_t r)
     const engine_t *e = ENGINES[t->engine];
     /* (after Clipper 1.2) each engine moves all its oscillators (and reseeds its noise): ph[0] alone left the others in
      * phase (ANALOG's osc 2, TRIO's 2 and 3, DIGITAL's and FM6's operators, the subs, SAMPLE's start...) */
-    if (e == &ENG_ANA4)
-        a4_spread(t, v, r);
-    else if (e == &ENG_M2K_SAW || e == &ENG_M2K_PULS || e == &ENG_M2K_ENS || e == &ENG_M2K_WAV || e == &ENG_M2K_STAT ||
-             e == &ENG_M2K_PAR || e == &ENG_M2K_DYN)
+    if (e == &ENG_FMTONE)
+        fmt_spread(t, v, r);
+    else if (e == &ENG_M2K_ENS || e == &ENG_M2K_WAV)
         m2k_spread(t, v, r);
+    else if (e == &ENG_GOLANA)
+        gol_spread(t, v, r);
     else if (e == &ENG_LOFI)
         lofi_spread(t, v, r);
     else if (e == &ENG_NOISE)

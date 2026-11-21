@@ -118,9 +118,9 @@ UI_SMALL static uint32_t param_icon(const param_desc_t *d, int32_t v)
 UI_SMALL static uint32_t engine_icon(const char *name)
 {
     static const icon_map_t M[] = {
-        {"ANALOG4", ICON_TRIO}, {"STAT", ICON_ALGORITHM}, {"PAR", ICON_ALGORITHM}, {"DYN", ICON_ALGORITHM}, {"SAW", ICON_W_SAW}, {"PULS", ICON_PULSE},
+        {"FMTONE", ICON_ALGORITHM},
         {"ENS", ICON_CHORUS}, {"WAV", ICON_WAVE}, {"LOFI", ICON_BITS}, {"VOICE", ICON_MOUTH},
-        {"WHEEL", ICON_DRAWBAR}, {"NOISE", ICON_NOISE},   /* (sloop_custom's engines) */
+        {"WHEEL", ICON_DRAWBAR}, {"NOISE", ICON_NOISE}, {"GOLANA", ICON_WAVE},   /* (sloop_custom's engines) */
         {"DRUM", ICON_DRUM},
     };
     uint32_t i;

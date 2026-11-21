@@ -38,7 +38,7 @@ static void reset(uint32_t ti, int voice)
     memset(&drums, 0, sizeof drums);
     drums.set = -2;
     song.g[G_BPM] = 120;
-    host_preset(&trk[ti], ti == 0 ? 0 : ENGI_PAR, ti == 0 ? 0 : 1);
+    host_preset(&trk[ti], ti == 0 ? ENGI_GOLANA : ENGI_FMTONE, 0);
     if (voice >= 0) trk[ti].p[P_VOICE] = (int16_t)voice;
     trk[ti].p[P_SLEN] = 16;
     song.sel = (uint8_t)ti;

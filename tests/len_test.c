@@ -164,7 +164,7 @@ int main(void)
     uint32_t n, r, g, SB;
     host_tracks_init();
     t = &trk[1];
-    host_preset(t, ENGI_PAR, 1);                           /* DIGITAL RHODES: POLY */
+    host_preset(t, 1, 0);                           /* DIGITAL RHODES: POLY */
     t->p[P_SLEN] = 16;
     song.sel = 1;
     SB = div_samples(2) / CTL;

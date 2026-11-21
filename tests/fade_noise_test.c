@@ -10,7 +10,7 @@
  * left is the error. Checked between -70 and -30 dBFS (808 SLIDE: -40): its rms under 1 LSB (an ideal 16-bit rounding:
  * 0.29; it was 5 to 6.5), and the THD+N of the window nearest -60 dBFS under -28 dB (it was -12 to -19). Cases: a
  * clean sine (no drive, no FX) at MASTER 4096 and at 2048 (the power-on level), the same through USB AUDIO = FULL
- * (MASTER ignored), and ANALOG4's SIN with its DRV and DIST 30 at 4096 (sloop_custom; ANALOG's 808 SLIDE before).
+ * (MASTER ignored), and GOLANA's SINE with its FOLD 40 and DIST 30 at 4096 (sloop_custom; ANALOG's 808 SLIDE before).
  * Exit status: the number of failed checks. */
 #define main hostsim_main
 #include "hostsim.c"
@@ -92,16 +92,14 @@ static void run(const char *name, int sine, int32_t master, int usb, int H, int 
         memset(&t->v[i], 0, sizeof t->v[i]);
     t->nmono = 0, t->mono_note = 0;
     song.master_q12 = (uint32_t)master;
-    /* (sloop_custom) ANALOG4 (its osc 1 in v->ph[0]): SIN alone, both filters open, no envelope on them, no key; the
-     * driven case: its DRV 40 and the track's DIST 30 (ANALOG's 808 SLIDE before) */
-    host_preset(t, ENGI_ANA4, 0);
-    t->p[P_E0] = 0, t->p[P_E1] = 64, t->p[P_E2] = 0, t->p[P_E3] = 0, t->p[P_E4] = 0, t->p[P_E5] = 64;
+    /* (sloop_custom) GOLANA: OSC 1 SINE alone, no sub, drift or LFO, the track filter flat; the driven case: its FOLD 40
+     * and the track's DIST 30 (ANALOG's 808 SLIDE before) */
+    host_preset(t, ENGI_GOLANA, 0);
+    t->p[P_E0] = 3, t->p[P_E1] = 0, t->p[P_E2] = 0, t->p[P_E3] = 0, t->p[P_E4] = 0, t->p[P_E5] = 0;
     t->p[P_E6] = 0, t->p[P_E7] = 0, t->p[P_ED_PIT] = 0, t->p[P_ED_FLT] = 0, t->p[P_ED_SHP] = 0;   /* (LEGATO, the preset's: v[0]) */
-    t->p[P_FM1_LEVEL] = 64, t->p[P_FM2_LEVEL] = 0,   /* (LEV1 64: under filter 1's saturation, a clean sine) */
-    t->p[P_FM3_ATK] = 0, t->p[P_FM3_DEC] = 0, t->p[P_FM3_SUS] = 0;
-    t->p[P_FM3_LEVEL] = 127, t->p[P_FM3_REL] = 0, t->p[P_FM4_DEC] = 0, t->p[P_FM4_SUS] = 0, t->p[P_FM4_LEVEL] = 127;
-    t->p[P_FM4_REL] = 0, t->p[P_FM2_REL] = 0, t->p[P_FTYPE] = 0;
-    t->p[P_FM4_ATK] = sine ? 0 : 40, t->p[P_DIST] = sine ? 0 : 30;
+    t->p[P_FM1_ATK] = 32, t->p[P_FM1_DEC] = 0, t->p[P_FM1_SUS] = 0;
+    t->p[P_FM1_REL] = sine ? 0 : 40, t->p[P_FM1_LEVEL] = 0, t->p[P_FM2_ATK] = 0, t->p[P_FM2_DEC] = 0;
+    t->p[P_TFLT] = t->p[P_TRES] = t->p[P_TKEY] = t->p[P_TDIST] = 0, t->p[P_DIST] = sine ? 0 : 30;
     t->p[P_ATK] = 0, t->p[P_DEC] = 118, t->p[P_SUS] = 0, t->p[P_REL] = 60;
     t->p[P_ED_FX] = sine ? 23 : -4;                    /* (the sine as loud as ANALOG's SIN was: the top of the trim; the */
     if (!sine)                                         /* driven one hot into DIST, then down, as 808 SLIDE's -4) */
@@ -146,8 +144,7 @@ int main(void)
     run("sine, MASTER 4096", 1, 4096, 0, 1, -30);
     run("sine, MASTER 2048 (power-on)", 1, 2048, 0, 1, -30);
     run("sine, USB AUDIO = FULL", 1, 2048, 1, 1, -30);
-    run("ANALOG4 SIN, DRV 40, DIST 30, MASTER 4096", 0, 4096, 0, 15, -40);   /* (from -40: its drive's own grit, -58 dB under
-                                                         * the note, follows the note: eng_analog.c, not the fade) */
+    run("GOLANA SINE, FOLD 40, DIST 30, MASTER 4096", 0, 4096, 0, 15, -40);   /* (from -40: its fold's own grit follows the note, not the fade) */
     printf("fade: %d failed\n", fails);
     return fails;
 }
