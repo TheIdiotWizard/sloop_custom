@@ -263,7 +263,7 @@ static void job_song(const job_t *j)
     host_tracks_init();
     song.g[G_BPM] = 120;
     host_preset(t1, ENGI_ANA4, 3);                     /* (sloop_custom) ANALOG4 ACID, FMTONE PLUCK LEAD, LOFI GAME LEAD */
-    host_preset(t2, ENGI_FMTONE, 5);
+    host_preset(t2, ENGI_DYN, 5);
     host_preset(t3, ENGI_LOFI, 0);
     for (i = 0; i < 16u; i++) {
         uint8_t n = ACID[i];
@@ -521,7 +521,7 @@ static void midi_pkt(uint32_t st, uint32_t d1, uint32_t d2)   /* as usb.c: the q
  * (a stolen voice fades out), the VOICE part at most 4; then all off: every voice free */
 static int chk_budget(char *msg, uint32_t n)
 {
-    static const uint8_t E[3] = {ENGI_ANA4, ENGI_FMTONE, ENGI_FORMANT};   /* (sloop_custom: VOICE is ENGI_FORMANT) */
+    static const uint8_t E[3] = {ENGI_ANA4, ENGI_DYN, ENGI_FORMANT};   /* (sloop_custom: VOICE is ENGI_FORMANT) */
     uint8_t held[NPART][128] = {{0}};
     uint32_t p, k, worst = 0, vworst = 0, fading = 0, kills0 = voice_kills;
     host_tracks_init();
@@ -815,8 +815,8 @@ int main(int argc, char **argv)
     uint32_t jobs_at_once = getenv("JOBS") ? (uint32_t)atoi(getenv("JOBS")) : 8u;
     static const char *const MN[4] = {"POLY", "MONO", "LEGATO", "UNISON"};
     static const char *const SN[6] = {"dry", "chorus", "delay", "reverb", "all", "dist"};
-    static const uint8_t MODE_E[3][2] = {{ENGI_ANA4, 0}, {ENGI_FMTONE, 1}, {ENGI_FORMANT, 0}};   /* engine, preset */
-    static const uint8_t SEND_E[2][2] = {{ENGI_ANA4, 1}, {ENGI_FMTONE, 0}};   /* ANALOG4 PWM LEAD, FMTONE TINE EP */
+    static const uint8_t MODE_E[3][2] = {{ENGI_ANA4, 0}, {ENGI_DYN, 1}, {ENGI_FORMANT, 0}};   /* engine, preset */
+    static const uint8_t SEND_E[2][2] = {{ENGI_ANA4, 1}, {ENGI_DYN, 0}};   /* ANALOG4 PWM LEAD, FMTONE TINE EP */
     static uint8_t cpu_parts[MAXJ][NPART + 1][3];
     static kv_t gold[MAXJ], cpu[MAXJ];
     uint32_t ng, nc, e, pi, i, g0, g1, c0, c1, k0, ncpu = 0;
@@ -908,7 +908,7 @@ int main(int argc, char **argv)
                                                                  * NOISE RADIO: the heaviest of each */
         memset(cpu_parts[ncpu], 0, sizeof cpu_parts[ncpu]);
         cpu_parts[ncpu][0][0] = ENGI_ANA4, cpu_parts[ncpu][0][1] = 6, cpu_parts[ncpu][0][2] = 8;
-        cpu_parts[ncpu][1][0] = ENGI_FMTONE, cpu_parts[ncpu][1][1] = 6, cpu_parts[ncpu][1][2] = 8;
+        cpu_parts[ncpu][1][0] = ENGI_DYN, cpu_parts[ncpu][1][1] = 6, cpu_parts[ncpu][1][2] = 8;
         cpu_parts[ncpu][2][0] = ENGI_NOISE, cpu_parts[ncpu][2][1] = 9, cpu_parts[ncpu][2][2] = 8;
         cpu_parts[ncpu][NPART][0] = 1;
         j->parts = (const uint8_t (*)[3])cpu_parts[ncpu++];

@@ -95,13 +95,11 @@ static uint32_t uni_turns(uint32_t r, int32_t p16, int32_t d16)
 #include "eng_fm6.c"            /* FM6: 6-operator FM, msfa ported (fm6_core.c, Apache-2.0); SLOOP 2.4 (not played) */
 #include "eng_noise.c"          /* NOISE: from Felucca 1.0; SLOOP 2.5 */
 #include "eng_ana4.c"           /* ANALOG4: Mini-Tone's (Stephane Schmitz) */
-#include "eng_fmtone.c"         /* FMTONE: Mini-Tone's */
 #include "eng_m2k.c"            /* SAW PULS ENS WAV: MONO2K's machines (Sequencist), Melodee Custom's port */
 
 typedef union {
     drw_part_t drawbar;                  /* eng_drawbar.c: the part's wheels, percussion and rotary (sloop-lab) */
     fm6_part_t fm6;                      /* eng_fm6.c: six notes and the operator buses (compiled, not played) */
-    fmt_slot_t fmtone[FMT_POLY];         /* eng_fmtone.c: its voices (Mini-Tone: ENG_MEM) */
     m2k_part_t m2k;                      /* eng_m2k.c: the machines of its voices, ENS's chorus line */
 } eng_arena_t;
 static eng_arena_t eng_arena[NPART] __attribute__((section(".pool")));
@@ -130,7 +128,7 @@ static void *eng_arena_of(const track_t *t, uint32_t eng)
 
 static const engine_t *const ENGINES[NENGINES] = {
     &ENG_ANA4,                   /* 0 ENGI_ANA4 */
-    &ENG_FMTONE,                 /* 1 ENGI_FMTONE */
+    &ENG_M2K_STAT,               /* 1 ENGI_STAT (MONO2K's FM+STAT; the slot of FMTONE) */
     &ENG_M2K_SAW,                /* 2 ENGI_SAW */
     &ENG_M2K_PULS,               /* 3 ENGI_PULS */
     &ENG_M2K_ENS,                /* 4 ENGI_ENS */
@@ -139,6 +137,8 @@ static const engine_t *const ENGINES[NENGINES] = {
     &ENG_FORMANT,                /* 7 ENGI_FORMANT (VOICE) */
     &ENG_DRAWBAR,                /* 8 ENGI_DRAWBAR */
     &ENG_NOISE,                  /* 9 ENGI_NOISE */
+    &ENG_M2K_PAR,                /* 10 ENGI_PAR (MONO2K's FM+PAR) */
+    &ENG_M2K_DYN,                /* 11 ENGI_DYN (MONO2K's FM+DYN) */
 };
 
 /* sloop_custom: UNISON's start-phase spread (voice.c unison_spread, after Clipper 1.2) for the engines ported here; their
@@ -151,20 +151,6 @@ static void a4_spread(track_t *t, voice_t *v, uint32_t r)
     v->ph[1] += uni_turns(r, v->pitch16, t->p[P_E6] * 16);
     v->ph[2] += r1 >> 1;
     v->s[7] = (int32_t)(((uint32_t)v->s[7] ^ (r * 0x9E3779B9u)) | 1u);   /* the noise from its own place */
-}
-static void fmt_spread(track_t *t, voice_t *v, uint32_t r)
-{
-    fmt_slot_t *S = fmt_slot_of(t, v);
-    const int16_t *p = t->p;
-    uint32_t rt[4], k;
-    if (!S)
-        return;
-    rt[0] = FMT_RATIO_Q8[clamp(p[P_E1], 0, FMT_NRATIO - 1)];   /* C, A, B1, B2 as fmt_render: their ratios, Q8 */
-    rt[1] = FMT_RATIO_Q8[clamp(p[P_E2], 0, FMT_NRATIO - 1)];
-    rt[2] = FMT_RATIO_Q8[clamp(p[P_E3], 0, FMT_NRATIO - 1)];
-    rt[3] = rt[2] * 2u > 4096u ? 4096u : rt[2] * 2u;
-    for (k = 0; k < 4u; k++)
-        S->ph[k] += (uint32_t)(((uint64_t)r * rt[k]) >> 8);
 }
 static void m2k_spread(track_t *t, voice_t *v, uint32_t r)
 {

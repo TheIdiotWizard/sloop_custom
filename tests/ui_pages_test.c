@@ -1669,7 +1669,7 @@ int main(int argc, char **argv)
         check(ins_d, "the drum track: the INSERT page in FX");
         go_home(); frames(16);
 
-        /* sloop_custom: an engine's own pages (params.c page_t.own): ANALOG4's FILTER 1, FMTONE's FILTER, none on SAW */
+        /* sloop_custom: an engine's own pages (params.c page_t.own): ANALOG4's FILTER 1, none on the others */
         song.sel = 0; set_engine_of(&trk[0], ENGI_ANA4); trk[0].engine = trk[0].eng_req; go_home(); frame();
         WALK(FAM_EDIT, "FILTER 1", flt_a);
         open_family(FAM_EDIT); frame();
@@ -1685,12 +1685,12 @@ int main(int argc, char **argv)
             check(song.g[G_BPM] == bpm0, "  and SELECT turns pages there, not the tempo");
             song.sel = 0; go_home(); frame();
         }
-        set_engine_of(&trk[0], ENGI_FMTONE); trk[0].engine = trk[0].eng_req; go_home(); frame();
+        set_engine_of(&trk[0], ENGI_DYN); trk[0].engine = trk[0].eng_req; go_home(); frame();
         WALK(FAM_EDIT, "FILTER 1", flt_o);
         {
             int flt_f = 0;
             WALK(FAM_EDIT, "FILTER", flt_f);
-            check(flt_a && !flt_o && flt_f, "EDIT: ANALOG4's FILTER 1 on ANALOG4 only; FMTONE's FILTER on FMTONE");
+            check(flt_a && !flt_o && !flt_f, "EDIT: ANALOG4's FILTER 1 on ANALOG4 only; no engine pages on DYN");
             set_engine_of(&trk[0], ENGI_SAW); trk[0].engine = trk[0].eng_req; go_home(); frame();
             flt_f = 0;
             WALK(FAM_EDIT, "FILTER", flt_f);

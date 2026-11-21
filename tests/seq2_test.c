@@ -1989,7 +1989,7 @@ static void t_midicc(void)
     song.g[G_ROUTE] = 0;
     a = &trk[0]; b = &trk[1];
     a->eng_req = a->engine = ENGI_NOISE;                /* (sloop_custom) NOISE: FREQ (EDIT 3) and RES */
-    b->eng_req = b->engine = ENGI_FMTONE;               /* FMTONE: neither an EDIT knob */
+    b->eng_req = b->engine = ENGI_DYN;               /* FMTONE: neither an EDIT knob */
     for (i = 0; i < 8u; i++)
         if (str_eq(ENGINES[ENGI_NOISE]->edit[i].label, "RES"))
             res = i;

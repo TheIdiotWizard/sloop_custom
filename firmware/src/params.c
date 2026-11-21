@@ -64,8 +64,8 @@ static const char *const N_SLCR[] = {"OFF", "GATE", "STUT"};             /* SL_O
 static const char *const N_SLDIV[] = {"1/8", "1/16", "1/32", "8T", "16T", "32T"};   /* SL_DEN */
 static const char *const N_CHORD[] = {"OFF", "TRIAD", "7TH", "9TH", "SUS4", "POWER"};   /* seq.c CHORD_DEG */
 static const char *const N_ROLL[] = {"1/8", "1/16", "1/32", "32T", "1/64"};   /* seq.c ROLL_DEN */
-static const char *const N_ENGNAME[] = {"ANALOG4", "FMTONE", "SAW", "PULS", "ENS", "WAV", "LOFI", "VOICE", "WHEEL",
-                                        "NOISE"};   /* sloop_custom: core.h ENGI_* (engines.c ENGINES[]) */
+static const char *const N_ENGNAME[] = {"ANALOG4", "STAT", "SAW", "PULS", "ENS", "WAV", "LOFI", "VOICE", "WHEEL",
+                                        "NOISE", "PAR", "DYN"};   /* sloop_custom: core.h ENGI_* (engines.c ENGINES[]) */
 _Static_assert(NELEM(N_ENGNAME) == NENGINES, "an engine name per engine");
 
 #define PD(l, f, mn, mx, df) {l, f, mn, mx, df, 0, 0}
@@ -443,13 +443,6 @@ static const page_t PAGES[] = {
     {"F1 ENV", FAM_EDIT, SC_TRACK, GR_NONE, {P_FM1_ATK, P_FM1_DEC, P_FM1_SUS, P_FM1_REL}, ENGI_ANA4 + 1u},
     {"F1 AMT", FAM_EDIT, SC_TRACK, GR_NONE, {P_FM3_SUS, P_FM4_SUS, 0xFF, 0xFF}, ENGI_ANA4 + 1u},
     {"ENV 2", FAM_EDIT, SC_TRACK, GR_NONE, {P_FM2_ATK, P_FM2_DEC, P_FM2_SUS, P_FM2_REL}, ENGI_ANA4 + 1u},
-    /* FMTONE's (Mini-Tone's, eng_fmtone.c): operator A's and B's envelopes, their delays and key tracking, the fine
-     * tuning, the voice filter (TYPE CUT RES KEY, P_FTYPE its TYPE) */
-    {"A ENV", FAM_EDIT, SC_TRACK, GR_NONE, {P_FM1_ATK, P_FM1_DEC, P_FM1_SUS, P_FM1_LEVEL}, ENGI_FMTONE + 1u},
-    {"B ENV", FAM_EDIT, SC_TRACK, GR_NONE, {P_FM2_ATK, P_FM2_DEC, P_FM2_SUS, P_FM2_LEVEL}, ENGI_FMTONE + 1u},
-    {"DEL TRK", FAM_EDIT, SC_TRACK, GR_NONE, {P_FM1_REL, P_FM2_REL, P_FM3_ATK, P_FM3_DEC}, ENGI_FMTONE + 1u},
-    {"FINE", FAM_EDIT, SC_TRACK, GR_NONE, {P_FM3_REL, P_FM4_ATK, P_FM4_DEC, 0xFF}, ENGI_FMTONE + 1u},
-    {"FILTER", FAM_EDIT, SC_TRACK, GR_NONE, {P_FTYPE, P_FM4_SUS, P_FM4_REL, P_FM4_LEVEL}, ENGI_FMTONE + 1u},
     {"VOICE", FAM_EDIT, SC_TRACK, GR_NONE, {P_VOICE, P_GLIDE, P_GLMODE, P_PRIO}},
     {"VOICE 2", FAM_EDIT, SC_TRACK, GR_NONE, {P_ALLOC, P_DETUNE, P_PAN, P_MUTE}},
     {"GLOBAL", FAM_GLO, SC_GLOBAL, GR_NONE, {G_BPM, G_SWING, G_CLOCK, G_TUNE}},

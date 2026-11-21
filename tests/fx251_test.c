@@ -581,7 +581,7 @@ static void t_throw(void)
 }
 static void t_clicks(void)
 {
-    static const uint8_t E[5][3] = {{ENGI_ANA4, 2, 7}, {ENGI_DRAWBAR, 0, 3}, {ENGI_FMTONE, 3, 1}, {ENGI_LOFI, 4, 1},
+    static const uint8_t E[5][3] = {{ENGI_ANA4, 2, 7}, {ENGI_DRAWBAR, 0, 3}, {ENGI_DYN, 3, 1}, {ENGI_LOFI, 4, 1},
                                     {ENGI_ENS, 4, 2}};   /* engine, from, to (sloop_custom's engines) */
     double worst = 0, base, sw;
     uint32_t k;

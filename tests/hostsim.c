@@ -188,7 +188,7 @@ static int tracks_demo(const char *dir, const char *name, uint32_t solo)
     host_tracks_init();
     song.g[G_BPM] = 120;
     host_preset(t1, ENGI_ANA4, 4);                  /* (sloop_custom) ANALOG4 WARM PAD, FMTONE TINE EP (POLY: the keys' */
-    host_preset(t2, ENGI_FMTONE, 0);                /* chord), LOFI GAME LEAD (the lead, as before) */
+    host_preset(t2, ENGI_DYN, 0);                /* chord), LOFI GAME LEAD (the lead, as before) */
     host_preset(t3, ENGI_LOFI, 0);
     for (i = 0; i < 16u; i++) {
         uint8_t n = ACID[i];
@@ -760,7 +760,7 @@ static int tracks_test(const char *dir)
     for (e = 0; e < NENGINES; e++)
         printf(" %s %s %.1f%s", ENGINES[e]->name, ENGINES[e]->presets[heavy[e]].name, best_e[e], e + 1u < NENGINES ? "," : "\n");
     {   /* (sloop_custom) FMTONE, ANALOG4, VOICE (their heaviest presets) at once: 3 + 3 + 2 notes = the budget of 8 */
-        enum { EA = ENGI_FMTONE, EB = ENGI_ANA4, EV = ENGI_FORMANT };
+        enum { EA = ENGI_DYN, EB = ENGI_ANA4, EV = ENGI_FORMANT };
         uint8_t parts[NPART][3] = {{EA, (uint8_t)heavy[EA], 3}, {EB, (uint8_t)heavy[EB], 3}, {EV, (uint8_t)heavy[EV], 2}};
         uint8_t full[NPART][3] = {{EA, (uint8_t)heavy[EA], 8}, {EB, (uint8_t)heavy[EB], 8}, {EV, (uint8_t)heavy[EV], 4}};
         uint8_t vv[NPART][3] = {{EV, (uint8_t)heavy[EV], 4}, {EV, (uint8_t)heavy[EV], 4}, {0, 0, 0}};

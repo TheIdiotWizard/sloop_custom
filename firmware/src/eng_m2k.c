@@ -27,6 +27,7 @@
  * WAV voice told by its level (Melodee's voice_was). Presets: SAW Melodee Custom 1.2.0's (before any filter), PULS,
  * ENS, WAV as Melodee Custom ships them. */
 #include "m2k_tables.h"
+#include "m2k_fm_tables.h"           /* sloop_custom: the FM machines' (STAT, PAR, DYN) */
 
 #define M2K_POLY 6u                  /* voices a part (POLY, UNISON) */
 #define M2K_ENS_POLY 3u              /* ENS: up to four saw pairs a voice */
@@ -34,9 +35,9 @@
 #define M2K_ENS_LEN 1024u            /* ENS's chorus line: 46 ms at half rate */
 #define M2K_ENS_GAIN 7119            /* a voice against the others' levels (MONO2K: calibrated, chain_ens20) */
 #define M2K_CLAMP(v, lo, hi) ((v) < (lo) ? (lo) : (v) > (hi) ? (hi) : (v))
-enum { M2K_SAW, M2K_ENS, M2K_PUL, M2K_PAR, M2K_DYN, M2K_WAV };    /* (engine - ENGI_SAW; PAR DYN retired, 1.2.6; PULS in
+enum { M2K_SAW, M2K_ENS, M2K_PUL, M2K_PAR, M2K_DYN, M2K_WAV, M2K_STAT };    /* (engine - ENGI_SAW; PAR DYN retired, 1.2.6; PULS in
                                                                   * STAT's place, 1.3.6) */
-#define M2K_KINDS 6
+#define M2K_KINDS 7
 
 #if !defined(__x86_64__) && !defined(__i386__) && !defined(__aarch64__) && !defined(__wasm__)   /* the FM-1 */
 #define M2K_MUL_FN static __attribute__((noinline))
@@ -97,7 +98,7 @@ static inline uint32_t m2k_inc(uint32_t inc, int32_t o) { return o ? m2k_mulu_hi
 typedef struct {
     uint32_t ph[7];
     int32_t ms[6];
-    uint32_t menv[1];                /* Q30 envelope from the note (WAV's) */
+    uint32_t menv[3];                /* Q30 envelopes from the note (WAV's; STAT's 1ENV, PAR's three, DYN's three) */
     uint32_t drng;                   /* SAW's drift */
     int32_t dcx, dcy;                /* sloop_custom: PULS's DC blocker (its last input, its output Q8) */
 } m2k_voice_t;
@@ -117,6 +118,9 @@ static int m2k_kind(const track_t *t)
     case ENGI_PULS: return M2K_PUL;
     case ENGI_ENS: return M2K_ENS;
     case ENGI_WAV: return M2K_WAV;
+    case ENGI_STAT: return M2K_STAT;
+    case ENGI_PAR: return M2K_PAR;
+    case ENGI_DYN: return M2K_DYN;
     default: return M2K_SAW;
     }
 }
@@ -124,7 +128,8 @@ static m2k_part_t *m2k_part_of(const track_t *t) { return (m2k_part_t *)eng_aren
 
 /* the controls with their modulation, Q8 (0 .. 127 x 256); FLT moves control flt, SHP control shp */
 /* the controls stored -64..63 (MONO2K's 64 the middle), per machine: bit k = EDIT k (TUNE; WAV's SCAN and DTUN) */
-static const uint8_t M2K_BIP[M2K_KINDS] = {[M2K_SAW] = 0x80, [M2K_ENS] = 0x80, [M2K_PUL] = 0x80, [M2K_WAV] = 0x22};
+static const uint8_t M2K_BIP[M2K_KINDS] = {[M2K_SAW] = 0x80, [M2K_ENS] = 0x80, [M2K_PUL] = 0x80, [M2K_WAV] = 0x22,
+                                        [M2K_STAT] = 0x80, [M2K_PAR] = 0x80, [M2K_DYN] = 0x80};
 static void m2k_params(const track_t *t, const vmod_t *m, int32_t *q, int flt, int shp)
 {
     uint32_t bip = M2K_BIP[m2k_kind(t)];
@@ -297,6 +302,162 @@ static void m2k_wav(m2k_voice_t *s, const int32_t *q, uint32_t base, int16_t *o)
     }
 }
 
+/* FM+DYN's depth at a point of its law (Q8 steps, 0..256), between table entries (rising, steps under 2^13) */
+static inline uint32_t m2k_fmd_at(int32_t v8)
+{
+    int32_t i = v8 >> 8;
+    if (i >= 256) return T_FMDV[256];
+    return T_FMDV[i] + (((T_FMDV[i + 1] - T_FMDV[i]) * (uint32_t)(v8 & 255)) >> 8);
+}
+/* sloop_custom: FM+STAT, FM+PAR and FM+DYN, MONO2K's FM machines (m2k_dsp.c mach_block, GPL-3.0-only), back after the
+ * retirement of 1.2.6, each voice with its own copy: a carrier on the note and two or three sine operators side by
+ * side, each machine's laws and tables MONO2K's (m2k_fm_tables.h). A ratio is the index of MONO2K's 24 (the
+ * ENUM: its stored value IS the table's index; MONO2K stores ENC(index), the same step). STAT: 1FRQ 1FIN 1ENV 1FB
+ * 2FRQ 2VOL TONE TUNE; PAR: 1FRQ 1ENV 2FRQ 2ENV 3FRQ 3ENV TONE TUNE; DYN: 1FRQ 1FEN 1VOL 1VEN 2FRQ 2ENV 2FB TUNE */
+static void m2k_stat(m2k_voice_t *s, const int32_t *q, uint32_t base, int16_t *o)
+{
+    /* after the Monomachine's FM+STAT, measured on its OS (tools/ref/chain_fm25.spec): a sine carrier on the note,
+     * half GND-SIN's level, phase-modulated by two sine operators side by side. Each operator's ratio on one 24-step
+     * table (1/64 .. 4); the first's fine-tuned by 0.75 .. 1.25 and fed back on itself; 1ENV its depth up to 64
+     * (index 0 .. 1.56), above 64 that depth decaying from the trig (10 s .. 5 ms); 2VOL the second's depth, the same
+     * law to 64 and on to index 14 at 127; both through a lowpass, TONE its cutoff (30 Hz at 0, 1.37 kHz at 64, open at
+     * 127), so a high modulator goes in shallower; TUNE +-2 semitones */
+    uint32_t inc = m2k_inc(base, QB(7) >> 7);
+    uint32_t r1 = m2k_mulu_hi(T_FMR24[Q7(0)], 192 * 256 + (uint32_t)q[1], 16);
+    uint32_t r2 = T_FMR24[Q7(4)];
+    uint32_t i1 = m2k_mulu_hi(inc, r1, 16), i2 = m2k_mulu_hi(inc, r2, 16);
+    int32_t env = q[2];
+    uint32_t k1 = m2k_tq32(T_FMB, env < 64 * 256 ? env : 64 * 256);
+    if (env >= 65 * 256) {         /* the depth from the trig, decaying (T_FMB[64] 32837: a word) */
+        k1 = (T_FMB[64] * (s->menv[0] >> 15)) >> 15;
+        s->menv[0] = m2k_mulu_hi(s->menv[0], m2k_tq32(T_FMEC, env - 64 * 256), 31);
+    }
+    uint32_t k2 = m2k_tq32(T_FMB, q[5]);
+    int32_t lp = m2k_tq16(T_FMLP, q[6]);
+    uint32_t kf = m2k_tq32(T_FMFB, q[3]);
+    for (int i = 0; i < M2K_SUB; i++) {
+        int32_t m1 = m2k_sinp(s->ph[1] + (uint32_t)((s->ms[0] + s->ms[1]) >> 1) * kf);   /* the low word alone */
+        s->ms[1] = s->ms[0];
+        s->ms[0] = m1;
+        /* each modulator through two one-poles at TONE's cutoff on its way to the carrier (at 64, 1.37 kHz: its
+         * depth measured 0.88 at 523 Hz, 0.30 at 2 kHz, 0.10 at 4 kHz; the feedback taken before), states Q23 */
+        uint64_t d = m2k_mul2_q15(lp, m1 * 256 - s->ms[2], m2k_sinp(s->ph[2]) * 256 - s->ms[4]);   /* the two firsts */
+        s->ms[2] += (int32_t)d;
+        s->ms[4] += (int32_t)(d >> 32);
+        d = m2k_mul2_q15(lp, s->ms[2] - s->ms[3], s->ms[4] - s->ms[5]);                       /* and seconds */
+        s->ms[3] += (int32_t)d;
+        s->ms[5] += (int32_t)(d >> 32);
+        uint32_t pm = (uint32_t)m2k_mul_sh(s->ms[3], (int32_t)k1, 8) + (uint32_t)m2k_mul_sh(s->ms[5], (int32_t)k2, 8);
+        o[i] = (int16_t)(m2k_sinp(s->ph[0] + pm) >> 1);
+        s->ph[0] += inc;
+        s->ph[1] += i1;
+        s->ph[2] += i2;
+    }
+}
+
+static void m2k_dyn(m2k_voice_t *s, const int32_t *q, uint32_t base, int16_t *o)
+{
+    /* after the Monomachine's FM+DYN, measured on its OS (tools/ref/chain_fm26.spec): FM+STAT's carrier and two
+     * operators side by side. The first's ratio 1FRQ / 64 (2 at 127), its frequency pushed from the trig by 1FEN (a
+     * note-independent amount added before the ratio, up over 64, a quarter of it down under) and falling back; 1VOL
+     * its depth, on FM+STAT's law; 1VEN over 64 pushes that law up from the trig by up to 128 of its steps, falling
+     * back on 1FEN's time (under 64's depth the push adds twice as fast, and stops there). The second's ratio
+     * (2FRQ / 64)^2 (4 at 127), 2ENV its depth or its decay as FM+STAT's 1ENV, 2FB its feedback as FM+STAT's 1FB;
+     * TUNE +-2 semitones */
+    uint32_t inc = m2k_inc(base, QB(7) >> 7);
+    int32_t f1 = q[0], f2 = q[4];              /* Q8: between steps too */
+    int32_t r1 = (f1 << 2) + (f1 > 126 * 256 ? (f1 - 126 * 256) << 2 : 0);   /* Q16, v / 64, 2 at 127 */
+    uint32_t r2 = f2 <= 126 * 256 ? ((uint32_t)f2 * (uint32_t)f2) >> 12          /* (v / 64)^2, 4 at 127 */
+                                  : (126u * 126u << 4) + ((508u << 4) * (uint32_t)(f2 - 126 * 256) >> 8);   /* to 128^2 */
+    int32_t fen = q[1], ven = q[3], env = q[5];
+    int64_t b1 = inc;
+    if (fen != 64 * 256) {
+        int32_t fe = T_FMFEN[fen >> 8];
+        if (fen & 255) fe += (int32_t)m2k_mul_sh(T_FMFEN[(fen >> 8) + 1] - fe, fen & 255, 8);
+        b1 += m2k_mul_sh(fe, (int32_t)(s->menv[1] >> 15), 15);
+        s->menv[1] = m2k_mulu_hi(s->menv[1], m2k_tq32(T_FMDEC, fen > 64 * 256 ? fen - 64 * 256 : 64 * 256 - fen), 31);
+    }
+    uint32_t i1 = (uint32_t)(int32_t)m2k_mul64_sh(b1, r1, 16), i2 = m2k_mulu_hi(inc, r2, 16);
+    int32_t vol8 = q[2];
+    int32_t k1 = (int32_t)m2k_fmd_at(vol8);
+    /* the envelope's 2^15 by a step count, a knob or 64's depth (T_FMDV[64] 32691) fits a word; the turn's not */
+    if (ven > 64 * 256) {          /* a push from the trig: 4 steps of the law a step, to 128 */
+        int32_t e8 = ((ven < 96 * 256 ? 4 * (ven - 64 * 256) : 128 * 256) * (int32_t)(s->menv[0] >> 15)) >> 15;
+        s->menv[0] = m2k_mulu_hi(s->menv[0], m2k_tq32(T_FMDEC, ven - 64 * 256), 31);
+        if (vol8 + e8 >= 64 * 256) {
+            k1 = (int32_t)m2k_fmd_at(vol8 + e8);
+        } else {                   /* under 64's depth it adds linearly, twice as fast, and stops there */
+            k1 += (int32_t)((T_FMDV[64] * (uint32_t)e8) >> 13);
+            if (k1 > (int32_t)T_FMDV[64]) k1 = (int32_t)T_FMDV[64];
+        }
+    } else if (ven < 64 * 256) {   /* a cut from the trig, 1/32 of 1VOL a step; on 64's depth, past half of it the
+                                    * operator turns over (to its whole depth, inverted, at 0) */
+        int32_t c = ((64 * 256 - ven) * (int32_t)(s->menv[0] >> 15)) >> 13;                /* Q15 of 1VOL */
+        s->menv[0] = m2k_mulu_hi(s->menv[0], m2k_tq32(T_FMDEC, 64 * 256 - ven), 31);
+        int32_t f = 32768 - c;                                               /* Q15, -1 .. 1 */
+        int32_t v8 = ((f < 0 && vol8 > 64 * 256 ? 64 * 256 : vol8) * f) >> 15;
+        if (v8 >= 64 * 256) {
+            k1 = (int32_t)m2k_fmd_at(v8);
+        } else if (vol8 >= 64 * 256) {
+            /* from over 64 the turn comes lower: at 32 steps from 64, at 0 from 127 */
+            int32_t h = vol8 - 64 * 256;
+            int32_t z = 32 * 256 - (int32_t)m2k_mul_sh(h * h, 2113, 26);
+            k1 = ((int32_t)T_FMDV[64] * (v8 - z)) >> 13;
+            if (k1 > (int32_t)T_FMDV[64]) k1 = (int32_t)T_FMDV[64];
+        } else {
+            k1 = (int32_t)m2k_mul_sh(k1, 2 * f - 32768, 15);
+        }
+    }
+    uint32_t k2 = m2k_fmd_at(env < 64 * 256 ? env : 64 * 256);
+    if (env >= 65 * 256) {
+        k2 = (T_FMDV[64] * (s->menv[2] >> 15)) >> 15;
+        s->menv[2] = m2k_mulu_hi(s->menv[2], m2k_tq32(T_FMEC, env - 64 * 256), 31);
+    }
+    uint32_t kf = m2k_tq32(T_FMFB, q[6]);
+    for (int i = 0; i < M2K_SUB; i++) {
+        int32_t m2 = m2k_sinp(s->ph[2] + (uint32_t)((s->ms[0] + s->ms[1]) >> 1) * kf);
+        s->ms[1] = s->ms[0];
+        s->ms[0] = m2;
+        uint32_t pm = (uint32_t)m2k_sinp(s->ph[1]) * (uint32_t)k1 + (uint32_t)m2 * k2;   /* the low words alone */
+        o[i] = (int16_t)(m2k_sinp(s->ph[0] + pm) >> 1);
+        s->ph[0] += inc;
+        s->ph[1] += i1;
+        s->ph[2] += i2;
+    }
+}
+
+static void m2k_par(m2k_voice_t *s, const int32_t *q, uint32_t base, int16_t *o)
+{
+    /* after the Monomachine's FM+PAR, measured on its OS (tools/ref/chain_fm26.spec): FM+STAT's carrier, lowpass and
+     * laws with three operators side by side, each on the 24 steps; an ENV up to 64 its depth, over 64 the depth of
+     * FM+STAT's 2VOL at that value, falling from the trig on 1ENV's time; TONE as FM+STAT's; TUNE +-2 semitones */
+    uint32_t inc = m2k_inc(base, QB(7) >> 7);
+    uint32_t ii[3], kk[3];
+    for (int j = 0; j < 3; j++) {
+        ii[j] = m2k_mulu_hi(inc, T_FMR24[Q7(2 * j)], 16);
+        int32_t env = q[2 * j + 1];
+        uint32_t k = m2k_tq32(T_FMB, env);
+        if (env >= 65 * 256) {
+            k = m2k_mulu_hi(k, s->menv[j] >> 15, 15);
+            s->menv[j] = m2k_mulu_hi(s->menv[j], m2k_tq32(T_FMEC, env - 64 * 256), 31);
+        }
+        kk[j] = k;
+    }
+    int32_t lp = m2k_tq16(T_FMLP, q[6]);
+    for (int i = 0; i < M2K_SUB; i++) {
+        uint32_t pm = 0;
+        for (int j = 0; j < 3; j++) {
+            int32_t *a = &s->ms[2 * j];
+            a[0] += (int32_t)m2k_mul_sh(m2k_sinp(s->ph[1 + j]) * 256 - a[0], lp, 15);
+            a[1] += (int32_t)m2k_mul_sh(a[0] - a[1], lp, 15);
+            pm += (uint32_t)m2k_mul_sh(a[1], (int32_t)kk[j], 8);
+            s->ph[1 + j] += ii[j];
+        }
+        o[i] = (int16_t)(m2k_sinp(s->ph[0] + pm) >> 1);
+        s->ph[0] += inc;
+    }
+}
+
 /* each machine's level into the voice (Q12: a voice's peak about 0.9 of full scale, no clip) and the
  * controls FLT and SHP move */
 static const struct { int16_t gain; int8_t flt, shp; } M2K_ROLE[M2K_KINDS] = {
@@ -304,6 +465,9 @@ static const struct { int16_t gain; int8_t flt, shp; } M2K_ROLE[M2K_KINDS] = {
     [M2K_ENS] = {6144, 3, 4},        /* FLT WAVE, SHP PW */
     [M2K_PUL] = {PULS_GAIN, 0, 4},   /* FLT UNIL, SHP PW */
     [M2K_WAV] = {4500, 1, 0},        /* FLT SCAN, SHP WAVE */
+    [M2K_STAT] = {6144, 6, 5},       /* FLT TONE, SHP 2VOL (MONO2K's carrier is half a sine: 0.75 of full scale here) */
+    [M2K_PAR] = {6144, 6, 1},        /* FLT TONE, SHP 1ENV */
+    [M2K_DYN] = {6144, 2, 5},        /* FLT 1VOL, SHP 2ENV */
 };
 
 
@@ -322,7 +486,7 @@ static void m2k_note_on(track_t *t, voice_t *v)
     uint32_t keep = s->ph[2], drng = s->drng;
     int32_t sweep = s->ms[4], was = v->env || v->env_out;   /* (voice.c voice_start: a sounding voice keeps its level) */
     memset(s, 0, sizeof *s);
-    s->menv[0] = 1u << 30;
+    s->menv[0] = s->menv[1] = s->menv[2] = 1u << 30;
     if (kind == M2K_WAV && was) s->ph[2] = keep;    /* a retrigger or steal: the sync's master runs on */
     s->drng = drng;
     if (kind == M2K_PUL && !t->p[P_E6]) s->ms[4] = sweep;     /* PWRS OFF: the sweep runs on */
@@ -346,6 +510,9 @@ static void m2k_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const v
         case M2K_SAW: m2k_saw(s, q, m->inc, note, o, (uint32_t)(v - t->v) + (uint32_t)(t - trk) * 16u); break;
         case M2K_ENS: m2k_ens(s, q, t->p, m->inc, o); break;
         case M2K_PUL: m2k_pul(s, q, m->inc, o); break;
+        case M2K_STAT: m2k_stat(s, q, m->inc, o); break;
+        case M2K_PAR: m2k_par(s, q, m->inc, o); break;
+        case M2K_DYN: m2k_dyn(s, q, m->inc, o); break;
         default: m2k_wav(s, q, m->inc, o); break;
         }
         for (uint32_t i = 0; i < M2K_SUB && b + i < n; i++) {
@@ -410,6 +577,10 @@ static const char *const N_M2K_ONOFF[3] = {"OFF", "ON", 0};
 #define M2K_PD(l, d) {l, F_INT, 0, 127, d, 0, 0}
 #define M2K_BI(l) {l, F_INT, -64, 63, 0, 0, 0}     /* (MONO2K's bipolar, its 64 the middle: m2k_params M2K_BIP) */
 #define M2K_PCH(l) {l, F_ENUM, 0, 32, 16, N_M2K_PCH, 0}
+static const char *const N_M2K_R24[25] = {"1/64", "1/32", "1/16", "3/32", "1/8", "5/32", "3/16", "1/4", "5/16", "3/8",
+    "7/16", "1/2", "5/8", "3/4", "7/8", "1", "5/4", "3/2", "7/4", "2", "5/2", "3", "7/2", "4", 0};
+#define M2K_R24(l, d) {l, F_ENUM, 0, 23, d, N_M2K_R24, 0}
+
 
 /* presets: MONO2K's controls at their values (a ratio its step of 24, an interval its place of 33; the bipolar ones less
  * 64), the ADSR Melodee's. SAW: Melodee Custom 1.2.0's, made before any FILTER; PULS, ENS, WAV: as Melodee Custom ships
@@ -441,6 +612,8 @@ static const preset_t M2K_WAV_PRESETS[] = {
     {"LOFI KEYS", {90, 0, 127, 0, 70, 0, 0, 40}, {0, 70, 40, 50}, 0, 0},
     {"DIGI BASS", {120, -24, 50, 20, 0, 0, 60, 0}, {0, 50, 70, 20}, 0, 1},
 };
+
+#include "m2k_fm_presets.h"      /* sloop_custom: STAT, PAR and DYN's presets (tools/m2k_fm_presets.py, from MONO2K's FM sounds) */
 
 static const engine_t ENG_M2K_SAW = {
     .name = "SAW",
@@ -479,6 +652,38 @@ static const engine_t ENG_M2K_WAV = {
              M2K_BI("DTUN"), M2K_P("MIX2"), M2K_P("STEP")},
     .presets = M2K_WAV_PRESETS, .npresets = NELEM(M2K_WAV_PRESETS),
     .macro = {P_E0, P_E1, P_E3, P_REL},
+    .poly = M2K_POLY,
+    .note_on = m2k_note_on, .render = m2k_render, .fil_page = -1,
+};
+
+/* sloop_custom: MONO2K's FM machines (its init values: the Monomachine's) */
+static const engine_t ENG_M2K_STAT = {
+    .name = "STAT",
+    .page_title = {"OP 1", "OP 2"},
+    .edit = {M2K_R24("1FRQ", 11), M2K_PD("1FIN", 64), M2K_PD("1ENV", 80), M2K_PD("1FB", 32), M2K_R24("2FRQ", 15),
+             M2K_PD("2VOL", 64), M2K_PD("TONE", 64), M2K_BI("TUNE")},
+    .presets = M2K_STAT_PRESETS, .npresets = NELEM(M2K_STAT_PRESETS),
+    .macro = {P_E2, P_E5, P_E6, P_REL},
+    .poly = M2K_POLY,
+    .note_on = m2k_note_on, .render = m2k_render, .fil_page = -1,
+};
+static const engine_t ENG_M2K_PAR = {
+    .name = "PAR",
+    .page_title = {"OP 1 2", "OP 3"},
+    .edit = {M2K_R24("1FRQ", 11), M2K_PD("1ENV", 64), M2K_R24("2FRQ", 15), M2K_PD("2ENV", 64), M2K_R24("3FRQ", 19),
+             M2K_PD("3ENV", 80), M2K_PD("TONE", 64), M2K_BI("TUNE")},
+    .presets = M2K_PAR_PRESETS, .npresets = NELEM(M2K_PAR_PRESETS),
+    .macro = {P_E1, P_E3, P_E6, P_REL},
+    .poly = M2K_POLY,
+    .note_on = m2k_note_on, .render = m2k_render, .fil_page = -1,
+};
+static const engine_t ENG_M2K_DYN = {
+    .name = "DYN",
+    .page_title = {"OP 1", "OP 2"},
+    .edit = {M2K_PD("1FRQ", 64), M2K_PD("1FEN", 64), M2K_PD("1VOL", 64), M2K_P("1VEN"), M2K_PD("2FRQ", 74),
+             M2K_PD("2ENV", 80), M2K_PD("2FB", 32), M2K_BI("TUNE")},
+    .presets = M2K_DYN_PRESETS, .npresets = NELEM(M2K_DYN_PRESETS),
+    .macro = {P_E2, P_E1, P_E5, P_REL},
     .poly = M2K_POLY,
     .note_on = m2k_note_on, .render = m2k_render, .fil_page = -1,
 };

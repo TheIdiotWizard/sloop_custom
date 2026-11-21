@@ -10,9 +10,9 @@
 #include "hostsim.c"
 #undef main
 #define PROJ_HOST 1
-static uint32_t trk_def_engine(uint32_t i)       /* ui.c TRK_DEF: ANALOG4, FMTONE, SAW */
+static uint32_t trk_def_engine(uint32_t i)       /* ui.c TRK_DEF: ANALOG4, PAR, SAW */
 {
-    static const uint8_t E[NPART] = {ENGI_ANA4, ENGI_FMTONE, ENGI_SAW};
+    static const uint8_t E[NPART] = {ENGI_ANA4, ENGI_PAR, ENGI_SAW};
     return i < NPART ? E[i] : 0u;
 }
 #include "../firmware/src/project.c"
@@ -50,7 +50,7 @@ int main(void)
     }
     {   /* the operator slots go with the project: ANALOG4's on track 1, FMTONE's (its FINE, -64..63) on track 2 */
         host_tracks_init();
-        trk[0].eng_req = trk[0].engine = ENGI_ANA4, trk[1].eng_req = trk[1].engine = ENGI_FMTONE;
+        trk[0].eng_req = trk[0].engine = ENGI_ANA4, trk[1].eng_req = trk[1].engine = ENGI_DYN;
         trk[0].p[P_FM3_LEVEL] = 37, trk[0].p[P_FM4_DEC] = 5, trk[0].p[P_FM2_REL] = 4, trk[0].p[P_FTYPE] = 2;
         trk[1].p[P_FM3_REL] = -64, trk[1].p[P_FM4_ATK] = 63, trk[1].p[P_FM4_DEC] = -7, trk[1].p[P_FM1_LEVEL] = 99;
         trk[1].p[P_E4] = -50;                      /* (FMTONE HARM) */
@@ -58,7 +58,7 @@ int main(void)
         proj_capture(&q);
         host_tracks_init();
         proj_apply(&q, 1);
-        ok = trk[0].engine == ENGI_ANA4 && trk[1].engine == ENGI_FMTONE && trk[0].p[P_FM3_LEVEL] == 37 &&
+        ok = trk[0].engine == ENGI_ANA4 && trk[1].engine == ENGI_DYN && trk[0].p[P_FM3_LEVEL] == 37 &&
              trk[0].p[P_FM4_DEC] == 5 && trk[0].p[P_FM2_REL] == 4 && trk[0].p[P_FTYPE] == 2 && trk[1].p[P_FM3_REL] == -64 &&
              trk[1].p[P_FM4_ATK] == 63 && trk[1].p[P_FM4_DEC] == -7 && trk[1].p[P_FM1_LEVEL] == 99 && trk[1].p[P_E4] == -50 &&
              lock_find(&trk[1], 3, P_FM2_LEVEL, 0) >= 0 && trk[1].lock[lock_find(&trk[1], 3, P_FM2_LEVEL, 0)].val == 12;
