@@ -64,8 +64,8 @@ static const char *const N_SLCR[] = {"OFF", "GATE", "STUT"};             /* SL_O
 static const char *const N_SLDIV[] = {"1/8", "1/16", "1/32", "8T", "16T", "32T"};   /* SL_DEN */
 static const char *const N_CHORD[] = {"OFF", "TRIAD", "7TH", "9TH", "SUS4", "POWER"};   /* seq.c CHORD_DEG */
 static const char *const N_ROLL[] = {"1/8", "1/16", "1/32", "32T", "1/64"};   /* seq.c ROLL_DEN */
-static const char *const N_ENGNAME[] = {"FMTONE", "ENS", "WAV", "LOFI", "VOICE", "WHEEL",
-                                        "NOISE", "GOLANA"};   /* sloop_custom: core.h ENGI_* (engines.c ENGINES[]) */
+static const char *const N_ENGNAME[] = {"GOLANA", "FMTONE", "ENS", "WAV", "LOFI", "VOICE",
+                                        "WHEEL", "NOISE"};   /* sloop_custom: core.h ENGI_* (engines.c ENGINES[]) */
 _Static_assert(NELEM(N_ENGNAME) == NENGINES, "an engine name per engine");
 
 #define PD(l, f, mn, mx, df) {l, f, mn, mx, df, 0, 0}
@@ -77,7 +77,7 @@ static const param_desc_t TP[P_COUNT] = {
     [P_DEC] = PD("DEC", F_TIME, 0, 127, 70),
     [P_SUS] = PD("SUS", F_PCT, 0, 127, 90),
     [P_REL] = PD("REL", F_TIME, 0, 127, 60),
-    [P_ED_FLT] = PD("FLT", F_BIPCT, -64, 63, 0),
+    [P_ED_FLT] = PD("EGINT", F_BIPCT, -64, 63, 0),   /* the ENV -> FILTER amount: the engines' own filters and (sloop_custom) the track FILTER's cutoff */
     [P_ED_PIT] = PD("PIT", F_BIPCT, -64, 63, 0),
     [P_ED_SHP] = PD("SHP", F_BIPCT, -64, 63, 0),
     [P_ED_FX] = PD("TRIM", F_INT, -64, 63, 0),   /* the sound's level trim, 1/2 dB (presets set it) */
@@ -86,7 +86,7 @@ static const param_desc_t TP[P_COUNT] = {
     [P_LPHASE] = PD("PHS", F_INT, 0, 127, 0),
     [P_LFADE] = PD("FADE", F_TIME, 0, 127, 0),
     [P_LD_PIT] = PD("PIT", F_BIPCT, -64, 63, 0),
-    [P_LD_FLT] = PD("FLT", F_BIPCT, -64, 63, 0),
+    [P_LD_FLT] = PD("EGINT", F_BIPCT, -64, 63, 0),   /* the ENV -> FILTER amount: the engines' own filters and (sloop_custom) the track FILTER's cutoff */
     [P_LD_SHP] = PD("SHP", F_BIPCT, -64, 63, 0),
     [P_LD_AMP] = PD("AMP", F_PCT, 0, 127, 0),
     [P_AMODE] = PE("MODE", N_AMODE, 0),
@@ -123,9 +123,9 @@ static const param_desc_t TP[P_COUNT] = {
     [P_SLDEPTH] = PD("DEPTH", F_PCT, 0, 127, 127),
     [P_CHORD] = PE("CHORD", N_CHORD, 0),
     [P_TFLT] = PD("FILT", F_FILT, -64, 63, 0),
-    [P_TRES] = PD("RES", F_INT, 0, 15, 0),         /* sloop_custom: the track filter's resonance: 0 clean .. 10, 11..15 the scream (fx.c tflt_k) */
+    [P_TRES] = PD("RES", F_INT, 0, 15, 0),         /* sloop_custom: the track filter's (MS20) resonance, 0 mild .. 15 near self-oscillation (fx.c tflt_k) */
     [P_TKEY] = PD("KEY", F_PCT, 0, 10, 0),        /* sloop_custom: the track filter follows the pitch played: 0..10 = 0..100 % (F_PCT of the range) */
-    [P_TDIST] = PD("DIST", F_PCT, 0, 10, 0),      /* sloop_custom: a drive in front of the track filter, 0..100 % in tenths */
+    [P_TDIST] = PD("DIST", F_PCT, 0, 10, 0),      /* sloop_custom: RETIRED (was a drive in front of the track filter); stored, unused, on no page */
     [P_STRUM] = PD("STRUM", F_INT, -60, 60, 0),   /* ms a note: > 0 low to high (down), < 0 high to low */
     [P_VLEAD] = PE("VLEAD", N_ONOFF, 0),
     /* 2.6, after Felucca 1.5 / 1.4. The INSERT (fx.c track_insert): TYPE OFF = as before. A B C as the editor
@@ -426,7 +426,7 @@ static const page_t PAGES[] = {
     {"LFO 2", FAM_LFO, SC_TRACK, GR_LFO, {P_LSYNC, P_LTRIG, P_LPOL, 0xFF}},   /* 2.6 (Felucca 1.4): SYNC TRIG POL */
     {"LFO DEST", FAM_LFO, SC_TRACK, GR_NONE, {P_LD_PIT, P_LD_FLT, P_LD_SHP, P_LD_AMP}},
     {"FX", FAM_FX, SC_TRACK, GR_FX, {P_DIST, P_CHOR, P_DLY, P_REV}},
-    {"FILTER", FAM_FX, SC_TRACK, GR_NONE, {P_TFLT, P_TRES, P_TKEY, P_TDIST}},   /* the track's filter (drum track too) */
+    {"FILTER", FAM_FX, SC_TRACK, GR_NONE, {P_TFLT, P_TRES, P_TKEY, P_ED_FLT}},   /* the track's filter (drum track too) */
     {"SLICER", FAM_FX, SC_TRACK, GR_SLCR, {P_SLCR, P_SLPAT, P_SLRATE, P_SLDEPTH}},   /* drum track too */
     {"INSERT", FAM_FX, SC_TRACK, GR_INS, {P_ITYPE, P_IA, P_IB, P_IC}},   /* 2.6 (Felucca 1.5): the track's INSERT (fx.c), */
     {"INSERT 2", FAM_FX, SC_TRACK, GR_INS, {P_IMIX, 0xFF, 0xFF, 0xFF}},  /* .. its dry / wet; the drum track too */

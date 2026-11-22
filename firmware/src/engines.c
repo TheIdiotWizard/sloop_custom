@@ -130,14 +130,14 @@ static void *eng_arena_of(const track_t *t, uint32_t eng)
 }
 
 static const engine_t *const ENGINES[NENGINES] = {
-    &ENG_FMTONE,                 /* 0 ENGI_FMTONE */
-    &ENG_M2K_ENS,                /* 1 ENGI_ENS */
-    &ENG_M2K_WAV,                /* 2 ENGI_WAV */
-    &ENG_LOFI,                   /* 3 ENGI_LOFI */
-    &ENG_FORMANT,                /* 4 ENGI_FORMANT (VOICE) */
-    &ENG_DRAWBAR,                /* 5 ENGI_DRAWBAR */
-    &ENG_NOISE,                  /* 6 ENGI_NOISE */
-    &ENG_GOLANA,                 /* 7 ENGI_GOLANA */
+    &ENG_GOLANA,                 /* 0 ENGI_GOLANA */
+    &ENG_FMTONE,                 /* 1 ENGI_FMTONE */
+    &ENG_M2K_ENS,                /* 2 ENGI_ENS */
+    &ENG_M2K_WAV,                /* 3 ENGI_WAV */
+    &ENG_LOFI,                   /* 4 ENGI_LOFI */
+    &ENG_FORMANT,                /* 5 ENGI_FORMANT (VOICE) */
+    &ENG_DRAWBAR,                /* 6 ENGI_DRAWBAR */
+    &ENG_NOISE,                  /* 7 ENGI_NOISE */
 };
 
 /* sloop_custom: UNISON's start-phase spread (voice.c unison_spread, after Clipper 1.2) for the engines ported here; their

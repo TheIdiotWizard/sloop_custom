@@ -746,26 +746,25 @@ static void t_filt_reso(void)
 {
     tsvf_t c0, c1;
     int32_t z0[2] = {0, 0}, z1[2] = {0, 0}, i, p0 = 0, p1 = 0, x = 10000;
-    tsvf_coef(&c0, 60 << 8, 40);                      /* the clean filter, as the track filter always was (FILTER RESO 0) */
-    tsvf_coef_k(&c1, 60 << 8, tflt_k(10));            /* RES 10 (fx.c tflt_k) */
+    tsvf_coef_k(&c0, 60 << 8, tflt_k(0));             /* RES 0: the MS20's mild peak (fx.c tflt_k) */
+    tsvf_coef_k(&c1, 60 << 8, tflt_k(15));            /* RES 15: a ringing, near self-oscillating one */
     for (i = 0; i < 400; i++) {                       /* a step in: a resonant filter overshoots and rings, a clean one does not */
         int32_t y0 = tsvf_lp(&c0, x, &z0[0], &z0[1]);
         int32_t y1 = tsvf_lp(&c1, x, &z1[0], &z1[1]);
         if (y0 > p0) p0 = y0;
         if (y1 > p1) p1 = y1;
     }
-    check(p1 > x + x / 4 && p0 < x + x / 10, "FILTER RESO (2.7.2): resonance makes the track filter overshoot a step; clean (40) barely does");
+    check(p1 > x + x / 4 && p0 < x + x / 10, "FILTER RES: resonance makes the track filter overshoot a step; RES 0 barely does");
     /* sloop_custom: 11..15 the scream (fx.c tflt_k, tflt_run): Q 4 .. 64, clipped near the signal's level */
     {
         djf_t df; tsvf_t cs; int32_t buf[32], pk = 0, pr = 0, j, blk;
         memset(&df, 0, sizeof df);
         df.mode = -1; df.cut = 60 << 8;
-        check(tflt_k(15) == 64, "FILTER RESO 15: damping 64 (Q 64)");
-        check(tflt_k(11) == 1024, "FILTER RESO 11: damping 1024 (Q 4)");
+        check(tflt_k(15) == 52 && tflt_k(0) > 6000 && tflt_k(7) < tflt_k(6), "FILTER RES: the MS20's damping, 8192 - reso * 8140 / 127: 52 at 15, falling with it");
         tsvf_coef_k(&cs, 60 << 8, tflt_k(15));
         for (blk = 0; blk < 200; blk++) {                       /* a burst, then silence: it rings and stays bounded */
             for (j = 0; j < 32; j++) buf[j] = blk < 4 ? ((j & 8) ? 8000 : -8000) : 0;
-            tflt_run(&df, &cs, buf, 32, 0, 15, 0);
+            tflt_run(&df, &cs, buf, 32, 0, 15);
             for (j = 0; j < 32; j++) {
                 int32_t a = buf[j] < 0 ? -buf[j] : buf[j];
                 if (blk < 4 && a > pk) pk = a;
@@ -794,23 +793,39 @@ static void t_filt_reso(void)
         check(i == down, "KEY: with no voice held (the release) it keeps the last pitch");
         t->p[P_TKEY] = save; memcpy(t->v, vsave, sizeof vsave);
     }
-    /* DIST (P_TDIST, fx.c tflt_drive): a drive in front of the filter: the level stays near the input's peak, the wave fills out */
+    /* EG INT (P_ED_FLT, fx.c tflt_eg): the sounding voices' envelope moves the cutoff, as the engines' own filters take it */
     {
-        int32_t buf[32], ref[32], j, pk = 0, e0 = 0, e1 = 0;
-        for (j = 0; j < 32; j++) ref[j] = buf[j] = (j & 8) ? 6000 : -6000, ref[j] = (j * 700) % 12000 - 6000, buf[j] = ref[j];
-        tflt_drive(buf, 32, 0 + 10);
-        for (j = 0; j < 32; j++) { int32_t a = buf[j] < 0 ? -buf[j] : buf[j]; if (a > pk) pk = a; e0 += ref[j] < 0 ? -ref[j] : ref[j]; e1 += a; }
-        check(pk <= 6000 + 8 && pk > 4000 && e1 > e0 + e0 / 8, "DIST 100 %: the peak stays at the input's, the average level rises (the wave fills out)");
-        {
-            int32_t d1 = 0, d10 = 0;
-            for (j = 0; j < 32; j++) buf[j] = ref[j];
-            tflt_drive(buf, 32, 10);
-            for (j = 0; j < 32; j++) d10 += buf[j] > ref[j] ? buf[j] - ref[j] : ref[j] - buf[j];
-            for (j = 0; j < 32; j++) buf[j] = ref[j];
-            tflt_drive(buf, 32, 1);
-            for (j = 0; j < 32; j++) d1 += buf[j] > ref[j] ? buf[j] - ref[j] : ref[j] - buf[j];
-            check(d1 > 0 && d1 < d10 / 2, "DIST 10 %: well gentler than 100 % (the wave changes less)");
+        track_t *t = &trk[0]; int32_t full, neg, none, i, save = t->p[P_ED_FLT];
+        voice_t vsave[NVOICE];
+        memcpy(vsave, t->v, sizeof vsave); for (i = 0; i < NVOICE; i++) t->v[i].active = 0;
+        t->v[0].active = 1; t->v[0].stage = 2; t->v[0].env = 1 << 24; t->v[0].env_out = 0;
+        t->p[P_ED_FLT] = 32;  full = tflt_eg(t);
+        t->p[P_ED_FLT] = -32; neg = tflt_eg(t);
+        t->v[0].env = 1 << 23; t->p[P_ED_FLT] = 32; i = tflt_eg(t);
+        t->v[0].active = 0;   none = tflt_eg(t);
+        check(full > 8000 && full < 8200 && neg >= -full - 1 && neg <= -full && i > full / 2 - 80 && i < full / 2 + 80 && none == 0,
+              "EG INT: +-32 at full envelope moves the cutoff +-8 steps (an octave is ~14); half the envelope, half; no voice, none");
+        t->p[P_ED_FLT] = save; memcpy(t->v, vsave, sizeof vsave);
+    }
+    /* the MS20 saturates: a huge input at the highest RES stays bounded, a quiet one passes unclipped (the low-pass at the top) */
+    {
+        djf_t df; tsvf_t cs; int32_t buf[32], j, blk, pk = 0, q = 0;
+        memset(&df, 0, sizeof df); df.mode = -1;
+        tsvf_coef_k(&cs, 100 << 8, tflt_k(15));
+        for (blk = 0; blk < 100; blk++) {
+            for (j = 0; j < 32; j++) buf[j] = (j & 4) ? 130000 : -130000;
+            ms20_run(&df, &cs, buf, 32, 0);
+            for (j = 0; j < 32; j++) { int32_t a = buf[j] < 0 ? -buf[j] : buf[j]; if (a > pk) pk = a; }
         }
+        check(pk <= 65535, "MS20: a full-scale square at RES 15 stays bounded");
+        memset(&df, 0, sizeof df); df.mode = -1;
+        tsvf_coef_k(&cs, 127 << 8, tflt_k(0));
+        for (blk = 0; blk < 50; blk++) {
+            for (j = 0; j < 32; j++) buf[j] = 1000;
+            ms20_run(&df, &cs, buf, 32, 0);
+        }
+        q = buf[31];
+        check(q > 900 && q < 1100, "MS20: a small steady signal through the open low-pass comes out near its level");
     }
     /* the setting's persistence (project.c midi_part) is checked in fm6_test (the full build has panel.c and project.c) */
 }

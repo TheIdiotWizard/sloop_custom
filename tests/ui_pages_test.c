@@ -1201,8 +1201,8 @@ int main(int argc, char **argv)
         tap(B_FX); SEL(1);
         check(!strcmp(PT(), "FILTER"), "SELECT on FX: next page, the track FILTER");
         TSEL->p[P_TFLT] = -32; ui.force = 1; frames(2); ppm("page-filter");
-        check(!strcmp(ui.big_l[0], "FILT") && !strcmp(ui.big_v[0], "LP50") && !strcmp(ui.big_l[1], "RES") && !strcmp(ui.big_l[2], "KEY") && !strcmp(ui.big_l[3], "DIST"),
-              "FILTER page: cutoff (LP50 %), RES, KEY and DIST drawn large");
+        check(!strcmp(ui.big_l[0], "FILT") && !strcmp(ui.big_v[0], "LP50") && !strcmp(ui.big_l[1], "RES") && !strcmp(ui.big_l[2], "KEY") && !strcmp(ui.big_l[3], "EGINT"),
+              "FILTER page: cutoff (LP50 %), RES, KEY and EGINT drawn large");
         {   /* the big value in the graph strip: white pixels in the middle of the screen */
             uint32_t x, y, lit = 0;
             for (y = Y_GRAPH + 30; y < Y_GRAPH + 90; y++)
@@ -1608,7 +1608,8 @@ int main(int argc, char **argv)
             go_home(); frame();
             pc_req[1] = 1;                                /* PC 0 on track 2's channel: the first sound of the list */
             frame();
-            check(trk[1].eng_req == BANK[0].e && trk[1].preset == bank_pi[0] && !strncmp(ui.msg, "T2 PROG 0", 9),
+            uint32_t pk0, pe0 = preset_at(0, &pk0);   /* (the list is ordered by engine: GOLANA's first sound) */
+            check(trk[1].eng_req == pe0 && trk[1].preset == pk0 && !strncmp(ui.msg, "T2 PROG 0", 9),
                   "MIDI Program Change 0: track 2 takes the first sound of the PRESETS list (T2 PROG 0)");
             pc_req[3] = 3;                                /* PC 2 on the drum channel: kit 2 */
             frame();
@@ -1616,7 +1617,7 @@ int main(int argc, char **argv)
             pc_req[1] = (uint8_t)(tot + 1u);              /* past the end: nothing */
             k = trk[1].eng_req;
             frame();
-            check(trk[1].eng_req == k && trk[1].preset == bank_pi[0], "MIDI Program Change past the list: ignored (no wrap)");
+            check(trk[1].eng_req == k && trk[1].preset == pk0, "MIDI Program Change past the list: ignored (no wrap)");
             TDRUM->p[P_E0] = k0;
             set_engine_of(&trk[1], e0); apply_preset_to(&trk[1], p0); trk[1].engine = trk[1].eng_req;
             frames(4);

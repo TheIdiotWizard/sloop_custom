@@ -684,7 +684,7 @@ UI_SMALL static void apply_preset_to(track_t *t, uint32_t pi)
         t->p[P_TFLT] = pr->flt[0];                   /* sloop_custom: the track FILTER the sound brings (flat: none) */
         t->p[P_TRES] = pr->flt[1];
         t->p[P_TKEY] = pr->flt[2];
-        t->p[P_TDIST] = pr->flt[3];
+        t->p[P_TDIST] = 0;                           /* (retired: the old DIST; EG INT is P_ED_FLT, the preset's fenv) */
     }
     if (e->loaded)                                   /* sloop_custom: the operator slots the preset sets (ANALOG4, */
         e->loaded(t);                                /* FMTONE: Mini-Tone's a4_track_loaded, fmt_track_loaded) */
@@ -770,7 +770,7 @@ static const struct { uint8_t kind, e; const char *name; } BANK[] = {
     {BK_KEYS, ENGI_GOLANA, "WORN TAPE"}, {BK_LEAD, ENGI_GOLANA, "DRIFT LEAD"}, {BK_PLUCK, ENGI_GOLANA, "SUB ARP"},
     {BK_PAD, ENGI_GOLANA, "AGED PAD"}, {BK_LEAD, ENGI_GOLANA, "SUPERSAW"},
     {BK_KEYS, ENGI_FMTONE, "EPIANO"}, {BK_KEYS, ENGI_FMTONE, "GLASSKY"}, {BK_BASS, ENGI_FMTONE, "DXBASS"},   /* sloop_custom: melodee's FMTONE sounds */
-    {BK_BASS, ENGI_FMTONE, "GROWL"}, {BK_PAD, ENGI_FMTONE, "GLASPAD"}, {BK_PAD, ENGI_FMTONE, "FMPAD"}, {BK_PAD, ENGI_FMTONE, "DRONE"},
+    {BK_BASS, ENGI_FMTONE, "GROWL"}, {BK_PAD, ENGI_FMTONE, "GLASPAD"}, {BK_PAD, ENGI_FMTONE, "FMPAD"}, {BK_PAD, ENGI_FMTONE, "DRONE 2"},
     {BK_PLUCK, ENGI_FMTONE, "FMBELL"}, {BK_PLUCK, ENGI_FMTONE, "BUBBLES"}, {BK_FX, ENGI_FMTONE, "ZAP"},
 };
 #define NBANK (sizeof BANK / sizeof BANK[0])

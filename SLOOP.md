@@ -2,7 +2,7 @@
 
 # SLOOP 2.8.5
 
-> **sloop_custom:** this is a personal build of SLOOP with eight engines (FMTONE, ENS, WAV, LOFI, VOICE, WHEEL, NOISE), engine-ordered presets, nameable user presets and a mod-wheel (CC 1) pitch-depth default. Release notes below the sound-bank and engine sections that mention FM6, PHYS, SAMPLE, GRAIN, TRIO, DIGITAL, PHASE, DX7 or the 12-engine bank describe stock SLOOP. Install and editor: https://theidiotwizard.github.io/sloop_custom/
+> **sloop_custom:** this is a personal build of SLOOP with eight engines (GOLANA, FMTONE, ENS, WAV, LOFI, VOICE, WHEEL, NOISE), engine-ordered presets, nameable user presets and a mod-wheel (CC 1) pitch-depth default. Release notes below the sound-bank and engine sections that mention FM6, PHYS, SAMPLE, GRAIN, TRIO, DIGITAL, PHASE, DX7 or the 12-engine bank describe stock SLOOP. Install and editor: https://theidiotwizard.github.io/sloop_custom/
 
 **A live groovebox firmware for the M-VAVE FM-1 — for any style.** Four tracks — three synths and a drum machine with 16 sounds on the white keys — ten synthesis engines, 69 sounds, 37 drum kits (808, 909, trap, phonk, house, techno, UK garage, jungle, amapiano, reggaeton, synthwave, chiptune, ambient, jazz…), your own samples, ghost notes and ratchets, parameter locks, micro timing and fills, note repeat, one-key chords, 27 punch-in effects, a vinyl / sidechain / DJ-filter master, and a teenage-engineering-style screen that always shows what your hands can do next. No factory patterns, nothing to load: everything you hear, you play.
 
@@ -27,7 +27,7 @@ SLOOP is free and open source (GPL-3.0), based on [Felucca](https://github.com/h
 - **A NOTES editor: a piano roll for the synth tracks.** SEQ → **NOTES**: write and edit notes step by step. KNOB 1 picks the notes (a chord's notes one at a time), KNOB 2 the pitch, KNOB 3 the length, KNOB 4 the force; PRESETS zooms, EDIT deletes. Hold **OCT+** on a step for its sheet: SLIDE, NUDGE, FILL, MOVE, COPY, DELETE. Thanks to everyone who asked for it.
 - **The same per-step sheet on the DRUMS grid.** Hold **OCT+** on a drum step for RATCHET, NUDGE, FILL, MOVE, COPY, DELETE — the groove, shaped step by step, without leaving the grid.
 - **The playing section on screen.** The TRACKS screen now shows which section — **A to D** — is playing, in its own colour, so you always know where you are in the song.
-- **Filter resonance.** The per-track filter gains a **RESO** control, 0 (clean, as before) to 10 (FX → FILTER, KNOB 2 **RES**, KNOB 3 **KEY** tracking, KNOB 4 **DIST** drive, 0–100 % each): from a gentle tilt to a singing, squelchy sweep. **sloop_custom:** 11 to 15 are the *scream* (Q about 4, 8, 16, 32, 64): the filter rings hard and its output is clipped near the signal's level, as MONO2K's resonant filter does.
+- **MS20 filter.** The per-track filter is **Golana's MS20**: a 12 dB low-pass (the knob's right side is the matching high-pass) with a driven soft clip in front of it and a saturating resonance, so it bites and rings without running away. FX → FILTER: one knob (left low-pass, right high-pass, centre off), KNOB 2 **RES** 0–15 (a mild peak up to a ringing, near self-oscillating one), KNOB 3 **KEY** tracking 0–100 %, KNOB 4 **EGINT**, a signed envelope amount (−64..63): the sounding notes' envelope opens (+) or closes (−) the cutoff, the same control as ENV DEST's. The old DIST drive is retired.
 - **The FX filter on the drum track too.** The FX → **FILTER** page now works on drums: sweep and shape the whole kit, live, like any synth track.
 - **Drum TUNE on the noise sounds.** **TUNE** now shapes the brightness of the tone-less sounds (closed hats, shakers, claps) on the synthesised kits, not only the pitched ones.
 - **A smoother punch-in.** A settable fade-in and out for the 27 punch-in effects, from instant to about a third of a second: hold **FX**, then **SELECT**. The old extra MASTER 2 page is gone.
@@ -421,7 +421,7 @@ The screen shows the 27 keys as a keyboard: the white keys in four rows of four,
 
 ## The sound bank
 
-**87 factory sounds** on eight engines (FMTONE, ENS, WAV, LOFI, VOICE, WHEEL, NOISE), level-matched. **PRESETS** lists them engine by engine; your own presets come at the end of their engine's group, and **KNOB 3** filters by kind (bass, keys, organ, pad, lead, pluck, stab, FX).
+**87 factory sounds** on eight engines (GOLANA, FMTONE, ENS, WAV, LOFI, VOICE, WHEEL, NOISE), level-matched. **PRESETS** lists them engine by engine; your own presets come at the end of their engine's group, and **KNOB 3** filters by kind (bass, keys, organ, pad, lead, pluck, stab, FX).
 
 | Kind | Sounds (engine) |
 | --- | --- |
@@ -438,6 +438,7 @@ The screen shows the 27 keys as a keyboard: the white keys in four rows of four,
 
 | Engine | Sound | EDIT knobs (the screen shows the engine's own labels) |
 | --- | --- | --- |
+| **GOLANA** | Golana's oscillator section, 6 voices | see GUIDE.md | · CRSH |
 | **FMTONE** | four-operator FM (from Mini-Tone), 6 voices, own filter | ALGO 1–8 · RAT (ratio set C, A, B) · HARM · DTN · FB · MIX. Own pages: A ENV, B ENV, DEL TRK, FINE, FILTER |
 | **ENS** | chord / ensemble machine (MONO2K), 3 voices | PCH2 · PCH3 · PCH4 (chord intervals) · WAVE · PW · CHRL · CHRW (chorus) · TUNE |
 | **WAV** | wavetable (MONO2K) | WAVE · SCAN · STIM · SYNC · BITS · DTUN · MIX2 · STEP |
@@ -445,7 +446,6 @@ The screen shows the 27 keys as a keyboard: the white keys in four rows of four,
 | **VOICE** | formant voice (choirs, talkbox), 4 voices | VOWL · VOWL2 · TALK · SHIFT ±12 · BUZZ · BRTH · Q · RAND |
 | **WHEEL** | tonewheel organ (drawbars) | REG (16 registrations: FLUTE, MELLO, HOLLW, SMOOT, 3BAR, BLUES, GOSPL, ROCK, TOPS, CLARI, REED, STRNG, CHAPL, BRITE, BASS, FULL) · SUB · BODY · TOP (±8) · PERC (OFF, 2ND, 3RD, soft and slow variants) · CLICK · DRV · ROTR (OFF, SLOW, FAST) |
 | **NOISE** | noise generator | MODE (ANLG, DUST, LFSR, META) · COLR · FREQ · RES · TRK · DENS · DRFT
-| **GOLANA** | Golana's oscillator section, 6 voices | see GUIDE.md | · CRSH |
 
 Every engine except FMTONE uses SLOOP's FX → FILTER; FMTONE has its own filter page. (ANALOG4, SAW and PULS are retired in this build.) The track LFO, the arp, UNISON, MONO and LEGATO work on all eight.
 

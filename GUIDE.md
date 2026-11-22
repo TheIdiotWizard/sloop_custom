@@ -8,7 +8,7 @@ SLOOP is a free, open-source (GPL-3.0) firmware for the M-VAVE FM-1, based on [F
 
 ---
 
-> **sloop_custom:** this is a personal build of SLOOP with eight engines (FMTONE, ENS, WAV, LOFI, VOICE, WHEEL, NOISE, GOLANA), engine-ordered presets, nameable user presets and a mod-wheel (CC 1) pitch-depth default. Release notes below the sound-bank and engine sections that mention FM6, PHYS, SAMPLE, GRAIN, TRIO, DIGITAL, PHASE, DX7 or the 12-engine bank describe stock SLOOP. Install and editor: https://theidiotwizard.github.io/sloop_custom/
+> **sloop_custom:** this is a personal build of SLOOP with eight engines (GOLANA, FMTONE, ENS, WAV, LOFI, VOICE, WHEEL, NOISE), engine-ordered presets, nameable user presets and a mod-wheel (CC 1) pitch-depth default. Release notes below the sound-bank and engine sections that mention FM6, PHYS, SAMPLE, GRAIN, TRIO, DIGITAL, PHASE, DX7 or the 12-engine bank describe stock SLOOP. Install and editor: https://theidiotwizard.github.io/sloop_custom/
 
 ## How to read this guide
 
@@ -72,7 +72,7 @@ The 11 black keys are F#3, G#3, A#3, C#4, D#4, F#4, G#4, A#4, C#5, D#5, F#5. The
 - **A NOTES editor: a piano roll for the synth tracks.** Tap **SEQ** on a synth track for the pattern as a piano roll, and write and edit notes step by step: KNOB 1 the notes (a chord's one by one), KNOB 2 the pitch, KNOB 3 the length, KNOB 4 the force; PRESETS zooms, EDIT deletes. Hold **OCT+** on a step for its **sheet** — SLIDE, NUDGE, FILL, MOVE, COPY, DELETE. See [The step sequencer](#10-the-step-sequencer-steps-nudge-locks-fills).
 - **The same per-step sheet on the DRUMS grid.** Hold **OCT+** on a drum step for RATCHET, NUDGE, FILL, MOVE, COPY, DELETE — the groove, shaped step by step. See [The step sequencer](#10-the-step-sequencer-steps-nudge-locks-fills).
 - **The playing section on the main screen.** The TRACKS screen shows which section — **A to D** — is playing, in its own colour. See [The screens](#15-the-screens).
-- **Filter resonance.** The per-track filter gains a **resonance**, 0 (clean, as before) to 10: FX → FILTER, KNOB 2 **RES**. See [Per track](#per-track). **sloop_custom:** 11 to 15 are the *scream* (Q about 4, 8, 16, 32, 64): the filter rings hard and its output is clipped near the signal's level, as MONO2K's resonant filter does.
+- **MS20 filter.** The per-track filter is **Golana's MS20**: a 12 dB low-pass (the knob's right side is the matching high-pass) with a driven soft clip in front of it and a saturating resonance, so it bites and rings without running away. FX → FILTER: one knob (left low-pass, right high-pass, centre off), KNOB 2 **RES** 0–15 (a mild peak up to a ringing, near self-oscillating one), KNOB 3 **KEY** tracking 0–100 %, KNOB 4 **EGINT**, a signed envelope amount (−64..63): the sounding notes' envelope opens (+) or closes (−) the cutoff, the same control as ENV DEST's. The old DIST drive is retired. See [Per track](#per-track).
 - **The FX filter on the drum track too.** FX → FILTER now works on drums: sweep and shape the whole kit, live. See [Per track](#per-track).
 - **Drum TUNE on the noise sounds.** On the DRUMS Sound page, **TUNE** now also shapes the brightness of the tone-less sounds (closed hats, shakers, claps). See [The drum track](#drum-sound).
 - **A smoother punch-in.** A settable fade-in and out for the 27 punch-in effects: hold **FX**, then **SELECT**, 0 (instant) to 15 (~0.37 s). See [Punch-in effects](#punch-in-effects).
@@ -184,7 +184,7 @@ The layers are **FX** (punch-in effects), **EDIT** (erase), **ARP** (note repeat
 | **GLO** | GLO pages (GLOBAL, MASTER, SYSTEM, DRUMS) | mix layer |
 | **OCT− / OCT+** | synth track: octave down / up (−3 … +3) · both together: octave 0 | drum track: **ghost** (OCT−) / **hard** (OCT+) hits while held |
 | **ALGORITHM** | select track 1–4, on every screen (inside a layer it waits; not during a free take, on the SONG screen or in the menu) | — |
-| **PRESETS** | on TRACKS, HOME and the PRESETS page: the selected track's **sound** (your favourites first (2.7), then every sound **by engine**: FMTONE, ENS, WAV, LOFI, VOICE, WHEEL, NOISE, each with its factory sounds and then your own user presets saved on it; sloop_custom) · drum track: the **kit** · on the DRUMS screen: the kit | — |
+| **PRESETS** | on TRACKS, HOME and the PRESETS page: the selected track's **sound** (your favourites first (2.7), then every sound **by engine**: GOLANA, FMTONE, ENS, WAV, LOFI, VOICE, WHEEL, NOISE, each with its factory sounds and then your own user presets saved on it; sloop_custom) · drum track: the **kit** · on the DRUMS screen: the kit | — |
 | **SELECT** | on TRACKS, inside a layer and on the REC screen: the **tempo** · on a page: previous / next page of its button (stops at the ends) · DRUMS screen: grid ↔ kit · visualiser: the style · menu: the section | — |
 | **KNOB 1–4** | the four dials at the bottom of the screen | — |
 | **MASTER** | output volume (the visualiser ignores it) | — |
@@ -762,7 +762,7 @@ Notes:
 
 ### The sound bank
 
-**87 factory sounds** on the eight engines, level-matched. **PRESETS** lists them **by engine**, in the engine order below (all the FMTONE sounds, then ENS, and so on); your own user presets sit at the end of their engine's group. The sound's kind is shown next to its name. **KNOB 3 (TYPE)** filters the list by kind. The effect sends of a loaded sound are as the sound defines them; the delay send is always 0.
+**87 factory sounds** on the eight engines, level-matched. **PRESETS** lists them **by engine**, in the engine order below (all the GOLANA sounds, then FMTONE, and so on). Where two engines have a sound of the same name, the later engine's gets a number: FMTONE's DRONE is **DRONE 2**; your own user presets sit at the end of their engine's group. The sound's kind is shown next to its name. **KNOB 3 (TYPE)** filters the list by kind. The effect sends of a loaded sound are as the sound defines them; the delay send is always 0.
 
 | Kind | Sounds (engine) |
 | --- | --- |
@@ -783,6 +783,7 @@ Each engine's eight parameters are on **EDIT 1** and **EDIT 2** (KNOB 1–4 each
 
 | Engine | Sound | EDIT knobs (the screen shows the engine's own labels) |
 | --- | --- | --- |
+| **GOLANA** | Golana's oscillator section (Gadlele, GPL-3.0): 2 oscillators, sub, noise, wavefolder, 6 voices | OSC 1: WAVE (SAW, PULSE, TRI, SINE, MORPH) · CTRL1 · DEPTH · RATE (a triangle LFO on CTRL1) · OSC 2: WAVE2 · MOD (OFF, RING, SYNC, R+S) · SEMI · TUNE · MIXER: OSC1 · OSC2 · NOISE · FOLD · SUB DRIFT: TYPE · SUB · DRIFT. Its filter is the track FILTER (FX → FILTER), which the 25 factory sounds set | · CRSH |
 | **FMTONE** | four-operator FM (from Mini-Tone), 6 voices, own filter | ALGO 1–8 · RAT (ratio set C, A, B) · HARM · DTN · FB · MIX. Own pages: A ENV, B ENV, DEL TRK, FINE, FILTER |
 | **ENS** | chord / ensemble machine (MONO2K), 3 voices | PCH2 · PCH3 · PCH4 (chord intervals) · WAVE · PW · CHRL · CHRW (chorus) · TUNE |
 | **WAV** | wavetable (MONO2K) | WAVE · SCAN · STIM · SYNC · BITS · DTUN · MIX2 · STEP |
@@ -790,9 +791,8 @@ Each engine's eight parameters are on **EDIT 1** and **EDIT 2** (KNOB 1–4 each
 | **VOICE** | formant voice (choirs, talkbox), 4 voices | VOWL · VOWL2 · TALK · SHIFT ±12 · BUZZ · BRTH · Q · RAND |
 | **WHEEL** | tonewheel organ (drawbars) | REG (16 registrations: FLUTE, MELLO, HOLLW, SMOOT, 3BAR, BLUES, GOSPL, ROCK, TOPS, CLARI, REED, STRNG, CHAPL, BRITE, BASS, FULL) · SUB · BODY · TOP (±8) · PERC (OFF, 2ND, 3RD, soft and slow variants) · CLICK · DRV · ROTR (OFF, SLOW, FAST) |
 | **NOISE** | noise generator | MODE (ANLG, DUST, LFSR, META) · COLR · FREQ · RES · TRK · DENS · DRFT
-| **GOLANA** | Golana's oscillator section (Gadlele, GPL-3.0): 2 oscillators, sub, noise, wavefolder, 6 voices | OSC 1: WAVE (SAW, PULSE, TRI, SINE, MORPH) · CTRL1 · DEPTH · RATE (a triangle LFO on CTRL1) · OSC 2: WAVE2 · MOD (OFF, RING, SYNC, R+S) · SEMI · TUNE · MIXER: OSC1 · OSC2 · NOISE · FOLD · SUB DRIFT: TYPE · SUB · DRIFT. Its filter is the track FILTER (FX → FILTER), which the 25 factory sounds set | · CRSH |
 
-Every engine except FMTONE uses SLOOP's FX → FILTER; FMTONE has its own filter page. (ANALOG4, SAW and PULS are retired in this build.) The track LFO, the arp, UNISON, MONO and LEGATO work on all eight.
+Every engine except FMTONE uses SLOOP's FX → FILTER (the MS20); FMTONE has its own filter page. (ANALOG4, SAW and PULS are retired in this build.) The track LFO, the arp, UNISON, MONO and LEGATO work on all eight.
 
 ### Polyphony
 
@@ -801,7 +801,7 @@ The three synth tracks **share one pool of 8 voices**; the drum track has its ow
 | Voices | Engines |
 | --- | --- |
 | **8** | LOFI, WHEEL, NOISE |
-| **6** | FMTONE, WAV, GOLANA |
+| **6** | GOLANA, FMTONE, WAV |
 | **4** | VOICE |
 | **3** | ENS |
 
@@ -869,7 +869,7 @@ The texture is saved with the project, and each song section (A–D) has its own
 
 ### Per track
 
-- **FILTER** (FX → FILTER, or **FX + KNOB 4** for the selected track): one knob, left a low-pass, right a high-pass, centre off. **sloop_custom:** the filter (all four settings) is part of the sound, like the sends: a **factory preset loads a flat filter**, and a **user preset brings the filter it was saved with** (older user presets load the cutoff they stored and RES, KEY and DIST at 0). It can be locked on a step, and is saved with the project. Its **resonance** is **per track**: FX → FILTER, KNOB 2 **RES** (0 clean … 10; **sloop_custom:** 11–15 the scream), kept with the track, the project and a lock like the cutoff. **KEY** (KNOB 3, **sloop_custom**, 0–100 % in tens) makes the cutoff follow the pitch you play: at 100 % an octave up opens the filter an octave, at 0 % it stays put. The filter sits on the whole track, so it follows the average of the notes held (and keeps the last one while they die away). **DIST** (KNOB 4, 0–100 % in tens) is a drive *in front of* the filter, as in MONO2K's chain: the signal is pushed into a soft clip at its own peak (so the level stays put and the wave fills out), then the filter works on all those extra harmonics. Heavy DIST with high RES and a sweeping cutoff is the squelchy, acid sound; it also works with the filter knob centred (drive only). **(2.8) The drum track has it too:** FX → FILTER sweeps and shapes the whole kit, live.
+- **FILTER** (FX → FILTER, or **FX + KNOB 4** for the selected track): **sloop_custom:** Golana's **MS20** filter (a 12 dB low-pass with a driven soft clip and a saturating resonance; the knob's right side is the high-pass), one knob, left a low-pass, right a high-pass, centre off. The filter (all four settings) is part of the sound, like the sends: a **factory preset loads a flat filter**, and a **user preset brings the filter it was saved with**. It can be locked on a step, and is saved with the project. **RES** (KNOB 2, 0–15, per track) goes from a mild peak to a ringing, near self-oscillating one (the resonance saturates, it does not run away; past 10 the output is also held near the signal's level). **KEY** (KNOB 3, 0–100 % in tens) makes the cutoff follow the pitch you play: at 100 % an octave up opens the filter an octave. The filter sits on the whole track, so it follows the average of the notes held. **EGINT** (KNOB 4, signed −64..63) lets the notes' envelope move the cutoff: positive opens it as a note starts and closes it as it dies, negative the other way; it is the same value as ENV DEST's EGINT, so it also moves the filters some engines have of their own. The drum track has no envelope, so EGINT does nothing there. **(2.8) The drum track has it too:** FX → FILTER sweeps and shapes the whole kit, live. (The old DIST drive is retired.)
 - **Sends** (FX page): DST drive, CHO chorus, DLY delay, REV reverb. The delay and the reverb / chorus settings are global (DLY and REV/CHO pages). The delay's TIME includes dotted 1/8 and 1/16.
 - **SLICER** (FX → SLICER): a tempo gate (GATE) or stutter (STUT), 16 patterns, 1/8 to 32T, with a depth.
 - **INSERT** (FX → INSERT and INSERT 2, 2.6, after Felucca 1.5): one effect on the track alone, right after its drive; the drum track has one too, on the whole kit and its sends. MIX sets dry / wet. A, B and C change with the type:

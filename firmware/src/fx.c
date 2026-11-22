@@ -370,17 +370,18 @@ typedef struct {
 } djf_t;
 static djf_t djf, tflt[NTRK];
 
-/* (2.7.2, per track in sloop_custom) the track filter's resonance P_TRES (FX > FILTER, KNOB 2) -> the damping (Q12) for
- * tsvf_coef_k: 0 is the clean filter as it always was (reso 40), 1..10 up to reso 110 (a strong but still stable peak;
- * tflt_run leaves 4x headroom for it); 11..15, after Melodee's FILTER M2K (its resonant two-pole reaches Q 1000 and is
- * clipped): Q 4, 8, 16, 32, 64 (damping 1024 .. 64). Past 10 the filter rings and tflt_run clips what comes out of it
- * (the scream) so the level stays near the signal's. The master DJ filter (G_FILT) and the tape TONE keep the fixed 40. */
+/* (2.7.2, per track in sloop_custom; the MS20 from Golana, Gadlele's golana-v1.3, GPL-3.0) the track filter's resonance P_TRES
+ * (FX > FILTER, KNOB 2, 0..15) -> the damping (Q12) for tsvf_coef_k, Golana's MS20 mapping `8192 - reso * 8140 / 127` with reso
+ * 30 .. 127 over the 16 steps: 0 a mild peak, 15 a ringing, near self-oscillating one. The filter is Golana's MS20: a 12 dB
+ * low-pass (the knob's high-pass is the input less that low-pass) with a driven soft clip in front of it and the resonating
+ * state itself saturated (the scream: it rings and bites, it does not run away). Past FLT_SCREAM the output is also kept to
+ * twice the block's input peak (tflt_run), so the level stays near the signal's. The master DJ filter (G_FILT) and the tape
+ * TONE keep the plain SVF at the fixed damping 40. */
 #define FLT_SCREAM 10
 static int32_t tflt_k(int32_t r)
 {
-    static const int16_t K[5] = {1024, 512, 256, 128, 64};
     r = r < 0 ? 0 : r > 15 ? 15 : r;
-    return r > FLT_SCREAM ? K[r - FLT_SCREAM - 1] : 8192 - (40 + r * 7) * 7600 / 127;
+    return 8192 - (30 + r * 97 / 15) * 8140 / 127;
 }
 /* sloop_custom: KEY TRACKING (P_TKEY, 0..100 %): the track filter's cutoff follows the pitch played, a semitone being ~1.168
  * CUTOFF_HZ steps (the filter's index is logarithmic): 100 % opens it an octave for an octave up, as the note does. The filter
@@ -401,6 +402,23 @@ static int32_t tflt_key(djf_t *f, const track_t *t)
         f->kp += clamp(to - f->kp, -64, 64);
     }
     return f->kp * kt * 187 / 1000;                     /* 1/16 semitone x % x 18.7 (299 / 16) / 100 */
+}
+/* sloop_custom: EG INT (P_ED_FLT, signed -64..63): the sounding voices' envelope (the loudest of them: the track's filter sits on
+ * their sum) opens (+) or closes (-) the track filter's cutoff, in the units the engines' own filters take it (voice.c m.cutoff:
+ * the envelope in Q15 x EG INT >> 7, cutoff index << 8). An engine with its own envelopes (FM6) gives its amplitude. Returns the
+ * offset to the cutoff, in index << 8; the drum track has no envelope (0) */
+static int32_t tflt_eg(const track_t *t)
+{
+    int32_t amt = t->p[P_ED_FLT], e = 0, x;
+    uint32_t i;
+    if (!amt || is_drum(t))
+        return 0;
+    for (i = 0; i < NVOICE; i++)
+        if (t->v[i].active && t->v[i].stage >= 1u && t->v[i].stage <= 3u) {
+            x = ENGINES[t->engine]->ownenv ? t->v[i].env_out : t->v[i].env >> 9;
+            e = x > e ? x : e;
+        }
+    return (clamp(e, 0, 32767) * amt) >> 7;
 }
 /* the knob v -> this block's coefficients in *c; 0 = bypassed (nothing to do). k: the damping, Q12 (tsvf_coef_k) */
 static int djf_block(djf_t *f, int32_t v, tsvf_t *c, int32_t k, int32_t off)
@@ -445,45 +463,46 @@ static void djf_run(djf_t *f, const tsvf_t *c, int32_t *b, uint32_t n, uint32_t 
         b[i] = f->mode < 0 ? y : x - y;
     }
 }
-/* sloop_custom: DIST (P_TDIST, 0..10 = 0..100 %): a drive in front of the filter, as Melodee's M2K chain has it (its DIST
- * is ahead of the resonant stage). The gain grows 1x .. 32x (TDIST_G, Q8, between the points a quarter apart), and the
- * result is rounded by a soft clip at the block's own peak (2000 at least): the level stays where it was, the wave fills
- * out towards a square and the filter then works on all the harmonics that makes (a fatter, squelchier resonance; the
- * cutoff sweeps the drive's brightness). 0: nothing */
-static const int16_t TDIST_G[5] = {256, 512, 1024, 2560, 8192};
-static void tflt_drive(int32_t *b, uint32_t n, int32_t dist)
+/* sloop_custom: Golana's MS20 on n samples of channel ch (x within +-140000): the input driven through a soft clip, the
+ * trapezoidal SVF's first state saturated (eng_golana.c, case 4); the low-pass is v2, the high-pass the (driven) input less it */
+static void ms20_run(djf_t *f, const tsvf_t *c, int32_t *b, uint32_t n, uint32_t ch)
 {
     uint32_t i;
-    int32_t pk = 0, q = dist * 40 / 10, g, k;                  /* 0..40: ten steps over four segments of ten */
-    int32_t seg = q / 10 > 3 ? 3 : q / 10, fr = q - seg * 10;
-    g = TDIST_G[seg] + (TDIST_G[seg + 1] - TDIST_G[seg]) * fr / 10;
-    for (i = 0; i < n; i++)
-        pk = b[i] > pk ? b[i] : -b[i] > pk ? -b[i] : pk;
-    pk = pk < 2000 ? 2000 : pk;
-    k = g * 65536 / pk;                                     /* |b| <= pk: b * k fits 32 bits (g * 65536 at most) */
-    for (i = 0; i < n; i++) {
-        int32_t u = clamp((b[i] * k) >> 12, -4096, 4096);   /* x * gain / peak, Q12, +-1 */
-        int32_t s = u - (((u * u >> 12) * u >> 12) / 3);    /* u - u^3 / 3: 2/3 at the clip */
-        b[i] = (s * 3 / 2) * pk >> 12;
+    int32_t b1 = f->z[ch][0], b2 = f->z[ch][1];
+    if ((f->seed >> ch) & 1u) {
+        f->seed &= (uint8_t)~(1u << ch);
+        if (f->mode < 0 && n) {
+            b1 = 0;                                     /* at rest on this input: the output is it (as djf_run) */
+            b2 = clamp(b[0], -65535, 65535);
+        }
     }
+    for (i = 0; i < n; i++) {
+        int32_t in = softclip(clamp(b[i] * 2, -65535, 65535)) >> 1, v1, v2, v3 = in - b2;
+        v1 = (c->a1 * b1 + c->a2 * v3) >> 13;
+        v2 = b2 + ((c->a2 * b1 + c->a3 * v3) >> 13);
+        b1 = softclip(clamp((2 * v1 - b1) >> 1, -65535, 65535)) << 1;
+        b2 = clamp(2 * v2 - b2, -150000, 150000);
+        v2 = clamp(v2, -65535, 65535);
+        b[i] = f->mode < 0 ? v2 : in - v2;
+    }
+    f->z[ch][0] = b1;
+    f->z[ch][1] = b2;
 }
-/* a track's filter on a signal at 4x its level (b >> 2 into the filter's range, back << 2). c == 0: the filter is flat
- * (the knob at the centre), only the drive runs */
-static void tflt_run(djf_t *f, const tsvf_t *c, int32_t *b, uint32_t n, uint32_t ch, int32_t reso, int32_t dist)
+/* a track's filter on a signal at 4x its level (b >> 2 into the filter's range, back << 2) */
+static void tflt_run(djf_t *f, const tsvf_t *c, int32_t *b, uint32_t n, uint32_t ch, int32_t reso)
 {
     uint32_t i;
     int32_t lim = 0;
+    if (!c)
+        return;
     for (i = 0; i < n; i++)
         b[i] >>= 2;
-    if (dist > 0)
-        tflt_drive(b, n, dist);
-    if (c && reso > FLT_SCREAM) {                       /* the scream: the ceiling is twice the block's input peak (8000 at least) */
+    if (reso > FLT_SCREAM) {                            /* the scream: the ceiling is twice the block's input peak (8000 at least) */
         for (i = 0; i < n; i++)
             lim = b[i] > lim ? b[i] : -b[i] > lim ? -b[i] : lim;
         lim = lim < 4000 ? 8000 : lim * 2;
     }
-    if (c)
-        djf_run(f, c, b, n, ch);
+    ms20_run(f, c, b, n, ch);
     if (lim)
         for (i = 0; i < n; i++)
             b[i] = clamp(b[i], -lim, lim);
@@ -777,9 +796,9 @@ static void mix_part_run(track_t *t, uint32_t n, mixacc_t *mx, int32_t *b)
         {
             tsvf_t fc;                                  /* the track's FILTER (P_TFLT), after the SLICER */
             djf_t *f = &tflt[(uint32_t)(t - trk) % NTRK];
-            int on = djf_block(f, t->p[P_TFLT], &fc, tflt_k(t->p[P_TRES]), tflt_key(f, t));
-            if (on || t->p[P_TDIST])
-                tflt_run(f, on ? &fc : 0, b, n, 0, t->p[P_TRES], t->p[P_TDIST]);
+            int on = djf_block(f, t->p[P_TFLT], &fc, tflt_k(t->p[P_TRES]), tflt_key(f, t) + tflt_eg(t));
+            if (on)
+                tflt_run(f, &fc, b, n, 0, t->p[P_TRES]);
         }
         int32_t lvl0, dl, gl0, dgl, gr0, dgr;          /* (2.7) LEVEL (and a new sound's trim) and PAN glide (drums.c
                                                          * mix_glide), ramped sample by sample inside the block */
@@ -919,17 +938,17 @@ static void mix_drums(uint32_t n, mixacc_t *mx)
     drums.a0 = TDRUM->att;                              /* the drum track's mute / solo fade */
     drums.a1 = 32767 - gain_next(TDRUM);
     flt = n <= CTL && djf_block(f, TDRUM->p[P_TFLT], &fc, tflt_k(TDRUM->p[P_TRES]), 0);   /* the drum track's FILTER */
-    if (flt || (n <= CTL && (TDRUM->p[P_TDIST] | TDRUM->p[P_ITYPE] | TDRUM->ins_run))) {   /* .. or its INSERT: left, right, the sends */
+    if (flt || (n <= CTL && (TDRUM->p[P_ITYPE] | TDRUM->ins_run))) {   /* .. or its INSERT: left, right, the sends */
         int32_t *dl = drum_buf[0], *dr = drum_buf[1], *dv = drum_buf[2], *dd = drum_buf[3];
         for (i = 0; i < n; i++)
             dl[i] = dr[i] = dv[i] = dd[i] = 0;
         slicer_drums(dl, dr, dv, dd, n);
         drum_insert(dl, dr, dv, dd, n);                 /* (2.6: off, nothing) */
-        if (flt || TDRUM->p[P_TDIST]) {
-            tflt_run(f, flt ? &fc : 0, dl, n, 0, TDRUM->p[P_TRES], TDRUM->p[P_TDIST]);
-            tflt_run(f, flt ? &fc : 0, dr, n, 1, TDRUM->p[P_TRES], TDRUM->p[P_TDIST]);
-            tflt_run(f, flt ? &fc : 0, dv, n, 2, TDRUM->p[P_TRES], TDRUM->p[P_TDIST]);
-            tflt_run(f, flt ? &fc : 0, dd, n, 3, TDRUM->p[P_TRES], TDRUM->p[P_TDIST]);
+        if (flt) {
+            tflt_run(f, &fc, dl, n, 0, TDRUM->p[P_TRES]);
+            tflt_run(f, &fc, dr, n, 1, TDRUM->p[P_TRES]);
+            tflt_run(f, &fc, dv, n, 2, TDRUM->p[P_TRES]);
+            tflt_run(f, &fc, dd, n, 3, TDRUM->p[P_TRES]);
         }
         for (i = 0; i < n; i++) {
             mx->l[i] += dl[i];

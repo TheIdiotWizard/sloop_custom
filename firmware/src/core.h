@@ -22,14 +22,14 @@ enum { V_POLY, V_MONO, V_LEGATO, V_UNISON };   /* P_VOICE */
  * upreset.c UP_VER). The retired engines' code that other parts still need (eng_sample.c: the drum kits' samples, the
  * user sample slots; eng_fm6.c: compiled, never played) stays; their indices are past NENGINES, which no track holds. */
 #define NENGINES 8u
-#define ENGI_FMTONE 0u           /* sloop_custom: ANALOG4, SAW and PULS are retired */
-#define ENGI_ENS 1u              /* ENS WAV: 1..2 (eng_m2k.c m2k_kind) */
-#define ENGI_WAV 2u
-#define ENGI_LOFI 3u
-#define ENGI_FORMANT 4u
-#define ENGI_DRAWBAR 5u
-#define ENGI_NOISE 6u
-#define ENGI_GOLANA 7u          /* sloop_custom: Golana's oscillator section (eng_golana.c, Gadlele) */
+#define ENGI_GOLANA 0u           /* sloop_custom: Golana's oscillator section (eng_golana.c, Gadlele): the first engine */
+#define ENGI_FMTONE 1u           /* ANALOG4, SAW and PULS are retired */
+#define ENGI_ENS 2u              /* ENS WAV: 2..3 (eng_m2k.c m2k_kind) */
+#define ENGI_WAV 3u
+#define ENGI_LOFI 4u
+#define ENGI_FORMANT 5u
+#define ENGI_DRAWBAR 6u
+#define ENGI_NOISE 7u
 #define ENGI_FM6 0xF0u           /* (retired: no track's engine; eng_fm6.c is compiled for the editor's FM6 bank only) */
 #define ENGI_GRAIN 0xF1u
 #define ENGI_PHYS 0xF2u
@@ -85,11 +85,11 @@ enum {                          /* per-track parameters */
     P_FM2_ATK, P_FM2_DEC, P_FM2_SUS, P_FM2_REL, P_FM2_LEVEL,
     P_FM3_ATK, P_FM3_DEC, P_FM3_SUS, P_FM3_REL, P_FM3_LEVEL,
     P_FM4_ATK, P_FM4_DEC, P_FM4_SUS, P_FM4_REL, P_FM4_LEVEL,
-    P_TRES,                                    /* sloop_custom: the track filter's RESONANCE, 0 clean .. 10, 11..15 the clipped scream (fx.c);
+    P_TRES,                                    /* sloop_custom: the track filter's RESONANCE, 0 mild .. 15 near self-oscillating, the MS20 (fx.c);
                                                 * a project keeps it in the engine byte's high nibble (project.c pt_get) */
     P_TKEY,                                    /* sloop_custom: the track filter's KEY TRACKING, 0..10 = 0..100 % of the played pitch (fx.c) */
-    P_TDIST,                                   /* sloop_custom: the track filter's DIST, a drive in front of it, 0..10 = 0..100 % (fx.c tflt_run);
-                                                * KEY and DIST share one byte of a project, a nibble each (project.c) */
+    P_TDIST,                                   /* sloop_custom: RETIRED (the track filter's DIST, replaced by EG INT = P_ED_FLT); kept so ids and
+                                                * projects stay put, always 0 now; KEY and DIST share one byte of a project, a nibble each (project.c) */
     P_E0, P_E1, P_E2, P_E3, P_E4, P_E5, P_E6, P_E7,
     P_COUNT
 };
@@ -170,8 +170,8 @@ typedef struct {
     uint8_t pat;                 /* sequence pattern (PATTERNS[pat - 1]), loaded only into an empty sequencer */
     int8_t x[8];                 /* more of the patch: up to 4 (track parameter id + 1, value) pairs, 0 = none
                                   * (glide, pitch / LFO modulation, voice mode...: preset_extras) */
-    int8_t flt[4];               /* sloop_custom: the track FILTER the sound brings: FILT, RES, KEY, DIST (0 = flat: P_TFLT,
-                                  * P_TRES, P_TKEY, P_TDIST; melodee's FMTONE sounds carry theirs) */
+    int8_t flt[4];               /* sloop_custom: the track FILTER the sound brings: FILT, RES, KEY (0 = flat: P_TFLT,
+                                  * P_TRES, P_TKEY; [3] unused, was DIST; the EG INT is `fenv`; melodee's FMTONE sounds carry theirs) */
 } preset_t;
 #define FX(d, c, dl, r) .fx = {(d) + 1, (c) + 1, (dl) + 1, (r) + 1}
 #define ARP(m, rt, o, g) .arp = {(m) + 1, (rt) + 1, (o) + 1, (g) + 1}
