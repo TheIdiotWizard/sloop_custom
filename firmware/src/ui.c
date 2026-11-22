@@ -668,7 +668,7 @@ UI_SMALL static void apply_preset_to(track_t *t, uint32_t pi)
     t->p[P_SUS] = e->presets[pi].env[2];
     t->p[P_REL] = e->presets[pi].env[3];
     t->p[P_ED_FLT] = e->presets[pi].fenv;
-    t->p[P_ED_FX] = preset_trim(t->eng_req % NENGINES, pi);  /* level-matched (tools/level_presets.py) */
+    t->p[P_ED_FX] = 0;                                       /* (the TRIM stays the user's: the engines' levels are ENG_TRIM, fx.c) */
     t->p[P_VOICE] = e->presets[pi].mono ? V_LEGATO : V_POLY;   /* mono presets keep the legato feel */
     {   /* the rest of the patch: sends, arpeggiator (never a pattern: LIVE) */
         static const uint8_t FX_DEF[4] = {0, 0, 0, 0};   /* sloop_custom: a preset with no sends of its own loads dry (Sloop: 0, 24, 28, 36) */

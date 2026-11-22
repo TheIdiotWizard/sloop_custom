@@ -762,7 +762,7 @@ Notes:
 
 ### The sound bank
 
-**87 factory sounds** on the eight engines, level-matched. **PRESETS** lists them **by engine**, in the engine order below (all the GOLANA sounds, then FMTONE, and so on). Where two engines have a sound of the same name, the later engine's gets a number: FMTONE's DRONE is **DRONE 2**; your own user presets sit at the end of their engine's group. The sound's kind is shown next to its name. **KNOB 3 (TYPE)** filters the list by kind. The effect sends of a loaded sound are as the sound defines them; the delay send is always 0.
+**87 factory sounds** on the eight engines, each engine calibrated to the same loudness (as in Felucca: no trim per sound, nothing cut by the number of notes: the master limiter takes the chords). **PRESETS** lists them **by engine**, in the engine order below (all the GOLANA sounds, then FMTONE, and so on). Where two engines have a sound of the same name, the later engine's gets a number: FMTONE's DRONE is **DRONE 2**; your own user presets sit at the end of their engine's group. The sound's kind is shown next to its name. **KNOB 3 (TYPE)** filters the list by kind. The effect sends of a loaded sound are as the sound defines them; the delay send is always 0.
 
 | Kind | Sounds (engine) |
 | --- | --- |

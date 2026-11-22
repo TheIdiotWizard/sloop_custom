@@ -616,13 +616,14 @@ static void t_glide(void)
     memcpy(dry, shared_dry, sizeof dry);
     trk[0].p[P_LEVEL] = 40;                             /* a big jump at once (a fast knob, MIDI) */
     render(64);
-    rt = (double)LEVEL_Q12[40] / LEVEL_Q12[100];
+    #define LVX(l) LEVEL_Q12[clamp((l) + ENG_TRIM[trk[0].engine % NENGINES], 1, 127)]   /* (LEVEL and the engine's trim) */
+    rt = (double)LVX(40) / LVX(100);
     for (b = 0; b < 64u; b++)
         r[b] = GAIN_OF(b);
     printf("  LEVEL 100 -> 40: gain %.3f %.3f %.3f %.3f .. block 24 %.3f .. 63 %.3f (target %.3f)\n", r[0], r[1], r[2], r[3],
            r[24], r[63], rt);
     check(r[0] > 0.8 && r[1] < r[0] && r[2] < r[1] && fabs(r[24] - rt) < 0.01 && fabs(r[63] - rt) < 0.005 &&
-          trk[0].lvl == LEVEL_Q12[40],
+          trk[0].lvl == LVX(40),
           "LEVEL: a jump glides over ~3 ms (the first block keeps most of the old level), then lands exactly");
     setup();
     trk_note_on(&trk[0], 45, 100);

@@ -421,7 +421,7 @@ The screen shows the 27 keys as a keyboard: the white keys in four rows of four,
 
 ## The sound bank
 
-**87 factory sounds** on eight engines (GOLANA, FMTONE, ENS, WAV, LOFI, VOICE, WHEEL, NOISE), level-matched. **PRESETS** lists them engine by engine; your own presets come at the end of their engine's group, and **KNOB 3** filters by kind (bass, keys, organ, pad, lead, pluck, stab, FX).
+**87 factory sounds** on eight engines (GOLANA, FMTONE, ENS, WAV, LOFI, VOICE, WHEEL, NOISE), each engine calibrated to the same loudness (as in Felucca: no trim per sound, nothing cut by the number of notes: the master limiter takes the chords). **PRESETS** lists them engine by engine; your own presets come at the end of their engine's group, and **KNOB 3** filters by kind (bass, keys, organ, pad, lead, pluck, stab, FX).
 
 | Kind | Sounds (engine) |
 | --- | --- |

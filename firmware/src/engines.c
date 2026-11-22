@@ -166,11 +166,3 @@ static void m2k_spread(track_t *t, voice_t *v, uint32_t r)
     for (k = 0; k < 7u; k++)                           /* (each oscillator a share r of its own cycle on) */
         s->ph[k] += r;
 }
-
-/* every factory sound as loud as the others: a level trim per preset, 1/2 dB, measured on a phrase
- * that fits the sound (tools/level_presets.py writes preset_trim.h); a track keeps it in P_ED_FX */
-#include "preset_trim.h"
-static int16_t preset_trim(uint32_t e, uint32_t pi)
-{
-    return e < PT_ENGINES && pi < PT_MAX ? PRESET_TRIM[e][pi] : 0;
-}

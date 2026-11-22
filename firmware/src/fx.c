@@ -752,13 +752,10 @@ static void mix_part(track_t *t, uint32_t n, mixacc_t *mx, int32_t *b)   /* into
     mix_part_run(t, n, mx, b);
     memcpy(t->p, pn, sizeof pnew[0]);
 }
-/* (sloop_custom, headroom) a part's voices add up: n voices sounding at once are ~sqrt(n) louder (their sum, uncorrelated) and,
- * in tune or in a unison, up to n times. The part's LEVEL is cut by 1/sqrt(n): one voice as it was, a chord of 6 at -7.8 dB, so
- * a full chord stays under the limiter where one note of the same sound sits just under it (melodee keeps its chords
- * under its limiter with a fixed headroom; here the sounds are level-matched on one note, the chord is what is cut).
- * The factor goes into the LEVEL gain, which glides (mix_glide) as a note starts or ends. tools/headroom_presets.py sets the
- * trims against the peak of a six-note chord (tests/chord_probe.c). */
-static const uint16_t VC_GAIN[NVOICE + 1] = {32768, 32768, 23170, 18919, 16384, 14654, 13377, 12385, 11585};   /* 32768 / sqrt(n) */
+/* (sloop_custom) the engines' levels: as in Felucca, a sound is not trimmed and a chord is not cut by its voice count: the engines
+ * are calibrated to come out alike (ENG_TRIM, 1/2 dB steps of LEVEL, from tools/level_engines.py: the median loudness of each
+ * engine's factory sounds on the phrases of tests/preset_level.c) and the master limiter takes what a chord adds up to */
+#include "engine_trim.h"
 static void mix_part_run(track_t *t, uint32_t n, mixacc_t *mx, int32_t *b)
 {
     uint32_t i, nv = track_render(t, b, n);
@@ -779,7 +776,7 @@ static void mix_part_run(track_t *t, uint32_t n, mixacc_t *mx, int32_t *b)
         return;
     }
     {
-        int32_t lvl = mulq15(expr_gain(LEVEL_Q12[t->p[P_LEVEL] ? clamp(t->p[P_LEVEL] + t->p[P_ED_FX], 1, 127) : 0], (uint32_t)(t - trk)), VC_GAIN[nv < NVOICE ? nv : NVOICE]), pan = t->p[P_PAN];   /* (+ the sound's trim: 1/2 dB steps, as LEVEL's) */
+        int32_t lvl = expr_gain(LEVEL_Q12[t->p[P_LEVEL] ? clamp(t->p[P_LEVEL] + t->p[P_ED_FX] + ENG_TRIM[t->engine % NENGINES], 1, 127) : 0], (uint32_t)(t - trk)), pan = t->p[P_PAN];   /* (+ the TRIM and the engine's: 1/2 dB steps, as LEVEL's) */
         int32_t gl = 4096 - (pan > 0 ? pan * 64 : 0), gr = 4096 + (pan < 0 ? pan * 64 : 0);
         int32_t c = t->p[P_CHOR] * 258, d = send_thr(t->p[P_DLY] * 258, thr_dly), r = send_thr(t->p[P_REV] * 258, thr_rev);
         int32_t pk = t->peak;
