@@ -117,6 +117,10 @@ static void lim_block(lim_t *s, int32_t *l, int32_t *r, uint32_t n)
     }
     s->w = w;
 }
+#ifdef PROBE_PRELIM
+static int32_t probe_pk;
+static double probe_ss;
+#endif
 static volatile uint8_t fx_lowcut;     /* settings: 12 dB/oct ~110 Hz for the small speaker */
 static int32_t lc_l1, lc_l2, lc_r1, lc_r2, dc_l, dc_r, dce_l, dce_r;
 
@@ -729,11 +733,18 @@ static void mix_part(track_t *t, uint32_t n, mixacc_t *mx, int32_t *b)   /* into
     mix_part_run(t, n, mx, b);
     memcpy(t->p, pn, sizeof pnew[0]);
 }
+/* (sloop_custom, headroom) a part's voices add up: n voices sounding at once are ~sqrt(n) louder (their sum, uncorrelated) and,
+ * in tune or in a unison, up to n times. The part's LEVEL is cut by 1/sqrt(n): one voice as it was, a chord of 6 at -7.8 dB, so
+ * a full chord stays under the limiter where one note of the same sound sits just under it (melodee keeps its chords
+ * under its limiter with a fixed headroom; here the sounds are level-matched on one note, the chord is what is cut).
+ * The factor goes into the LEVEL gain, which glides (mix_glide) as a note starts or ends. tools/headroom_presets.py sets the
+ * trims against the peak of a six-note chord (tests/chord_probe.c). */
+static const uint16_t VC_GAIN[NVOICE + 1] = {32768, 32768, 23170, 18919, 16384, 14654, 13377, 12385, 11585};   /* 32768 / sqrt(n) */
 static void mix_part_run(track_t *t, uint32_t n, mixacc_t *mx, int32_t *b)
 {
-    uint32_t i;
+    uint32_t i, nv = track_render(t, b, n);
     int32_t g0 = 32767 - t->att, g1 = gain_next(t);
-    if (track_render(t, b, n))
+    if (nv)
         t->tail = t->p[P_ITYPE] ? 64 : 16, t->ins_xt = 0;              /* blocks of DIST / INSERT state to run out after the last
                                                          * voice (the INSERT's: 46 ms, a flanger's feedback) */
     else if ((!t->tail || !(t->p[P_DIST] | t->p[P_ITYPE]) || !--t->tail) && !slicer_busy(t) &&
@@ -749,7 +760,7 @@ static void mix_part_run(track_t *t, uint32_t n, mixacc_t *mx, int32_t *b)
         return;
     }
     {
-        int32_t lvl = expr_gain(LEVEL_Q12[t->p[P_LEVEL] ? clamp(t->p[P_LEVEL] + t->p[P_ED_FX], 1, 127) : 0], (uint32_t)(t - trk)), pan = t->p[P_PAN];   /* (+ the sound's trim: 1/2 dB steps, as LEVEL's) */
+        int32_t lvl = mulq15(expr_gain(LEVEL_Q12[t->p[P_LEVEL] ? clamp(t->p[P_LEVEL] + t->p[P_ED_FX], 1, 127) : 0], (uint32_t)(t - trk)), VC_GAIN[nv < NVOICE ? nv : NVOICE]), pan = t->p[P_PAN];   /* (+ the sound's trim: 1/2 dB steps, as LEVEL's) */
         int32_t gl = 4096 - (pan > 0 ? pan * 64 : 0), gr = 4096 + (pan < 0 ? pan * 64 : 0);
         int32_t c = t->p[P_CHOR] * 258, d = send_thr(t->p[P_DLY] * 258, thr_dly), r = send_thr(t->p[P_REV] * 258, thr_rev);
         int32_t pk = t->peak;
@@ -1311,6 +1322,13 @@ static void mix_block(int32_t *out, uint32_t n)
                 master_pre_usb(&ul[i], &ur[i]);
             }
         }
+#ifdef PROBE_PRELIM                                     /* tests/chord_probe.c: the peak of the mix as it enters the limiter */
+        for (i = 0; i < n; i++) {
+            int32_t a = ol[i] < 0 ? -ol[i] : ol[i], b = orr[i] < 0 ? -orr[i] : orr[i];
+            probe_pk = a > probe_pk ? a : probe_pk, probe_pk = b > probe_pk ? b : probe_pk;
+            probe_ss += ((double)ol[i] * ol[i] + (double)orr[i] * orr[i]) * 0.5;
+        }
+#endif
         lim_block(&lim_dac, ol, orr, n);
         for (i = 0; i < n; i++) {
             out[2u * i] = knee(ol[i]);

@@ -2132,7 +2132,7 @@ static void t_usbfull(void)
     uint32_t k, i;
     int32_t out[CTL * 2], pk_dac = 0, pk_usb = 0;
     reset(120);
-    trk[0].p[P_VOICE] = V_POLY, trk[0].p[P_LEVEL] = 30;   /* (sloop_custom: the default sound is mono and hot: eight notes, kept off the limiter) */
+    trk[0].p[P_VOICE] = V_POLY;                       /* (sloop_custom: the default sound is mono; eight notes) */
     song.master_q12 = 512;                            /* MASTER low */
     master_cur = -1;
     usb_full_now = 1;
