@@ -60,7 +60,7 @@ static void track_dist(track_t *t, int32_t *b, uint32_t n)
  * CTL samples late (0.73 ms) and the gain glides over each block to what the loudest sample of it and of the next one
  * needs, so a hot kick or bass is already turned down when it comes. Before, the gain caught up in ~4 samples and the
  * first ones went through the tanh knee at up to 4x: a crackle on the beats with the MASTER up (in headphones most) */
-#define LIM_T 18000
+#define LIM_T 24000                     /* (sloop_custom: 18000 before the headroom work, which put the sounds under it; melodee: 26000) */
 typedef struct {
     int32_t dl[CTL], dr[CTL];           /* the mix of the last block (the delay) */
     uint32_t w;                         /* its oldest sample (the next out) */
@@ -148,7 +148,7 @@ static inline int32_t lowcut1(int32_t x, int32_t *lc, int32_t *err)   /* x minus
 
 /* the output stage: linear up to KNEE (a clean low end: no tanh harmonics on a loud sine), above it
  * a tanh knee with the same slope at the joint, to full scale */
-#define KNEE 16384
+#define KNEE 20000                      /* (16384 before LIM_T 24000) */
 static inline int32_t knee(int32_t x)
 {
     int32_t a = x < 0 ? -x : x;

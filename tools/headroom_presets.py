@@ -23,8 +23,8 @@ import sys
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parent.parent / "firmware/src/preset_trim.h"
-RMS_T = -14.0            # dBFS RMS: a saw-like sound with a crest of 9 dB peaks at the limiter's threshold, -5
-PEAK_T = 3.0             # dBFS: the limiter takes 8 dB off a peak this high
+RMS_T = -11.5            # dBFS RMS: a saw-like sound with a crest of 9 dB peaks at the limiter's threshold, -2.7 (LIM_T 24000)
+PEAK_T = 5.5             # dBFS: the limiter takes 8 dB off a peak this high (LIM_T 24000)
 LO, HI = -40, 23         # the trim's range, 1/2 dB (preset_trim.h: LEVEL 104 + 23 = 127)
 
 
