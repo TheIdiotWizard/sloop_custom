@@ -168,7 +168,7 @@ typedef struct {
     uint8_t fx[4];               /* DIST, CHORUS, DELAY, REVERB sends */
     uint8_t arp[4];              /* MODE, RATE, OCT, GATE */
     uint8_t pat;                 /* sequence pattern (PATTERNS[pat - 1]), loaded only into an empty sequencer */
-    int8_t x[8];                 /* more of the patch: up to 4 (track parameter id + 1, value) pairs, 0 = none
+    int8_t x[12];                /* more of the patch: up to 6 (track parameter id + 1, value) pairs, 0 = none
                                   * (glide, pitch / LFO modulation, voice mode...: preset_extras) */
     int8_t flt[4];               /* sloop_custom: the track FILTER the sound brings: FILT, RES, KEY (0 = flat: P_TFLT,
                                   * P_TRES, P_TKEY; [3] unused, was DIST; the EG INT is `fenv`; melodee's FMTONE sounds carry theirs) */

@@ -36,35 +36,8 @@ static void midi(uint8_t st, uint8_t d1, uint8_t d2)
 
 static int repro_root(void)
 {
-    uint8_t a[700], d[256], hdr[sizeof(smp_user_hdr_t)];
-    smp_user_hdr_t *h = (smp_user_hdr_t *)hdr;
-    uint32_t n, i;
-    a[0] = 0; ed(ED_SMP_BEGIN, a, 1);                   /* slot USR1 */
-    for (i = 0; i < 256; i++) d[i] = (uint8_t)(i * 37u);
-    n = 0; a[n++] = 0; a[n++] = 512 & 127; a[n++] = 512 >> 7; a[n++] = 0;
-    n += pack7(a + n, d, 256);
-    ed(ED_SMP_WRITE, a, n);
-    memset(hdr, 0, sizeof hdr);
-    h->magic = SMP_USER_MAGIC; h->version = 1; h->nz = 1; memcpy(h->name, "ROOT", 4);
-    h->data_len = 256; h->crc = st_crc32(d, 256);
-    h->zone[0].off = 0; h->zone[0].n = 512; h->zone[0].ls = 0; h->zone[0].le = 511; h->zone[0].rate = 0x8000;
-    h->zone[0].lo = 0; h->zone[0].hi = 127;
-    h->zone[0].root16 = 32767;                         /* every check of the header passes: smp_zone_ok has no root check */
-    n = 0; a[n++] = 0; n += pack7(a + n, hdr, sizeof hdr);
-    ed(ED_SMP_END, a, n);
-    printf("SMP_END rc %u, usr_nz[0] %u\n", rx_n > 6 ? rx_last[6] : 99u, usr_nz[0]);
-    a[0] = TRK_DRUM; a[1] = P_E0; a[2] = (uint8_t)((DRUM_USR + 8192) & 127); a[3] = (uint8_t)((DRUM_USR + 8192) >> 7);
-    ed(ED_TRACK_PARAM, a, 4);                           /* the drum track's KIT: USR1 */
-    printf("drum kit %d (USR1 = %u); a kick on MIDI channel 10:\n", TDRUM->p[P_E0], DRUM_USR);
-    midi(0x99, 36, 100);
-    audio_blocks(1);                                    /* -> drums.c drum_on -> pow2_q16(36 * 16 - 32767) */
-    printf("drum voice step %d (a sane one: ~0x8000 for rate 0x8000 at its root)\n", drums.v[0].s[5]);
-    {   uint32_t v, ok = 1;                             /* (any voice: the kick's step bounded, 8 octaves down at most) */
-        for (v = 0; v < sizeof drums.v / sizeof drums.v[0]; v++)
-            if (drums.v[v].s[5] < 0 || drums.v[v].s[5] > (int32_t)(16u << 16))
-                ok = 0;
-        printf("repro 1 (a user kit zone with root16 32767): %s\n", ok ? "ok" : "FAIL");
-        return !ok; }
+    printf("repro 1 (a user kit zone with root16 32767): retired with the USR drum kits (sloop_custom)\n");
+    return 0;
 }
 
 static int repro_pc(void)

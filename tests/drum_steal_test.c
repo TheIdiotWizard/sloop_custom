@@ -85,7 +85,7 @@ int main(void)
     uint32_t kit, kicks, nat, c1, c2, fails = 0;
     host_tracks_init();
     printf("NDRUM %u\n", NDRUM);
-    for (kit = 0; kit < DRUM_USR; kit++) {
+    for (kit = 0; kit < DRUM_SYN; kit++) {
         c1 = run_kit(kit, 0, &kicks, &nat);
         c2 = run_kit(kit, 1, &kicks, &nat);
         lost = lostk = early = hits = 0;

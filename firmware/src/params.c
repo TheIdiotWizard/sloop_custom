@@ -169,7 +169,7 @@ static const param_desc_t *eng_pdesc(uint32_t e, uint32_t id)
 static void preset_extras(int16_t *p, const preset_t *pr)
 {
     uint32_t i;
-    for (i = 0; i + 1u < 8u; i += 2u) {
+    for (i = 0; i + 1u < 12u; i += 2u) {
         int32_t id = pr->x[i] - 1;
         if (id >= 0 && id < P_E0)
             p[id] = (int16_t)clamp(pr->x[i + 1u], TP[id].min, TP[id].max);

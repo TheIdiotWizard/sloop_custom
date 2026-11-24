@@ -452,7 +452,7 @@ Every engine except FMTONE uses SLOOP's FX → FILTER; FMTONE has its own filter
 
 ## Drum kits
 
-37 kits, and your own (USR1–USR4, USR3+4, and the synthesised SYN1–SYN4 of 2.5) — **PRESETS** on the drum track, KNOB 1 on the kit page, or the editor. 1–5 are a sampled acoustic kit (CC0 recordings of a real snare, hi-hat, toms and cymbals) and its treatments; 6–37 are synthesised, so they cost almost no memory. Every synthesised kit has 16 sounds of its own, one per white key — KICK 2 and SNARE 2 are other sounds, not the same one retuned (the long 808 in TRAP, the log drum in AMAPIANO, the rumble in TECHNO). Each sound is built like on the classic machines: a tuned body with a pitch drop and a hold before it fades, a second partial for the drum heads, a click for the attack, noise through a resonant filter, drive. Softer hits are darker as well as quieter. The levels are measured: every kit is as loud as the others, each sound at its place in the mix.
+37 kits, and your own synthesised SYN1–SYN4 (2.5) — **PRESETS** on the drum track, KNOB 1 on the kit page, or the editor. 1–5 are a sampled acoustic kit (CC0 recordings of a real snare, hi-hat, toms and cymbals) and its treatments; 6–37 are synthesised, so they cost almost no memory. Every synthesised kit has 16 sounds of its own, one per white key — KICK 2 and SNARE 2 are other sounds, not the same one retuned (the long 808 in TRAP, the log drum in AMAPIANO, the rumble in TECHNO). Each sound is built like on the classic machines: a tuned body with a pitch drop and a hold before it fades, a second partial for the drum heads, a click for the attack, noise through a resonant filter, drive. Softer hits are darker as well as quieter. The levels are measured: every kit is as loud as the others, each sound at its place in the mix.
 
 | # | Kit | Style | # | Kit | Style |
 | --- | --- | --- | --- | --- | --- |
@@ -476,24 +476,13 @@ Every engine except FMTONE uses SLOOP's FX → FILTER; FMTONE has its own filter
 | 18 | TECHNO | techno | 37 | JAZZ | jazz (brushes) |
 | 19 | MINIMAL | minimal | | | |
 
-The kit is saved with projects and song sections. MIDI notes in on the drum channel (10) play the nearest of the 16 sounds. Kits **38–42** are yours: **USR1–USR4** and **USR3+4** (below).
-
-### Your own drum kits (KIT USR1–USR4, USR3+4)
-
-A sample slot can be a drum kit: a sound of yours on each of the drum track's 16 lanes, one per white key (KICK on F3 … COWBELL on G5). Make it in the web editor, page **Drum kit**:
-
-1. Drop WAV files on the **16 pads** (KICK, KICK 2, SNARE, CLAP, HAT, OPEN HAT, PEDAL, RIM, SNARE 2, LOW TOM, HI TOM, CRASH, RIDE, SHAKER, CONGA, COWBELL), or **Choose files** to add several at once: they are sorted onto the pads by their names (*kick*, *bd*, *snare*, *hh*, *open*, *crash*…; a second kick goes to KICK 2). Click a pad's wave to hear it.
-2. Each pad has **Pitch** (±12 semitones), **Gain** and **Length** (a cut ends with a short fade, no click).
-3. **Where it goes:** **USR3+4**, the big kit (about 15 s: the editor shares the sounds out over USR3 and USR4 by itself; USR1 and USR2 stay free for your instruments), or a single slot, **USR1**–**USR4** (about 7.4 s). Each choice shows what it holds now, and what a send would replace. The meter shows the time used of that space, at 22 kHz mono. Too long? Shorten the long sounds (crashes, open hats) or press **Fit the slot**.
-4. Name it, **Send**. Then **Use … on the drum track** selects track 4 and sets its KIT (or turn KIT yourself: USR3+4 is the last one).
-
-Everything the drum track does works with it: steps, levels, ratchets, fill conditions, the grid page, the keys, MIDI on the drum channel (a note plays its lane's sound), the track filter, the slicer, mute. The closed hat cuts the open one. A lane without a sound is silent, and so is an empty slot. A slot is a kit or an instrument, your choice: for example, USR1 and USR2 as instruments on tracks 1–3 (SAMPLE), and a big kit on USR3+4. **Save as ZIP** keeps the kit's 16 WAVs to share it; **Open ZIP** (or dropping a .zip) loads one back.
+The kit is saved with projects and song sections. MIDI notes in on the drum channel (10) play the nearest of the 16 sounds. Kits **38–41** are yours: the synthesised **SYN1–SYN4**.
 
 ## Your own samples (USR1–USR4)
 
-Four slots of about 7.4 s each hold your own sounds (USR4 from 2.4), played by a synth track: engine **SAMPLE**, **SET** = USR1 … USR4, or by the drum track as a kit (above). Load them from the web editor's **Samples** page, in three steps:
+Four slots of about 7.4 s each hold your own sounds (USR4 from 2.4), played by a synth track: engine **SAMPLE**, **SET** = USR1 … USR4, (sloop_custom: no longer as drum kits). Load them from the web editor's **Samples** page, in three steps:
 
-1. **Choose a slot.** Four tiles show what each slot holds (its name, how full it is); the page says when sending will replace something (or half of your USR3+4 kit).
+1. **Choose a slot.** Four tiles show what each slot holds (its name, how full it is); the page says when sending will replace something .
 2. **Make the sound**, one of two ways:
    - **From files (one note per file)**, for an instrument: drop WAV files (or click to choose them), up to 16, any rate, mono or stereo. Each plays at its own note, the keys between play the nearest one, pitched. The note is read from the file name (`KEYS_C4.wav`, C4 = 60) or set in the list; a keyboard picture shows which keys play which file; ▶ plays a file; the meter shows the time used of the slot.
    - **Chop a recording**, for a loop, a break or a phrase: one recording cut into pieces, one per key (CHOP, below).
@@ -627,7 +616,7 @@ The glow is a short pulse on every scan of the panel (about 900 times a second):
 | Sounds | 69 presets on 10 engines (listed by engine, filterable by kind, level-matched), 32 user presets |
 | Sequencer | 64 steps per track, own length and division each (1/32 to two bars); chords with a level and ratchet per note; drums with a level and ratchet per sound; ties, slide; per-step nudge (±½ step in 1/64), parameter locks (24 per track, any sound parameter) and fill conditions (fill only / no fill); swing 0 (straight) to 100 (MPC 75 %); one sample-accurate clock for steps, arp, rolls, slicer and song (no drift) |
 | Performance | layers (hold a button: keys and knobs change job): punch-in FX, erase, note repeat, step entry, key / chords, mute / solo / fill / tap tempo; live sections on the bar and a quick chain of up to 8 |
-| Drum kits | 37 (5 sampled, 32 synthesised, 16 sounds each), plus your own: USR1–USR4 and USR3+4 (about 15 s) |
+| Drum kits | 37 (5 sampled, 32 synthesised, 16 sounds each), plus your SYN1–SYN4 |
 | Effects | 27 punch-in effects (DJ kills, rewind, freeze…); master DUST, DUCK, DJ filter; per track drive, slicer, a one-knob HP / LP filter, sends to a stereo chorus, a tempo delay (dotted 1/8 and 1/16 too) and a stereo reverb; master limiter |
 | Recording | live, quantised as heard (latency-compensated), overdub; records at once while playing; free take sets loop length and tempo, or the tempo set, from the first note or a one-bar count-in |
 | Memory | undo / redo, 4 projects, 32 user presets, autosave of the working project, song of 4 sections × 16 steps × 1–64 bars |

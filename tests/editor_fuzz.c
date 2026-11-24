@@ -416,7 +416,7 @@ static void play_slots(void)
     a[0] = (uint8_t)t; cmdv(ED_TRACK, a, 1);
     a[0] = (uint8_t)e; a[1] = (uint8_t)rn(8); cmdv(ED_PRESET, a, 2);
     a[0] = (uint8_t)t; a[1] = P_E0; v14(a + 2, (int32_t)(SMP_NSETS + rn(SMP_USER_SLOTS))); cmdv(ED_TRACK_PARAM, a, 4);
-    a[0] = TRK_DRUM; a[1] = P_E0; v14(a + 2, (int32_t)(DRUM_USR + rn(5))); cmdv(ED_TRACK_PARAM, a, 4);
+    a[0] = TRK_DRUM; a[1] = P_E0; v14(a + 2, (int32_t)(DRUM_SYN + rn(4))); cmdv(ED_TRACK_PARAM, a, 4);
     a[0] = 1; a[1] = G_TXSRC; v14(a + 2, (int32_t)(7 + rn(4))); cmdv(ED_SET, a, 4);
     a[0] = 1; a[1] = G_TXWHEN; v14(a + 2, 1); cmdv(ED_SET, a, 4);
     if (rn(2)) { a[0] = 1; a[1] = 1; cmdv(ED_LIVE, a, 2); }

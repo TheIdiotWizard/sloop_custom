@@ -250,9 +250,7 @@ The FM-1's keys have no velocity: on the drum track every hit has one of four **
 | --- | --- |
 | 1–5 | **ACOUSTIC** (sampled studio kit, CC0) and its treatments: DEEP, TIGHT, BRIGHT, DUST |
 | 6–37 | 32 synthesised kits, 16 sounds each: 808, 909, 606, 80S, VINTAGE, TRAP, DRILL, BOOMBAP, LO-FI, PHONK, HOUSE, D.HOUSE, TECHNO, MINIMAL, ELECTRO, DISCO, GARAGE, JUNGLE, DUBSTEP, DEMBOW, AMAPIANO, AFRO, LATIN, TRIBAL, SYNTHWV, CHIP, ARCADE, GLITCH, INDUSTR, HYPER, AMBIENT, JAZZ |
-| 38–41 | **USR1, USR2, USR3, USR4**: your own kit in one sample slot (about 7.4 s) |
-| 42 | **USR3+4**: your own big kit over two slots (about 15 s) |
-| 43–46 | **SYN1, SYN2, SYN3, SYN4** (2.5): your own synthesised kits, made in the editor's [Drum synth](#your-own-synthesised-kits-syn1syn4) page. The FM-1 shows the name you gave them |
+| 38–41 | **SYN1, SYN2, SYN3, SYN4** (2.5): your own synthesised kits, made in the editor's [Drum synth](#your-own-synthesised-kits-syn1syn4) page. The FM-1 shows the name you gave them |
 
 Every kit is level-matched. The kit is saved with projects and song sections. Changing the kit never touches the pattern. [Your own kits](#23-your-own-samples-and-drum-kits) work like any other: steps, levels, ratchets, fills, choke, MIDI.
 
@@ -287,7 +285,7 @@ Open it with **EDIT** or **SEQ** tapped on the TRACKS screen while the drum trac
 | --- | --- | --- | --- |
 | **sound** (you hear it) | **tune**: −8 … +7 semitones | **decay**: −4 (very short) … 0 (as the kit has it) … +3 (long) | **level** of the drum track |
 
-On the synthesised kits (808, 909… and your SYN1–4) DECAY shortens or lengthens the sound itself; on the sampled kits (ACOUSTIC … DUST, USR) it can only shorten it (a fade), +3 plays the sample as it is. **(2.8)** On the synthesised kits, TUNE also shapes the **brightness** of the tone-less sounds (closed hats, shakers, claps), which have no pitch to shift: lower it for a darker, duller hat, raise it for a crisper one. The settings are kept with the project and with each section A–D, so a section can have its own tuning; changing the kit keeps them, NEW sets them back to 0. A project from an older SLOOP opens with every sound as its kit has it.
+On the synthesised kits (808, 909… and your SYN1–4) DECAY shortens or lengthens the sound itself; on the sampled kits (ACOUSTIC … DUST) it can only shorten it (a fade), +3 plays the sample as it is. **(2.8)** On the synthesised kits, TUNE also shapes the **brightness** of the tone-less sounds (closed hats, shakers, claps), which have no pitch to shift: lower it for a darker, duller hat, raise it for a crisper one. The settings are kept with the project and with each section A–D, so a section can have its own tuning; changing the kit keeps them, NEW sets them back to 0. A project from an older SLOOP opens with every sound as its kit has it.
 
 While the song plays in song mode, the grid's hit and level knobs wait (*STOP THE SONG FIRST*).
 
@@ -1059,13 +1057,13 @@ The computer or phone sees each setting as a slightly different device and may s
 The FM-1 has **four sample slots**, **USR1–USR4**, of about **7.4 s** each (22 kHz mono). A slot holds either:
 
 - **an instrument**, played by a synth track: engine **SAMPLE**, **SET = USR1 … USR4** (or the GRAIN engine's SRC), or
-- **a drum kit**, played by the drum track: **KIT = USR1 … USR4**, or **USR3+4**, one big kit of about **15 s** over two slots.
+- (sloop_custom: the drum track no longer plays the slots as kits; its KIT list ends with SYN1–SYN4.)
 
-A good setup: USR1 and USR2 as instruments, a big kit on USR3+4. You fill the slots from the web editor.
+You fill the slots from the web editor.
 
 ### An instrument (editor → Samples)
 
-1. **Choose a slot.** Four tiles show what each slot holds and how full it is; the page warns when sending would replace something (or half of your USR3+4 kit).
+1. **Choose a slot.** Four tiles show what each slot holds and how full it is; the page warns when sending would replace something.
 2. **Make the sound**, one of two ways:
    - **From files (one note per file):** drop up to 16 WAV files (any rate, mono or stereo). Each plays at its own note, the keys between play the nearest one, pitched. The note is read from the file name (`KEYS_C4.wav`, C4 = 60) or set in the list; a keyboard picture shows which keys play which file; ▶ plays a file; the meter shows the time used. Each file has a **Gain** (0 to −24 dB, 2.6); **Match levels** sets them so every file is heard at the same level (the loud ones turned down: every file comes in at full scale), then adjust by ear. **Loop** (2.7), for each file: **ONE SHOT** (plays once to the end, as before), **LOOP** (the whole file again and again while the key is held; let go, it ends its round) or **LOOP+TAIL** (the start plays, then the part between **Loop start** and **Loop end** again and again while the key is held; let go, the rest of the file, the tail, plays to the end). A short sample becomes a sound you can hold: a pad, a string, a voice, an organ. Set the points on the file's wave (the loop is lit); when you let go of a slider the point moves to the nearest zero crossing, so the loop does not click. Hold ▶ to hear it as the FM-1 plays it, let go for the tail. A WAV that has its own loop (set in a sample editor: its *smpl* chunk) comes in as LOOP+TAIL with its points. It takes no extra memory. The SAMPLE engine's **LOOP** (EDIT 1, KNOB 4) still turns loops off for the whole set. The release (ENV) still ends the note: set REL long enough to hear the tail. On SLOOP 2.6 such a file loops until the release ends it.
    - **Chop a recording** (CHOP): open or drop a recording (WAV, MP3, AIFF…) and cut it into up to 16 chops, one per key.
@@ -1086,16 +1084,6 @@ A good setup: USR1 and USR2 as instruments, a big kit on USR3+4. You fill the sl
 | mouse wheel | zoom |
 
 A recording of any length works: keep the chops you want, the slot takes about 7.4 s of them.
-
-### A drum kit (editor → Drum kit)
-
-1. **Your sounds.** Drop a WAV on any of the **16 pads** (KICK, KICK 2, SNARE, CLAP, HAT, OPEN HAT, PEDAL, RIM, SNARE 2, LOW TOM, HI TOM, CRASH, RIDE, SHAKER, CONGA, COWBELL), or **Choose files** to add several at once: they are sorted onto the pads by name (*kick*, *bd*, *snare*, *hh*, *open*, *crash*…; a second kick goes to KICK 2). Click a pad's wave to hear it. Each pad has **Pitch** (±12 semitones), **Gain** and **Length** (a cut ends with a short fade). **Match levels** (2.6, under the pads) sets every pad's Gain so the kit is heard even (as the ear hears it: the lows count less; the loud pads turned down to the quietest), then adjust by ear.
-2. **Where it goes.** **USR3+4** (the big kit, about 15 s; the editor shares the sounds out over the two slots by itself), or a single slot **USR1–USR4** (about 7.4 s). Each choice shows what it holds now and what a send would replace. The meter shows the time used; too long? shorten the long sounds or press **Fit the slot**.
-3. **Send it.** Name it, **Send**, then **Use … on the drum track** selects track 4 and sets its KIT (or turn PRESETS on the drum track: USR3+4 is the last kit).
-
-**Save as ZIP** keeps the kit's 16 WAVs to share; **Open ZIP** (or dropping a .zip) loads one back.
-
-On the FM-1 your kit works like any other: steps, levels, ratchets, fill conditions, the DRUMS grid, the keys, MIDI channel 10 (a note plays its lane's sound), the filter, the slicer, mute. The closed hat cuts the open one. A lane without a sound is silent, and so is an empty slot.
 
 ### Your own synthesised kits (SYN1–SYN4)
 

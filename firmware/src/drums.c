@@ -18,19 +18,14 @@
 #endif
 #include "drum_synth.c"       /* synthesised kits (DS_KITS) */
 /* P_E0 was unused on the drum track: it holds the kit. 0..4: the GM sample kit and its four
- * treatments (as before: old projects keep their kit), 5..: the synthesised kits, then (2.4) USR1..USR4:
- * a user sample slot as a kit (the web editor's DRUM KIT: a sound per lane, zone lo..hi = the lane's note),
- * and USR3+4: one kit over the slots USR3 and USR4 (a lane's sound in either) */
+ * treatments (as before: old projects keep their kit), 5..: the synthesised kits, then SYN1..SYN4
+ * (sloop_custom: the USR1..USR4 / USR3+4 sample kits are gone, the flash slots have no room left) */
 #define DRUM_SAMPLED 5u
-#define DRUM_USR (DRUM_SAMPLED + DS_NKITS)
-#define DRUM_PAIR (DRUM_USR + SMP_USER_SLOTS)   /* USR3+4: one kit in two slots (the editor splits it), ~15 s */
-#define DRUM_SYN (DRUM_PAIR + 1u)                /* SLOOP 2.5: SYN1..SYN4, your synthesised kits (drum_synth.c dsu) */
+#define DRUM_SYN (DRUM_SAMPLED + DS_NKITS)               /* SLOOP 2.5: SYN1..SYN4, your synthesised kits (drum_synth.c dsu) */
 #define DRUM_KITS (DRUM_SYN + DSU_N)
 static const char *const DRUM_KIT_NAMES[] = {"ACOUSTIC", "DEEP", "TIGHT", "BRIGHT", "DUST", DS_KIT_NAME_LIST,
-                                             "USR1", "USR2", "USR3", "USR4", "USR3+4",
                                              "SYN1", "SYN2", "SYN3", "SYN4"};
 static const char *const DRUM_KIT_STYLES[] = {"STUDIO", "SOFT", "PUNCHY", "BRIGHT", "DUSTY", DS_KIT_STYLE_LIST,
-                                              "YOUR KIT", "YOUR KIT", "YOUR KIT", "YOUR KIT", "BIG KIT",
                                               "YOUR SYNTH", "YOUR SYNTH", "YOUR SYNTH", "YOUR SYNTH"};
 _Static_assert(sizeof(DRUM_KIT_NAMES) / sizeof(DRUM_KIT_NAMES[0]) == DRUM_KITS, "a name per kit");
 static uint32_t drum_kit(void) { return (uint32_t)clamp(TDRUM->p[P_E0], 0, DRUM_KITS - 1); }
@@ -155,23 +150,12 @@ static void dstep_clr(dstep_t *s, uint32_t l)                                /* 
     s->rat[b] &= (uint8_t)~(3u << sh);
 }
 
-/* the zone a sampled drum voice plays (drum_on: v->s[4]): SMP_ZONES[i], or a user kit's, DZ_USR + slot * 16 + zone */
-#define DZ_USR (1 << 16)                 /* (above every SMP_ZONES index) */
+/* the zone a sampled drum voice plays (drum_on: v->s[4]): SMP_ZONES[i] */
 static const smp_zone_t *drum_zone_of(const voice_t *v)
 {
     int32_t z = v->s[4];
-    return z >= DZ_USR ? &usr_zone[((uint32_t)(z - DZ_USR) >> 4) % SMP_USER_SLOTS][(uint32_t)z & 15u] : &SMP_ZONES[(uint32_t)z];
+    return &SMP_ZONES[(uint32_t)z];
 }
-/* a user kit (KIT USR1..3): the zone of slot k for the lane note ln (the lane's GM note), -1 = none */
-static int32_t drum_usr_zone(uint32_t k, uint32_t ln)
-{
-    uint32_t j;
-    for (j = 0; j < usr_nz[k] && j < 16u; j++)
-        if (ln >= usr_zone[k][j].lo && ln <= usr_zone[k][j].hi)
-            return DZ_USR + (int32_t)(k * 16u + j);
-    return -1;
-}
-
 /* the velocity of a level: as played (LV_NORM: vel), ghost, soft, hard */
 static uint32_t lvl_vel(uint32_t lvl, uint32_t vel)
 {
@@ -302,20 +286,7 @@ static void drum_on(uint32_t note, uint32_t vel)
         drum_synth_on(note, vel, kit, u->s, u->crush, 1);
         return;
     }
-    if (kit >= DRUM_USR) {                          /* a user kit: the lane's sound, as its note (the hat choke) */
-        if (note == 76u || note == 77u)
-            return;                                 /* (the click's wood block: not a lane) */
-        note = LANE_NOTE[lane_of_note(note)];
-        if (kit == DRUM_PAIR) {                     /* USR3+4: the lane's sound in USR3, else in USR4 */
-            zid = drum_usr_zone(2, note);
-            if (zid < 0)
-                zid = drum_usr_zone(3, note);
-        } else {
-            zid = drum_usr_zone(kit - DRUM_USR, note);
-        }
-        if (zid < 0)
-            return;                                 /* (an empty slot, or no sound on this lane) */
-    } else if (kit >= DRUM_SAMPLED) {               /* synthesised kit */
+    if (kit >= DRUM_SAMPLED) {               /* synthesised kit */
         drum_synth_on(note, vel, kit, DS_KITS[kit - DRUM_SAMPLED].s, DS_KITS[kit - DRUM_SAMPLED].crush, 1);
         return;
     }
